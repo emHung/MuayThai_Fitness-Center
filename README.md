@@ -6,22 +6,26 @@
 
 ## Báo cáo hệ thống & Tiến độ bàn giao
 
-Hệ thống hiện đạt **85% tiến độ bàn giao**, đáp ứng đầy đủ các luồng nghiệp vụ cốt lõi theo đặc tả v2.3.
+> Dữ liệu tiến độ được đối chiếu trực tiếp từ mã nguồn và tài liệu nghiệm thu hiện hành của dự án: [PROGRESS.md](PROGRESS.md), bảng 59 yêu cầu [docs/NGHIEM_THU_V2_3.md](docs/NGHIEM_THU_V2_3.md), trạng thái thực thi [docs/DEMO_STATUS.md](docs/DEMO_STATUS.md) và bộ kiểm thử tự động [tests/acceptance.mjs](tests/acceptance.mjs).
+
+* **Mốc nghiệm thu cấp cao**: **4/6 mốc đã hoàn thành** ([PROGRESS.md](PROGRESS.md)).
+* **Yêu cầu chức năng chi tiết**: **50/59 yêu cầu (FR01–FR59)** đã có đầy đủ mã nguồn Backend, Migration và giao diện Android (~**85%**).
+* **15% còn lại**: Đang triển khai tại 2 mốc cuối (Nghiệm thu v2.3 hoàn tất và Nghiệm thu thiết bị vật lý / đóng gói bản nộp).
 
 ```
 +---------------------------------+---------------------------------+---------------------------------+
 |       TIẾN ĐỘ BÀN GIAO          |    SITEMAP CẤU TRÚC HỆ THỐNG    |      CHỨC NĂNG ĐÃ HOÀN THÀNH    |
-|        [█████████░] 85%         |                                 |                                 |
-|                                 |         [ Client / User ]       | [x] Xác thực & Phân quyền       |
-| [x] Khởi tạo & Thiết kế         |                 |               | [x] Quản lý Người dùng          |
-| [x] Phát triển Frontend/Backend |         v       v               | [x] API & Xử lý Dữ liệu         |
-| [x] Tích hợp & Kiểm thử API     |       [ Android Native App ]    | [x] Hệ thống Thông báo          |
-| [ ] Bàn giao & Triển khai       |                 |               | [x] Cấu hình & Thiết lập        |
-|                                 |         v       v               | [x] Báo cáo & Thống kê          |
+|   4/6 Mốc lớn · 50/59 FR (85%)  |                                 |                                 |
+|        [█████████░] 85%         |       [ Client: 3 Vai trò ]     | [x] Xác thực & Phân quyền       |
+|                                 |                 |               | [x] Quản lý Người dùng          |
+| [x] Khởi tạo & Thiết kế         |                 v               | [x] API & Xử lý Dữ liệu         |
+| [x] Phát triển Frontend/Backend |       [ Android Native App ]    | [x] Hệ thống Thông báo          |
+| [x] Tích hợp & Kiểm thử API     |                 |               | [x] Cấu hình & Thiết lập        |
+| [ ] Bàn giao & Triển khai       |                 v               | [x] Báo cáo & Thống kê          |
 |                                 |       [ Spring Boot Gateway ]   |                                 |
-|                                 |        /        |        \      |                                 |
-|                                 |  [Auth]    [Schedule] [Checkin] |                                 |
-|                                 |        \        |        /      |                                 |
+|                                 |        /      |     |      \    |                                 |
+|                                 |   [Auth] [Sched] [Check] [Prog] |                                 |
+|                                 |        \      |     |      /    |                                 |
 |                                 |       [ PostgreSQL Multi-DB ]   |                                 |
 +---------------------------------+---------------------------------+---------------------------------+
 ```
