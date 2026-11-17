@@ -32,14 +32,16 @@ final class SchedulePane {
     if (work.role().equals("ADMIN")) {
       work.ui.action(body, "Quản lý lớp nhóm", () -> work.open("Lớp nhóm", this::classes));
     } else if (work.role().equals("TRAINER")) {
+      work.operations.reviewReminder(body);
       work.ui.row(body, "Ca làm của tôi", "", () -> work.open("Ca làm việc", panel -> work.planning.shifts(panel, work.userId())));
       work.ui.action(body, "Đề xuất lớp 10", () -> work.open("Đề xuất lớp 10", panel -> classes.form(panel, "GROUP10", null)));
     }
+    EditText query = work.ui.field(body, "Tên buổi cần tìm", "");
     CalendarFeed list = new CalendarFeed();
-    work.ui.action(body, "Xem theo ngày", () -> list.show(LocalDate.parse(WorkspaceUi.read(date)), 1));
-    work.ui.action(body, "Xem theo tuần", () -> list.show(LocalDate.parse(WorkspaceUi.read(date)), 7));
+    work.ui.action(body, "Xem theo ngày", () -> list.show(LocalDate.parse(WorkspaceUi.read(date)), 1, WorkspaceUi.read(query)));
+    work.ui.action(body, "Xem theo tuần", () -> list.show(LocalDate.parse(WorkspaceUi.read(date)), 7, WorkspaceUi.read(query)));
     work.ui.add(body, list, 6);
-    list.show(today, 1);
+    list.show(today, 1, "");
   }
 
   private final class CalendarFeed extends LinearLayout {
@@ -78,10 +80,10 @@ final class SchedulePane {
       super.onDetachedFromWindow();
     }
 
-    void show(LocalDate first, int days) {
+    void show(LocalDate first, int days, String query) {
       String from = Uri.encode(first.atStartOfDay(WorkspaceUi.ZONE).toOffsetDateTime().toString());
       String to = Uri.encode(first.plusDays(days).atStartOfDay(WorkspaceUi.ZONE).toOffsetDateTime().toString());
-      path = "api/sessions?from=" + from + "&to=" + to;
+      path = "api/sessions?from=" + from + "&to=" + to + "&q=" + Uri.encode(query);
       load(true);
     }
 

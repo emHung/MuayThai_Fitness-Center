@@ -8,6 +8,7 @@ import vn.muaythai.shared.Actor;
 
 @RestController
 class ProgressApi {
+  enum GoalStatus { NOT_STARTED, IN_PROGRESS, ACHIEVED, NOT_ACHIEVED }
   record NoteForm(@NotBlank @Size(max = 3000) String content, @Size(max = 3000) String comment,
       @Min(1) @Max(5) Integer rating) {}
   record Note(long id, long sessionId, Long learnerId, long trainerId, String trainerName, String sessionTitle,
@@ -15,9 +16,9 @@ class ProgressApi {
 
   record GoalForm(@NotBlank @Pattern(regexp = "[0-9]{4}-(0[1-9]|1[0-2])") String month,
       @NotBlank @Size(max = 160) String title, @NotBlank @Size(max = 2000) String description,
-      @Min(0) @Max(100) int progress) {}
+      @Min(0) @Max(100) int progress, GoalStatus status) {}
   record Goal(long id, long learnerId, long trainerId, String month, String title, String description,
-      int progress, String updatedAt) {}
+      int progress, GoalStatus status, String updatedAt) {}
 
   private final ProgressService progress;
 

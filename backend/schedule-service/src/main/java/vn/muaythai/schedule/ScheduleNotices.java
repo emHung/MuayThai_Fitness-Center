@@ -11,9 +11,11 @@ import vn.muaythai.shared.ServiceHttp;
 @RestController
 class ScheduleNotices {
   private final ScheduleRepository repository;
+  private final ScheduleService schedule;
 
-  ScheduleNotices(ScheduleRepository repository) {
+  ScheduleNotices(ScheduleRepository repository, ScheduleService schedule) {
     this.repository = repository;
+    this.schedule = schedule;
   }
 
   @GetMapping("/internal/notices")
@@ -52,10 +54,16 @@ class ScheduleNotices {
             assigned ? rs.getLong("session_id") : null, "SCHEDULE");
       }).list());
     } else if (role.equals("LEARNER")) {
+      List<Long> classes = new ArrayList<>(schedule.learnerClassIds(userId));
+      classes.add(-1L);
       result.addAll(repository.jdbc().sql("""
-          SELECT * FROM sessions WHERE learner_id=:id AND status='CONFIRMED'
-            AND start_at BETWEEN now() AND now()+interval '1 day' ORDER BY start_at LIMIT 50
-          """).param("id", userId).query((rs, row) -> {
+          SELECT s.* FROM sessions s WHERE status='CONFIRMED'
+            AND start_at BETWEEN now() AND now()+interval '1 day'
+            AND (learner_id=:id OR (type='GROUP30' AND class_id IN (:classes))
+              OR (type='GROUP10' AND EXISTS (SELECT 1 FROM class_signups r
+                WHERE r.session_id=s.id AND r.learner_id=:id AND NOT r.cancelled)))
+          ORDER BY start_at LIMIT 50
+          """).param("id", userId).param("classes", classes).query((rs, row) -> {
         long id = rs.getLong("id");
         OffsetDateTime start = rs.getObject("start_at", OffsetDateTime.class);
         return new ServiceHttp.Notice("reminder-" + id + "-" + start.toEpochSecond(), "Sắp đến buổi tập",
@@ -63,6 +71,13 @@ class ScheduleNotices {
       }).list());
     }
     if (role.equals("TRAINER") || role.equals("LEARNER")) {
+      result.addAll(repository.jdbc().sql("""
+          SELECT n.id,n.session_id,n.created_at,s.title FROM schedule_notifications n
+          JOIN sessions s ON s.id=n.session_id WHERE n.recipient_id=:id
+            AND n.created_at>now()-interval '14 day' ORDER BY n.created_at DESC LIMIT 50
+          """).param("id", userId).query((rs, row) -> new ServiceHttp.Notice(
+              "direct-pt-" + rs.getLong("id"), "Lịch PT mới được xếp", rs.getString("title"),
+              rs.getObject("created_at", OffsetDateTime.class).toString(), rs.getLong("session_id"), "SCHEDULE")).list());
       result.addAll(repository.jdbc().sql("""
           SELECT * FROM pt_changes WHERE recipient_id=:id AND status='PENDING' AND expires_at>now()
           ORDER BY created_at DESC LIMIT 50

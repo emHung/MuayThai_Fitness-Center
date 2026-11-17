@@ -1,5 +1,6 @@
 package vn.muaythai.app;
 
+import android.net.Uri;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -18,16 +19,26 @@ final class ClassPane {
   void show(LinearLayout body) {
     work.ui.action(body, "Tạo lớp 30", () -> work.open("Tạo lớp 30", panel -> form(panel, "GROUP30", null)));
     work.ui.action(body, "Tạo lớp 10", () -> work.open("Tạo lớp 10", panel -> form(panel, "GROUP10", null)));
-    load(body, "GROUP30", "Lớp 30");
-    load(body, "GROUP10", "Lớp 10");
+    var query = work.ui.field(body, "Tên lớp cần tìm", "");
+    LinearLayout results = new LinearLayout(work);
+    results.setOrientation(LinearLayout.VERTICAL);
+    Runnable search = () -> {
+      results.removeAllViews();
+      String filter = "?q=" + Uri.encode(WorkspaceUi.read(query));
+      load(results, "GROUP30", "Lớp 30", filter);
+      load(results, "GROUP10", "Lớp 10", filter);
+    };
+    work.ui.action(body, "Tìm lớp", search);
+    work.ui.add(body, results, 8);
+    search.run();
   }
 
-  private void load(LinearLayout parent, String type, String label) {
+  private void load(LinearLayout parent, String type, String label, String filter) {
     LinearLayout list = new LinearLayout(work);
     list.setOrientation(LinearLayout.VERTICAL);
     work.ui.label(list, label, 15, true);
     work.ui.add(parent, list, 8);
-    work.request(work.api.service.get(path(type)), response -> {
+    work.request(work.api.service.get(path(type) + filter), response -> {
       var rows = Jsons.rows(response);
       if (rows.isEmpty()) {
         work.ui.label(list, "Chưa có lớp.", 13, false);

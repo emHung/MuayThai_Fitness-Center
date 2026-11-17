@@ -42,8 +42,9 @@ class ScheduleApi {
   }
 
   @GetMapping("/api/{kind:classes30|classes10}")
-  List<ClassInfo> classes(Actor actor, @PathVariable String kind) {
-    return schedule.classes(actor, type(kind));
+  List<ClassInfo> classes(Actor actor, @PathVariable String kind,
+      @RequestParam(defaultValue = "") @Size(max = 120) String q) {
+    return schedule.classes(actor, type(kind), q.strip());
   }
 
   @GetMapping("/api/{kind:classes30|classes10}/{id}")
@@ -70,8 +71,9 @@ class ScheduleApi {
 
   @GetMapping("/api/sessions")
   List<ServiceHttp.Session> sessions(Actor actor,
-      @RequestParam(required = false) OffsetDateTime from, @RequestParam(required = false) OffsetDateTime to) {
-    return schedule.sessions(actor, from, to);
+      @RequestParam(required = false) OffsetDateTime from, @RequestParam(required = false) OffsetDateTime to,
+      @RequestParam(defaultValue = "") @Size(max = 120) String q) {
+    return schedule.sessions(actor, from, to, q.strip());
   }
 
   @GetMapping("/api/sessions/{id}")

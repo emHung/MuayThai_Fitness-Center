@@ -24,12 +24,14 @@ Phiên cần đổi mật khẩu lần đầu có thể gọi đổi mật khẩ
 | `POST /api/packages`, `GET /api/packages?learnerId=...` | ADMIN | Gán/xem gói của học viên. Gói có loại, ngày hiệu lực, HLV với PT, lớp với gói lớp 30 và số lượt khi gói tính theo buổi. |
 | `GET /api/packages/{id}`, `PUT /api/packages/{id}/trainer` | ADMIN | Xem gói hoặc đổi HLV phụ trách gói PT/lớp 10 bằng `trainerId`, `reason`. Gói giữ mã QR và số lượt. Lịch đã đặt vẫn dùng được. |
 | `GET /api/packages/mine`, `GET /api/packages/mine/{id}` | Học viên | Thẻ gói, mã QR của chính mình, hạn và lượt còn lại. |
-| `GET /api/classes30`, `GET /api/classes30/{id}` | Theo phạm vi | Hồ sơ lớp và quy tắc lịch lặp. |
+| `GET /api/classes10`, `GET /api/classes30` | Theo phạm vi | Hồ sơ lớp và quy tắc lịch lặp. Tham số `q` tùy chọn tìm theo tên lớp. |
+| `GET /api/classes10/{id}`, `GET /api/classes30/{id}` | Theo phạm vi | Chi tiết hồ sơ lớp. |
 | `POST /api/classes30`, `PUT /api/classes30/{id}`, `POST /api/classes30/{id}/stop` | ADMIN | Quản lý lớp, HLV phụ trách, các thứ và giờ mở lớp. |
-| `GET /api/sessions`, `GET /api/sessions/{id}` | Theo phạm vi | Buổi tập gồm loại, giờ, HLV, lớp hoặc học viên, trạng thái. |
+| `GET /api/sessions`, `GET /api/sessions/{id}` | Theo phạm vi | Buổi tập gồm loại, giờ, HLV, lớp hoặc học viên, trạng thái. Danh sách hỗ trợ `from`, `to` và `q` để lọc khoảng ngày và tên buổi. |
 | `GET /api/sessions/events` | ADMIN, HLV, học viên | Luồng SSE gửi `ready` lúc kết nối và `calendar` khi lịch có thay đổi. App tải lại `GET /api/sessions` với ngày đang xem để áp dụng đúng phạm vi của tài khoản. |
 | `GET /api/pt/availability` | Học viên | Nhận `packageId`, `startAt`. Trả khả dụng tại thời điểm đọc. |
 | `POST /api/pt/bookings` | Học viên | Nhận `packageId`, `startAt`. Trả lịch `PENDING_TRAINER`. |
+| `POST /api/pt/direct` | ADMIN | Xếp buổi PT đã xác nhận và gửi ngay thông báo cho học viên, HLV. |
 | `GET /api/pt/requests`, `POST /api/pt/{id}/confirm`, `POST /api/pt/{id}/reject` | HLV phụ trách | Duyệt trạng thái đang chờ, lưu lý do khi từ chối. |
 | `POST /api/sessions/{id}/cancel` | Theo vai trò, buổi và mốc giờ | Nhận `reason` và trả trạng thái sau hủy. Buổi đang cập nhật trả `409 SESSION_UPDATE_PENDING`. |
 | `PUT /api/sessions/{id}/trainer` | ADMIN | Nhận `trainerId`, `reason`. Kiểm ca làm, giờ trùng và lượt điểm danh trước khi đổi HLV cho một buổi tương lai. |
@@ -68,6 +70,8 @@ Khi hủy hoặc đổi HLV, Schedule lưu yêu cầu trước, sau đó đợi 
 | --- | --- | --- |
 | `GET /api/notes/session/{id}`, `PUT /api/notes/session/{id}` | Ghi bởi HLV phụ trách, xem theo phạm vi | Nội dung, nhận xét, điểm PT và giờ cập nhật. |
 | `GET /api/notes?learnerId=...` | ADMIN, HLV phụ trách, học viên của chính mình | Danh sách đánh giá theo thứ tự thời gian. |
+| `GET /api/goals?learnerId=...`, `PUT /api/goals/{learnerId}` | Ghi bởi HLV phụ trách, xem theo phạm vi | Mục tiêu theo tháng, phần trăm và trạng thái `NOT_STARTED`, `IN_PROGRESS`, `ACHIEVED`, `NOT_ACHIEVED`. Nếu gửi từ client cũ thiếu `status`, máy chủ suy ra từ phần trăm. |
+| `GET /api/notifications` | Tài khoản đăng nhập | Hộp thư theo người nhận. Gồm nhắc đánh giá PT của HLV và nhắc buổi nhóm trong 24 giờ tới theo đăng ký lớp 10 hoặc gói lớp 30. |
 
 ## Lỗi và hợp đồng nội bộ
 

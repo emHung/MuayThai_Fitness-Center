@@ -9,7 +9,7 @@
 | FR03 | Hồ sơ học viên, khóa/mở khóa, mã hội viên | API kiểm tạo và sinh mã. Thử sửa và khóa/mở khóa trên APK. |
 | FR04 | Hồ sơ HLV, mật khẩu tạm, ca làm, khóa/mở khóa, xóa | API kiểm xóa khi chưa có dữ liệu, thu hồi phiên và tranh chấp với gán ca. |
 | FR05 | Cấp gói, chọn HLV/lớp, hạn, lượt và gia hạn qua gói mới | API kiểm cấp nhiều loại gói và bảo toàn mã QR khi đổi HLV. Thử cấp gói thay thế trên APK. |
-| FR06 | Danh bạ tìm theo từ khóa. Lịch lọc theo ngày/tuần | Còn tìm lớp và buổi bằng từ khóa theo phạm vi tài khoản. |
+| FR06 | Tìm theo từ khóa trong danh bạ, lớp và lịch ngày/tuần | API kiểm kết quả tìm lớp và lịch theo phạm vi HLV, học viên và gói đã gán. |
 | FR07 | Sửa thông tin cá nhân và đổi mật khẩu | API kiểm đổi mật khẩu HLV. Thử lưu hồ sơ cá nhân trên APK. |
 | FR08 | Lớp 30 lặp hàng tuần và sinh lịch | API kiểm tạo lớp và thấy buổi đã sinh. Chạy thêm ca chỉnh/dừng lớp. |
 | FR09 | HLV đề xuất lớp 10 theo thứ/giờ | API kiểm trạng thái chờ duyệt và sinh buổi khi mở lớp. |
@@ -28,7 +28,7 @@
 | FR22 | Học viên đề xuất và HLV xác nhận đổi PT | API kiểm đủ hai bước và đối chiếu ngày giờ mới. |
 | FR23 | Yêu cầu đổi tự hết hạn | Thử mốc hết hạn trước khi xác nhận và xác minh lịch cũ. |
 | FR24 | ADMIN duyệt/từ chối đề xuất lớp 10 | API kiểm duyệt và chặn HLV tự duyệt. Thử từ chối trên APK. |
-| FR25 | ADMIN xếp trực tiếp, chọn HLV và khung giờ | API kiểm lịch đã xác nhận. Còn đối chiếu thông báo học viên ngay sau khi xếp lịch xa hơn một ngày. |
+| FR25 | ADMIN xếp trực tiếp, chọn HLV và khung giờ | API kiểm lịch đã xác nhận và thông báo tức thời cho học viên, HLV khi buổi còn cách hơn một ngày. |
 | FR26 | Ca làm theo tuần, quyền xem và xử lý lịch vướng ca | API kiểm lưu ca. Thử sửa/xóa và quyền xem ca HLV trên APK. |
 | FR27 | Lưới giờ PT trống, bận và ngoài ca | Thử cách tô ô theo ca, lịch trùng và nơi truy cập theo vai trò. |
 | FR28 | Đóng khung giờ của HLV | Thử đóng, mở lại và xem ô bị khóa ở lưới PT. |
@@ -55,11 +55,11 @@
 | FR49 | HLV đánh giá PT sau buổi | Thử mốc trước/sau giờ kết thúc và kiểm điểm hợp lệ. |
 | FR50 | Học viên xem tổng kết PT | Thử từ lúc HLV lưu đánh giá tới lúc học viên xem trên APK. |
 | FR51 | HLV tạo mục tiêu tháng cho học viên PT | API kiểm tạo và học viên đọc đúng mục tiêu. |
-| FR52 | HLV sửa tiến độ phần trăm | Còn trạng thái mục tiêu tường minh theo đặc tả. |
+| FR52 | HLV sửa phần trăm và chọn trạng thái mục tiêu | API kiểm trạng thái được lưu, học viên đọc được và yêu cầu từ phiên bản cũ vẫn được xử lý. |
 | FR53 | Lịch sử nội dung và nhận xét | Thử thứ tự bản ghi và quyền theo học viên ở cả ba vai trò. |
 | FR54 | Xem tiến độ mục tiêu | API kiểm học viên đọc %. Kiểm thêm quyền ADMIN, HLV và trạng thái hoàn thành. |
 | FR55 | Hộp thư nhận yêu cầu HLV đề xuất đổi PT | Thử thông báo học viên, mở yêu cầu và phản hồi. |
 | FR56 | Hộp thư HLV có trạng thái lịch và thông báo thay HLV | Thử đủ đặt, duyệt, từ chối, đổi và hủy. |
-| FR57 | Nhắc đánh giá PT còn chờ trong hộp thư | Còn hiển thị nhắc ngay lúc HLV mở ứng dụng. |
-| FR58 | Nhắc PT sắp tập và gói sắp hết | Cần đối chiếu nhắc lịch lớp 10/lớp 30 theo phạm vi của học viên. |
+| FR57 | Nhắc đánh giá PT còn chờ ở màn Lịch dạy và hộp thư | APK cần kiểm hiển thị số mục đang chờ khi HLV có buổi PT đã kết thúc. |
+| FR58 | Nhắc lịch PT, lớp 10, lớp 30 và gói sắp hết | API kiểm nhắc lớp 10 theo đăng ký và lớp 30 theo gói được gán trong 24 giờ tới. |
 | FR59 | ADMIN gửi thông báo chung | API kiểm học viên nhận và đánh dấu đã đọc. |

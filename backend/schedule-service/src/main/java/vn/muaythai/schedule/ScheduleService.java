@@ -40,12 +40,12 @@ class ScheduleService {
     this.checkin = checkin;
   }
 
-  List<ScheduleApi.ClassInfo> classes(Actor actor, String type) {
+  List<ScheduleApi.ClassInfo> classes(Actor actor, String type, String query) {
     List<ScheduleApi.ClassInfo> visible = repository.jdbc().sql("""
-        SELECT * FROM classes WHERE type = :type
+        SELECT * FROM classes WHERE type=:type AND (:query='' OR strpos(lower(title),lower(:query))>0)
           AND (:role = 'ADMIN' OR (:role = 'TRAINER' AND trainer_id=:user) OR (:role='LEARNER' AND status='OPEN'))
         ORDER BY title,id
-        """).param("type", type).param("role", actor.role()).param("user", actor.id())
+        """).param("type", type).param("role", actor.role()).param("user", actor.id()).param("query", query)
         .query(ScheduleRepository.CLASS).list();
     if (!actor.is("LEARNER")) {
       return visible;
@@ -215,27 +215,26 @@ class ScheduleService {
     }
   }
 
-  List<Session> sessions(Actor actor, OffsetDateTime from, OffsetDateTime to) {
+  List<Session> sessions(Actor actor, OffsetDateTime from, OffsetDateTime to, String query) {
     OffsetDateTime start = from == null ? LocalDate.now(ZONE).atStartOfDay(ZONE).toOffsetDateTime() : from;
     OffsetDateTime end = to == null ? start.plusDays(28) : to;
     if (!end.isAfter(start) || Duration.between(start, end).toDays() > 93) {
       throw Problem.invalid("Khoảng thời gian xem lịch không hợp lệ.");
     }
+    String window = "s.start_at>=:start AND s.start_at<:end AND (:query='' OR strpos(lower(s.title),lower(:query))>0)";
     if (actor.is("ADMIN")) {
-      return repository.sessions("s.start_at >= :start AND s.start_at < :end",
-          Map.of("start", start, "end", end));
+      return repository.sessions(window, Map.of("start", start, "end", end, "query", query));
     }
     if (actor.is("TRAINER")) {
-      return repository.sessions("s.trainer_id=:id AND s.start_at >= :start AND s.start_at < :end",
-          Map.of("id", actor.id(), "start", start, "end", end));
+      return repository.sessions(window + " AND s.trainer_id=:id",
+          Map.of("id", actor.id(), "start", start, "end", end, "query", query));
     }
     List<Long> classes = new ArrayList<>(learnerClassIds(actor.id()));
     classes.add(-1L);
-    return repository.sessions("""
-        s.start_at >= :start AND s.start_at < :end
+    return repository.sessions(window + """
           AND (s.learner_id=:id OR (s.class_id IN (:classes) AND s.status = 'CONFIRMED')
             OR EXISTS (SELECT 1 FROM class_signups r WHERE r.session_id=s.id AND r.learner_id=:id AND NOT r.cancelled))
-        """, Map.of("id", actor.id(), "start", start, "end", end, "classes", classes));
+        """, Map.of("id", actor.id(), "start", start, "end", end, "classes", classes, "query", query));
   }
 
   Session findSession(long id) {
@@ -318,7 +317,11 @@ class ScheduleService {
       if (!active(pack, start.toLocalDate())) {
         throw Problem.conflict("PACKAGE_EXPIRED", "Một buổi lặp nằm ngoài thời hạn gói.");
       }
-      bookings.add(createPt(learner.id(), trainer, pack.id(), start, "CONFIRMED", actor.is("TRAINER")));
+      Session confirmed = createPt(learner.id(), trainer, pack.id(), start, "CONFIRMED", actor.is("TRAINER"));
+      repository.jdbc().sql("""
+          INSERT INTO schedule_notifications(session_id,recipient_id) VALUES(:id,:learner),(:id,:trainer)
+          """).param("id", confirmed.id()).param("learner", learner.id()).param("trainer", trainer).update();
+      bookings.add(confirmed);
     }
     return bookings;
   }
@@ -570,7 +573,7 @@ class ScheduleService {
         """, alternatives);
   }
 
-  private List<Long> learnerClassIds(long learner) {
+  List<Long> learnerClassIds(long learner) {
     ServiceHttp.Package[] packages = http.to(checkin, client -> client.get()
         .uri("/internal/packages?learnerId={id}", learner).retrieve().body(ServiceHttp.Package[].class));
     if (packages == null) {

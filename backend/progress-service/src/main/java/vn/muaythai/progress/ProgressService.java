@@ -25,7 +25,8 @@ class ProgressService {
   private static final RowMapper<ProgressApi.Goal> GOAL = (rs, row) -> new ProgressApi.Goal(
       rs.getLong("id"), rs.getLong("learner_id"), rs.getLong("trainer_id"),
       rs.getString("target_month").substring(0, 7), rs.getString("title"), rs.getString("description"),
-      rs.getInt("progress"), rs.getObject("updated_at", OffsetDateTime.class).toString());
+      rs.getInt("progress"), ProgressApi.GoalStatus.valueOf(rs.getString("status")),
+      rs.getObject("updated_at", OffsetDateTime.class).toString());
 
   private final JdbcClient db;
   private final ServiceHttp http;
@@ -120,14 +121,22 @@ class ProgressService {
   ProgressApi.Goal saveGoal(Actor actor, long learner, ProgressApi.GoalForm form) {
     actor.require("TRAINER");
     requireAssigned(actor, learner);
+    var status = form.status();
+    if (status == null) {
+      status = switch (form.progress()) {
+        case 0 -> ProgressApi.GoalStatus.NOT_STARTED;
+        case 100 -> ProgressApi.GoalStatus.ACHIEVED;
+        default -> ProgressApi.GoalStatus.IN_PROGRESS;
+      };
+    }
     return db.sql("""
-        INSERT INTO monthly_goals(learner_id,trainer_id,target_month,title,description,progress,updated_at)
-          VALUES(:learner,:trainer,:month,:title,:description,:progress,now())
+        INSERT INTO monthly_goals(learner_id,trainer_id,target_month,title,description,progress,status,updated_at)
+          VALUES(:learner,:trainer,:month,:title,:description,:progress,:status,now())
         ON CONFLICT(learner_id,trainer_id,target_month) DO UPDATE SET title=EXCLUDED.title,
-          description=EXCLUDED.description,progress=EXCLUDED.progress,updated_at=now() RETURNING *
+          description=EXCLUDED.description,progress=EXCLUDED.progress,status=EXCLUDED.status,updated_at=now() RETURNING *
         """).param("learner", learner).param("trainer", actor.id()).param("month", YearMonth.parse(form.month()).atDay(1))
         .param("title", form.title().strip()).param("description", form.description().strip())
-        .param("progress", form.progress()).query(GOAL).single();
+        .param("progress", form.progress()).param("status", status.name()).query(GOAL).single();
   }
 
   private void requireAssigned(Actor actor, long learner) {

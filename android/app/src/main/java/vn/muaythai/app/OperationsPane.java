@@ -11,6 +11,20 @@ final class OperationsPane {
     this.work = work;
   }
 
+  void reviewReminder(LinearLayout body) {
+    LinearLayout panel = new LinearLayout(work);
+    panel.setOrientation(LinearLayout.VERTICAL);
+    work.ui.add(body, panel, 0);
+    work.refreshQuietly(work.api.service.get("api/notifications"), response -> {
+      long count = Jsons.rows(response).stream().map(item -> Jsons.object(item.get("notice")))
+          .filter(item -> "REVIEW".equals(Jsons.text(item, "kind"))).count();
+      if (count != 0) {
+        work.ui.row(panel, count + " buổi PT cần đánh giá", "Mở thông báo để xem các buổi",
+            () -> work.open("Thông báo", this::notices));
+      }
+    });
+  }
+
   void notices(LinearLayout body) {
     if (work.role().equals("ADMIN")) {
       work.ui.action(body, "Gửi thông báo chung", () -> work.open("Thông báo chung", this::broadcast));

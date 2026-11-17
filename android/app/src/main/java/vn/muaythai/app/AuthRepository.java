@@ -65,6 +65,7 @@ final class AuthRepository {
 
       @Override
       public void onFailure(Call<T> request, Throwable error) {
+        android.util.Log.e("AUTH_ERR", "AuthRepository onFailure: " + error.getMessage(), error);
         if (!request.isCanceled()) {
           result.failure("NETWORK_ERROR", "Không kết nối được máy chủ. Vui lòng thử lại.");
         }

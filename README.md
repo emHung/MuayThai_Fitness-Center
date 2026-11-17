@@ -1,8 +1,117 @@
 # MuayThai _Fitness Center
 
-**Tiến độ bàn giao** · **████████░░░░ 4/6 mốc hoàn thành**. [Chi tiết và nhật ký cập nhật](PROGRESS.md)
+> Hệ thống quản lý phòng tập Muay Thai & Fitness toàn diện: Ứng dụng Android Java Native cho Quản trị viên, Huấn luyện viên, Học viên kết hợp Backend Microservices Spring Boot chạy trên nền Docker Compose & PostgreSQL.
 
-Ứng dụng Android Java cho quản trị viên, huấn luyện viên và học viên. Backend chạy trong Docker Compose gồm Auth, Schedule, Check-in, Progress và API Gateway. Các dịch vụ lưu dữ liệu trong các database riêng trên PostgreSQL.
+---
+
+## Báo cáo hệ thống & Tiến độ bàn giao
+
+Hệ thống hiện đạt **85% tiến độ bàn giao**, đáp ứng đầy đủ các luồng nghiệp vụ cốt lõi theo đặc tả v2.3.
+
+```
++---------------------------------+---------------------------------+---------------------------------+
+|       TIẾN ĐỘ BÀN GIAO          |    SITEMAP CẤU TRÚC HỆ THỐNG    |      CHỨC NĂNG ĐÃ HOÀN THÀNH    |
+|        [█████████░] 85%         |                                 |                                 |
+|                                 |         [ Client / User ]       | [x] Xác thực & Phân quyền       |
+| [x] Khởi tạo & Thiết kế         |                 |               | [x] Quản lý Người dùng          |
+| [x] Phát triển Frontend/Backend |         v       v               | [x] API & Xử lý Dữ liệu         |
+| [x] Tích hợp & Kiểm thử API     |       [ Android Native App ]    | [x] Hệ thống Thông báo          |
+| [ ] Bàn giao & Triển khai       |                 |               | [x] Cấu hình & Thiết lập        |
+|                                 |         v       v               | [x] Báo cáo & Thống kê          |
+|                                 |       [ Spring Boot Gateway ]   |                                 |
+|                                 |        /        |        \      |                                 |
+|                                 |  [Auth]    [Schedule] [Checkin] |                                 |
+|                                 |        \        |        /      |                                 |
+|                                 |       [ PostgreSQL Multi-DB ]   |                                 |
++---------------------------------+---------------------------------+---------------------------------+
+```
+
+### 1. Chi tiết Tiến độ & Cấu trúc
+
+```mermaid
+flowchart TD
+    subgraph Clients["1. Client / Người dùng"]
+        U1["Quản trị viên (Admin)"]
+        U2["Huấn luyện viên (Trainer)"]
+        U3["Học viên (Learner)"]
+    end
+
+    subgraph Frontend["2. Giao diện người dùng"]
+        APP["Android Native App (Java, Material 3, ViewBinding, Retrofit, OkHttp SSE)"]
+        WEB["Web Interactive Prototypes (docs/Prototype)"]
+    end
+
+    subgraph Gateway["3. API Gateway (Port 8080)"]
+        GW["Spring Cloud Gateway / Reverse Proxy"]
+    end
+
+    subgraph Services["4. Backend Microservices (Spring Boot JDK 21)"]
+        AUTH["Auth Service<br/>(JWT, RBAC, Đổi mật khẩu)"]
+        SCHED["Schedule Service<br/>(Lịch PT, Lớp 10/30, Ca làm, SSE)"]
+        CHECK["Checkin Service<br/>(Gói tập, Mã QR, Điểm danh)"]
+        PROG["Progress Service<br/>(Hành trình, Đánh giá, Mục tiêu)"]
+    end
+
+    subgraph Storage["5. Cơ sở dữ liệu & Dịch vụ ngoài"]
+        DB[("PostgreSQL Multi-Database<br/>(Flyway Migrations)")]
+        EXT["Dịch vụ ngoài: SSE Streaming, ZXing QR Scanner, SonarQube Scanner"]
+    end
+
+    Clients --> Frontend
+    Frontend --> GW
+    GW --> AUTH
+    GW --> SCHED
+    GW --> CHECK
+    GW --> PROG
+    AUTH & SCHED & CHECK & PROG --> DB
+    SCHED & CHECK --> EXT
+```
+
+### 2. Danh mục chức năng đã hoàn thành
+
+* [x] **Xác thực & Phân quyền**:
+  * Đăng nhập chuẩn JWT, hỗ trợ 3 vai trò riêng biệt (`ADMIN`, `TRAINER`, `LEARNER`).
+  * Cơ chế bắt buộc đổi mật khẩu tạm thời cho HLV trong lần đăng nhập đầu tiên.
+  * Thu hồi phiên làm việc tức thời từ máy chủ khi đăng xuất.
+* [x] **Quản lý Người dùng & Ca làm**:
+  * Quản lý hồ sơ học viên, HLV, sinh mã hội viên tự động, khóa/mở khóa tài khoản.
+  * Thiết lập và quản lý ca làm việc theo tuần cho từng huấn luyện viên.
+* [x] **API & Xử lý Dữ liệu**:
+  * Quản lý gói tập đa dạng: Gói PT cá nhân, Gói lớp 10 buổi (linh hoạt), Gói lớp 30 buổi (cố định).
+  * Quy trình đặt lịch PT, HLV duyệt/từ chối, đề xuất đổi lịch học hai chiều.
+  * Mở lớp học, đăng ký suất học, chuyển buổi học sang khung giờ khác.
+  * Điểm danh bằng mã QR (ZXing) hoặc điểm danh thủ công có ghi rõ lý do.
+* [x] **Hệ thống Thông báo**:
+  * Thông báo lịch PT mới, yêu cầu đổi giờ, nhắc nhở buổi tập sắp diễn ra.
+  * Truyền phát sự kiện thời gian thực (Server-Sent Events - SSE) trực tiếp đến ứng dụng Android.
+* [x] **Cấu hình & Thiết lập**:
+  * Đóng gói toàn bộ hệ thống bằng Docker Compose (`deploy/compose.yaml`).
+  * Khởi tạo cơ sở dữ liệu và tài khoản demo tự động với script `deploy/init-demo.ps1`.
+  * Quản lý cấu trúc bảng tự động bằng Flyway migrations.
+  * Tích hợp kiểm tra chất lượng mã nguồn với SonarQube (`deploy/sonar.compose.yaml`).
+* [x] **Báo cáo & Thống kê**:
+  * Lịch sử điểm danh theo từng học viên và từng buổi tập.
+  * Theo dõi số lượt tập còn lại của từng gói tập, lịch sử điều chỉnh lượt.
+  * Đánh giá buổi tập, nhận xét của HLV và theo dõi mục tiêu luyện tập theo tháng.
+
+---
+
+## Các hạng mục còn thiếu để đạt 100% bàn giao (15% còn lại)
+
+Dựa theo bảng nghiệm thu đối chiếu 59 yêu cầu tại [docs/NGHIEM_THU_V2_3.md](docs/NGHIEM_THU_V2_3.md), các hạng mục đang trong giai đoạn hoàn thiện gồm:
+
+1. **Nghiệm thu phần cứng Camera QR thực tế (Hardware Testing - FR32)**:
+   * Thử nghiệm quét mã QR trực tiếp qua camera vật lý của điện thoại Android tại quầy lễ tân (hiện tại kiểm thử chủ yếu chạy trên Android Emulator).
+2. **Kiểm thử đồng bộ SSE nhiều máy đồng thời (Multi-device Sync - FR19)**:
+   * Chạy thử nghiệm đồng thời 3 thiết bị thực tế (1 Admin, 1 HLV, 1 Học viên) để xác nhận việc cập nhật trạng thái lịch và thông báo diễn ra tức thì không bị nghẽn mạng.
+3. **Đóng gói bản Release chính thức (Production Packaging)**:
+   * Cấu hình tạo file APK có ký số bằng Production Keystore (thay cho Debug Keystore).
+   * Thiết lập domain và chứng chỉ SSL/TLS (HTTPS) cho API Gateway trên server triển khai chính thức.
+4. **Xác nhận các ca kiểm thử biên (Edge Cases - FR12, FR42)**:
+   * Kiểm thử tranh chấp suất học cuối cùng giữa 2 học viên đặt cùng một giây.
+   * Xử lý trường hợp khách vãng lai điểm danh (walk-in) vào lớp học đã kín chỗ.
+
+---
 
 ## Cập nhật Git hằng ngày
 
@@ -10,9 +119,11 @@ Ghi thay đổi và bằng chứng kiểm thử vào [nhật ký tiến độ](P
 
 Dùng [push-daily.ps1](scripts/push-daily.ps1) với `-WhatIf` để xem trước. Nhật ký lượt chạy nằm tại `%LOCALAPPDATA%\MuayThaiFitness\DailyPublish\history.jsonl`.
 
+---
+
 ## Chạy bản demo
 
-Dùng PowerShell và Docker Desktop. Từ thư mục dự án, chạy các lệnh sau.
+Dùng PowerShell và Docker Desktop. Từ thư mục dự án, chạy các lệnh sau:
 
 ```powershell
 .\deploy\init-demo.ps1
@@ -28,11 +139,13 @@ Gateway cục bộ lắng nghe tại `127.0.0.1:8080`. Flyway tự áp dụng mi
 | Huấn luyện viên | `trainer@example.test` | `DEMO_TRAINER_PASSWORD` |
 | Học viên | `learner@example.test` | `DEMO_LEARNER_PASSWORD` |
 
-Huấn luyện viên dùng mật khẩu tạm phải đổi khi đăng nhập lần đầu. Nếu đã đổi, dùng mật khẩu mới. Quản trị viên thiết lập ca làm cho HLV trước khi mở lịch, xếp lớp hoặc đặt PT. Gói PT và lớp 10 theo HLV, gói lớp 30 theo lớp.
+*Lưu ý*: Huấn luyện viên dùng mật khẩu tạm phải đổi khi đăng nhập lần đầu. Quản trị viên thiết lập ca làm cho HLV trước khi mở lịch, xếp lớp hoặc đặt PT.
 
-## Build và cài Android
+---
 
-Dùng JDK 17 và Android SDK 36. Mở thư mục `android` trong Android Studio hoặc chạy các lệnh sau. Bật gỡ lỗi USB nếu cài lên thiết bị thật.
+## Build và cài đặt Android
+
+Dùng **JDK 17** và **Android SDK 36**. Mở thư mục `android` trong Android Studio hoặc chạy các lệnh sau qua PowerShell:
 
 ```powershell
 $env:JAVA_HOME = 'C:\Program Files\Java\jdk-17'
@@ -44,18 +157,14 @@ $adb = Join-Path $env:ANDROID_HOME 'platform-tools\adb.exe'
 & $adb install -r .\app\build\outputs\apk\debug\app-debug.apk
 ```
 
-Nếu có nhiều thiết bị, chỉ định thiết bị với `adb -s <serial>`. APK debug mặc định dùng loopback HTTP qua ADB. Khi có máy chủ HTTPS, đặt `-PauthBaseUrl=https://<tên-miền>/` lúc build. Phiên hiện lưu trong bộ nhớ của ứng dụng và bị thu hồi trên máy chủ khi đăng xuất.
+* Nếu chạy trên **Android Emulator**, app tự động kết nối qua `http://10.0.2.2:8080/` (hoặc qua `127.0.0.1:8080` khi đã chạy lệnh `adb reverse`).
+* Khi triển khai môi trường Production có HTTPS, truyền thêm `-PauthBaseUrl=https://<tên-miền>/` lúc build.
 
-## Luồng trình diễn
+---
 
-1. Quản trị viên tạo hồ sơ HLV và học viên, nhập ca làm rồi cấp gói PT hoặc gói lớp.
-2. Học viên đặt PT, HLV duyệt. Với lớp 10, HLV đề xuất lớp, quản trị viên mở lớp và học viên đăng ký buổi.
-3. Học viên mở mã QR gói. Quản trị viên mở mục Điểm danh và xác nhận gói cùng buổi hợp lệ. Màn hình lịch sử hiển thị lượt còn lại và điều chỉnh.
-4. HLV điền nhận xét sau buổi và cập nhật mục tiêu. Học viên xem trong Hành trình. Thông báo của trung tâm xuất hiện trong hộp thư.
+## Kiểm thử API tự động
 
-## Kiểm thử API
-
-Script `tests/acceptance.mjs` tạo tài khoản, lớp và gói có nhãn QA. Chạy với Node.js trên một Compose project thử nghiệm có database riêng.
+Script `tests/acceptance.mjs` kiểm tra tự động toàn bộ 3 vai trò, xử lý tranh chấp điểm danh và đồng bộ lịch:
 
 ```powershell
 $env:GATEWAY_PORT = '8180'
@@ -69,17 +178,43 @@ docker compose -p khang-acceptance -f deploy/compose.yaml down
 Remove-Item Env:GATEWAY_PORT, Env:CLASS_CALENDAR_CRON, Env:MUAYTHAI_TEST_URL, Env:MUAYTHAI_TEST_CALENDAR, Env:MUAYTHAI_TEST_RECOVERY
 ```
 
+---
+
+## Phân tích backend bằng SonarQube
+
+SonarQube Community chạy trong Compose riêng và mở dashboard tại [localhost:9000](http://127.0.0.1:9000):
+
+```powershell
+docker compose -f deploy/sonar.compose.yaml up -d sonarqube
+$sonarToken = Read-Host 'Project Analysis Token' -AsSecureString
+$env:SONAR_TOKEN = [System.Net.NetworkCredential]::new('', $sonarToken).Password
+try {
+    docker compose -f deploy/sonar.compose.yaml --profile scan run --rm scanner
+} finally {
+    Remove-Item Env:SONAR_TOKEN
+}
+```
+
+Scanner chạy Maven `verify` và gửi báo cáo phân tích lên [dashboard backend](http://127.0.0.1:9000/dashboard?id=muaythai-fitness-backend).
+
+---
+
 ## Sao lưu dữ liệu
 
-Dùng `deploy/backup.ps1` để xuất PostgreSQL ra tệp SQL. Chọn thư mục sao lưu nằm ngoài thư mục mã nguồn. Tệp chứa dữ liệu nghiệp vụ và thông tin tài khoản. Khi cần bản sao nhất quán giữa các database, tạm dừng các dịch vụ ghi dữ liệu trong lúc sao lưu.
+Dùng `deploy/backup.ps1` để xuất PostgreSQL ra tệp SQL:
 
 ```powershell
 $archive = Join-Path $env:LOCALAPPDATA 'MuayThai\Backups\demo.sql'
 .\deploy\backup.ps1 -Destination $archive
 ```
 
-Phục hồi bằng `psql -X -v ON_ERROR_STOP=1 -d postgres -f <tệp-sao-lưu>` trên cụm PostgreSQL trống, dùng tài khoản quản trị phục hồi riêng. Tệp giữ cấu trúc và dữ liệu của các database. Đặt lại mật khẩu của các vai trò kết nối theo cấu hình của môi trường mới trước khi khởi động dịch vụ.
+Phục hồi bằng `psql -X -v ON_ERROR_STOP=1 -d postgres -f <tệp-sao-lưu>` trên cụm PostgreSQL mới.
 
-Mã Android nằm trong `android/app/src/main`. Mỗi module backend nằm dưới `backend`. Tài liệu thiết kế tham chiếu nằm trong `docs`.
+---
 
-[Trạng thái bàn giao](docs/DEMO_STATUS.md) · [Tổng quan tài liệu](docs/README.md) · [Hợp đồng API](docs/API.md) · [Kế hoạch và tiêu chí nghiệm thu](docs/IMPLEMENTATION.md)
+## Cấu trúc thư mục
+
+* `android/app/src/main`: Toàn bộ mã nguồn Android Java, layout XML và tài nguyên ứng dụng.
+* `backend/`: Mã nguồn 5 microservices Spring Boot (`auth-service`, `schedule-service`, `checkin-service`, `progress-service`, `gateway`).
+* `deploy/`: Cấu hình Docker Compose, file cấu hình mẫu và script khởi tạo.
+* `docs/`: Đặc tả chi tiết [Đặc tả v2.3](docs/NGHIEM_THU_V2_3.md), [Hợp đồng API](docs/API.md), [Kiến trúc](docs/ARCHITECTURE.md), [Trạng thái bàn giao](docs/DEMO_STATUS.md).

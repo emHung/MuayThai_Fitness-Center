@@ -11,7 +11,7 @@ android {
         targetSdk 36
         versionCode 1
         versionName '0.1.0'
-        def baseUrl = providers.gradleProperty('authBaseUrl').orElse('http://127.0.0.1:8080/').get()
+        def baseUrl = providers.gradleProperty('authBaseUrl').orElse('http://10.0.2.2:8080/').get()
         buildConfigField 'String', 'AUTH_BASE_URL', groovy.json.JsonOutput.toJson(baseUrl.endsWith('/') ? baseUrl : baseUrl + '/')
     }
     buildFeatures {

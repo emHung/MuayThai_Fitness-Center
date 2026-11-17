@@ -217,6 +217,18 @@ async function main() {
   });
   const sessions = await request('GET', '/api/sessions', { token: coach });
   assert.ok(sessions.some(session => session.classId === group.id));
+  const findClass = '/api/classes30?q=' + encodeURIComponent(group.title);
+  const findSession = '/api/sessions?q=' + encodeURIComponent(group.title);
+  assert.deepEqual((await request('GET', findClass, { token: coach })).map(item => item.id), [group.id]);
+  assert.equal((await request('GET', findSession, { token: student })).length, 0);
+  await request('POST', '/api/packages', { token: admin, status: 201,
+    body: { ...pt, trainerId: null, classId: group.id, type: 'GROUP30' } });
+  const found = await request('GET', findSession, { token: student });
+  assert.ok(found.length > 0 && found.every(item => item.classId === group.id));
+  if (Date.parse(found[0].startAt) < later(1440).valueOf()) {
+    const reminders = await request('GET', '/api/notifications', { token: student });
+    assert.ok(reminders.some(item => item.notice.sessionId === found[0].id));
+  }
   const group10 = await request('POST', '/api/classes10', {
     token: coach, status: 201, body: { title: 'QA lớp 10 ' + run,
       weekdays: [weekday], startsAt: '15:00', endsAt: '16:00' },
@@ -326,6 +338,9 @@ async function main() {
     await request('PUT', '/api/sessions/' + bookedSession.id + '/signup', {
       token: visitor, body: { packageId: routingPack.id },
     });
+    const reminders = await request('GET', '/api/notifications', { token: visitor });
+    assert.ok(reminders.some(item => item.notice.sessionId === bookedSession.id));
+    assert.ok(!reminders.some(item => item.notice.sessionId === earlierSession.id));
     const scan = { code: routingPack.code, codeKind: 'QR' };
     await request('POST', '/api/checkins/preview', { token: admin, body: scan, status: 409, code: 'NO_SESSION_NOW' });
     const confirm = { sessionId: earlierSession.id, packageId: routingPack.id, method: 'QR' };
@@ -367,10 +382,13 @@ async function main() {
     assert.equal(retainedEntry.trainerId, spare.profile.id);
     console.log('PASS chờ đúng cửa sổ đã hẹn và xác nhận lớp 10 walk-in.');
   }
-  await request('PUT', '/api/goals/' + learner.profile.id, {
-    token: coach, body: { month: date(later()).slice(0, 7), title: 'QA mục tiêu', description: 'Tập đúng lịch', progress: 25 },
-  });
-  assert.equal((await request('GET', '/api/goals', { token: student }))[0].progress, 25);
+  const goalPath = '/api/goals/' + learner.profile.id;
+  const objective = { month: date(later()).slice(0, 7), title: 'QA mục tiêu', description: 'Tập đúng lịch', progress: 25 };
+  assert.equal((await request('PUT', goalPath, { token: coach, body: objective })).status, 'IN_PROGRESS');
+  await request('PUT', goalPath, { token: coach, body: { ...objective, status: 'NOT_ACHIEVED' } });
+  const [goal] = await request('GET', '/api/goals', { token: student });
+  assert.equal(goal.progress, 25);
+  assert.equal(goal.status, 'NOT_ACHIEVED');
 
   const substitute = '/api/sessions/' + booking.id + '/trainer';
   const substituteBody = { trainerId: guardTrainer.profile.id, reason: 'QA thay HLV cho buổi đã đặt' };
@@ -381,6 +399,10 @@ async function main() {
     token: admin, status: 201, body: { learnerId: guardLearner.profile.id, packageId: guardPack.id,
       weeks: 1, startAt: newTime.toISOString() },
   });
+  const guardLogin = await login(guardLearner.profile.username, guardLearner.initialPassword);
+  const directNotices = await request('GET', '/api/notifications', { token: guardLogin.token });
+  assert.ok(directNotices.some(item => item.notice.sessionId === occupied.id
+    && item.notice.id.startsWith('direct-pt-')));
   await request('PUT', substitute, { token: admin, body: substituteBody, status: 409, code: 'SCHEDULE_CONFLICT' });
   assert.equal((await current()).trainerId, trainer.profile.id);
   await request('POST', '/api/sessions/' + occupied.id + '/cancel', {

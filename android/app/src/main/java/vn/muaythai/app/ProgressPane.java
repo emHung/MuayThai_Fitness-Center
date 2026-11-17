@@ -3,11 +3,14 @@ package vn.muaythai.app;
 import android.text.InputType;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.gson.JsonObject;
 import java.time.YearMonth;
 import java.util.Locale;
 
 final class ProgressPane {
+  private static final String[] GOAL_STATES = {"", "NOT_STARTED", "IN_PROGRESS", "ACHIEVED", "NOT_ACHIEVED"};
+  private static final String[] GOAL_LABELS = {"Theo phần trăm", "Chưa bắt đầu", "Đang thực hiện", "Đã đạt", "Chưa đạt"};
   private final WorkspaceActivity work;
 
   ProgressPane(WorkspaceActivity work) {
@@ -24,7 +27,8 @@ final class ProgressPane {
         work.ui.label(goals, "Chưa có mục tiêu.", 13, false);
       }
       rows.forEach(goal -> work.ui.row(goals, Jsons.text(goal, "title"),
-          Jsons.text(goal, "month") + " · " + Jsons.text(goal, "progress") + "% · " + Jsons.text(goal, "description"),
+          Jsons.text(goal, "month") + " · " + Jsons.text(goal, "progress") + "% · "
+              + GOAL_LABELS[stateIndex(Jsons.text(goal, "status"))] + " · " + Jsons.text(goal, "description"),
           work.role().equals("TRAINER") && learnerId != null
               ? () -> work.open("Cập nhật mục tiêu", form -> goal(form, learnerId, goal)) : null));
       if (work.role().equals("TRAINER") && learnerId != null) {
@@ -101,6 +105,13 @@ final class ProgressPane {
     EditText title = work.ui.field(body, "Mục tiêu", Jsons.text(goal, "title"));
     EditText description = work.ui.field(body, "Mô tả", Jsons.text(goal, "description"));
     EditText value = work.ui.field(body, "Tiến độ (%)", Jsons.text(goal, "progress", "0"), InputType.TYPE_CLASS_NUMBER);
+    int[] chosenStatus = {stateIndex(Jsons.text(goal, "status"))};
+    var status = work.ui.label(body, GOAL_LABELS[chosenStatus[0]], 14, false);
+    work.ui.action(body, "Chọn trạng thái", () -> new MaterialAlertDialogBuilder(work).setTitle("Trạng thái mục tiêu")
+        .setItems(GOAL_LABELS, (dialog, index) -> {
+          chosenStatus[0] = index;
+          status.setText(GOAL_LABELS[index]);
+        }).show());
     work.ui.action(body, "Lưu mục tiêu", () -> {
       Long score = positiveNumber(WorkspaceUi.read(value));
       if (score == null || score < 0 || score > 100) {
@@ -108,9 +119,14 @@ final class ProgressPane {
         return;
       }
       work.request(work.api.service.put("api/goals/" + learner, Jsons.body("month", WorkspaceUi.read(month),
-          "title", WorkspaceUi.read(title), "description", WorkspaceUi.read(description), "progress", score)),
+          "title", WorkspaceUi.read(title), "description", WorkspaceUi.read(description), "progress", score,
+          "status", chosenStatus[0] == 0 ? null : GOAL_STATES[chosenStatus[0]])),
           saved -> { work.message("Đã lưu mục tiêu."); work.back(); });
     });
+  }
+
+  private static int stateIndex(String status) {
+    return Math.max(0, java.util.Arrays.asList(GOAL_STATES).indexOf(status));
   }
 
   static Long positiveNumber(String value) {
