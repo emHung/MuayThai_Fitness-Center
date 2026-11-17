@@ -5,6 +5,8 @@ import jakarta.validation.constraints.*;
 import java.time.Instant;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.CacheControl;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +20,8 @@ class AuthApi {
       @NotBlank @Size(min = 8, max = 72) String newPassword) {}
 
   record UpdateStatus(@NotNull Status status, @NotBlank @Size(max = 240) String reason) {}
+  record ResetPassword(@NotBlank @Size(max = 240) String reason) {}
+  record TemporaryPassword(String password) {}
 
   enum Status {
     ACTIVE,
@@ -63,5 +67,12 @@ class AuthApi {
   @PatchMapping("/api/users/{id}/status")
   User status(@AuthenticationPrincipal Jwt jwt, @PathVariable long id, @Valid @RequestBody UpdateStatus input) {
     return auth.updateStatus(jwt, id, input);
+  }
+
+  @PostMapping("/api/users/{id}/password-reset")
+  ResponseEntity<TemporaryPassword> resetPassword(@AuthenticationPrincipal Jwt jwt, @PathVariable long id,
+      @Valid @RequestBody ResetPassword input) {
+    return ResponseEntity.ok().cacheControl(CacheControl.noStore())
+        .body(new TemporaryPassword(auth.resetPassword(jwt, id, input.reason())));
   }
 }

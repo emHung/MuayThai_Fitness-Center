@@ -225,7 +225,7 @@ class ScheduleService {
     if (!end.isAfter(start) || Duration.between(start, end).toDays() > 93) {
       throw Problem.invalid("Khoảng thời gian xem lịch không hợp lệ.");
     }
-    if (actor.is("ADMIN")) {
+    if (actor.canCheckInAtDesk()) {
       return repository.sessions(SessionSelection.CENTER_CALENDAR, Map.of("start", start, "end", end, "query", query));
     }
     if (actor.is("TRAINER")) {
@@ -244,7 +244,7 @@ class ScheduleService {
 
   Session visibleSession(Actor actor, long id) {
     Session session = findSession(id);
-    boolean allowed = actor.is("ADMIN") || actor.is("TRAINER") && session.trainerId() == actor.id()
+    boolean allowed = actor.canCheckInAtDesk() || actor.is("TRAINER") && session.trainerId() == actor.id()
         || actor.is("LEARNER") && (Objects.equals(session.learnerId(), actor.id())
         || session.classId() != null && (registered(id, actor.id()) || learnerClassIds(actor.id()).contains(session.classId())));
     actor.require(allowed);

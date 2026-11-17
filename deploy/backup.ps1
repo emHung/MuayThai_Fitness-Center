@@ -1,7 +1,8 @@
 ﻿[CmdletBinding(SupportsShouldProcess)]
 param(
     [Parameter(Mandatory)] [string] $Destination,
-    [ValidatePattern('^[a-z0-9][a-z0-9_-]*$')] [string] $Project = 'deploy'
+    [ValidatePattern('^[a-z0-9][a-z0-9_-]*$')] [string] $Project = 'deploy',
+    [string] $ProductionEnvFile
 )
 
 $ErrorActionPreference = 'Stop'
@@ -20,7 +21,15 @@ $command.RedirectStandardOutput = $true
 $command.RedirectStandardError = $true
 $command.UseShellExecute = $false
 $compose = Join-Path $PSScriptRoot 'compose.yaml'
-$command.Arguments = 'compose -p {0} -f "{1}" exec -T db pg_dumpall -U auth_app --no-role-passwords' -f $Project, $compose
+$composeArguments = '-p {0} -f "{1}"' -f $Project, $compose
+$dbUser = 'auth_app'
+if ($ProductionEnvFile) {
+    $settings = (Resolve-Path -LiteralPath $ProductionEnvFile).Path
+    $production = Join-Path $PSScriptRoot 'production.compose.yaml'
+    $composeArguments += ' --env-file "{0}" -f "{1}"' -f $settings, $production
+    $dbUser = 'db_bootstrap'
+}
+$command.Arguments = 'compose {0} exec -T db pg_dumpall -U {1} --no-role-passwords' -f $composeArguments, $dbUser
 
 try {
     $process = [Diagnostics.Process]::Start($command)

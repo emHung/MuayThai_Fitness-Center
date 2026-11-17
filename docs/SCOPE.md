@@ -4,13 +4,14 @@ Mốc triển khai đầu tiên bám theo tài liệu thiết kế nghiệp vụ
 
 ## Người dùng và quyền
 
-| Vai trò | Quyền trong bản đầu |
+| Vai trò | Quyền hiện tại |
 | --- | --- |
-| ADMIN/Sale | Quản lý học viên, HLV, gói, lớp 30, lịch và điểm danh tại quầy. |
+| Quản lý (`ADMIN`) | Quản lý học viên, HLV, lễ tân, gói, lớp, lịch và điểm danh. |
+| Lễ tân (`RECEPTION`) | Tra học viên, xem lịch, quét hoặc nhập mã điểm danh. Xem lịch sử do chính mình ghi. |
 | HLV | Xem lịch và học viên được phân công, xử lý yêu cầu PT, điểm danh thủ công và ghi đánh giá buổi mình phụ trách. |
 | Học viên | Xem lịch, gói, QR, kết quả và lịch sử của chính mình. Đặt PT với HLV phụ trách gói. |
 
-Giữ một vai trò ADMIN theo đặc tả. Thao tác điều chỉnh điểm danh yêu cầu quyền riêng trong vai trò đó. Quyền sở hữu và quyền thao tác được kiểm tại service. Tài khoản bị khóa mất quyền truy cập từ yêu cầu được xác thực tiếp theo. HLV dùng mật khẩu tạm phải đổi trước khi truy cập chức năng.
+Thao tác điều chỉnh điểm danh yêu cầu quyền riêng của quản lý. Service kiểm quyền sở hữu và quyền thao tác. Khi khóa hoặc cấp lại mật khẩu, hệ thống thu hồi các phiên của tài khoản. Tài khoản có mật khẩu tạm phải đổi trước khi truy cập chức năng.
 
 ## Chức năng bắt buộc của mốc đầu
 

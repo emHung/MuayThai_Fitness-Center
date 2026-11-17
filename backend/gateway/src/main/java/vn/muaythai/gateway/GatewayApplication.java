@@ -27,7 +27,8 @@ public class GatewayApplication {
       @Value("${app.auth-uri}") String authUri, @Value("${APP_SCHEDULE_URI}") String schedule,
       @Value("${APP_CHECKIN_URI}") String checkin, @Value("${APP_PROGRESS_URI}") String progress) {
     return routes.routes()
-        .route("auth", route -> route.path("/api/auth/**", "/api/users/**", "/api/learners/**", "/api/trainers/**")
+        .route("auth", route -> route.path("/api/auth/**", "/api/users/**", "/api/learners/**", "/api/trainers/**",
+            "/api/receptionists/**")
             .filters(filters -> filters.removeRequestHeader("X-Service-Key")).uri(authUri))
         .route("calendar-events", route -> route.path("/api/sessions/events")
             .filters(filters -> filters.filter(session)).metadata("response-timeout", -1).uri(schedule))

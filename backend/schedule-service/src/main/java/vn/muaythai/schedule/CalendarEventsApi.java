@@ -22,7 +22,7 @@ class CalendarEventsApi {
 
   @GetMapping(path = "/api/sessions/events", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
   ResponseEntity<SseEmitter> subscribe(Actor actor) {
-    actor.require(actor.is("ADMIN") || actor.is("TRAINER") || actor.is("LEARNER"));
+    actor.require(actor.canCheckInAtDesk() || actor.is("TRAINER") || actor.is("LEARNER"));
     return ResponseEntity.ok().header("Cache-Control", "no-store").body(events.subscribe());
   }
 

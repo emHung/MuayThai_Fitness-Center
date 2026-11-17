@@ -117,6 +117,10 @@ Dựa theo bảng nghiệm thu đối chiếu 59 yêu cầu tại [docs/NGHIEM_T
 
 ---
 
+## Chuẩn bị vận hành tại doanh nghiệp
+
+Xem [hướng dẫn production](docs/PRODUCTION.md) để chuẩn bị database riêng, tạo tài khoản quản lý và build APK ký số qua HTTPS.
+
 ## Cập nhật Git hằng ngày
 
 Ghi thay đổi và bằng chứng kiểm thử vào [nhật ký tiến độ](PROGRESS.md) cùng commit của ngày đó. Windows Task Scheduler chạy lúc **18:00 giờ Việt Nam** trên máy dự án khi tài khoản đã đăng nhập Windows. Lịch đẩy các commit trên `main` và bỏ qua lần chạy nếu GitHub đã có commit đó.

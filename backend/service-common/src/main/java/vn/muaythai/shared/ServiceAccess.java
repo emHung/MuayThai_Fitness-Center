@@ -61,7 +61,7 @@ class ServiceAccess extends OncePerRequestFilter {
     String id = request.getHeader("X-Actor-Id");
     String role = request.getHeader("X-Actor-Role");
     if (id == null || !id.matches("[1-9][0-9]{0,17}") || role == null
-        || !Set.of("ADMIN", "TRAINER", "LEARNER").contains(role)) {
+        || !Set.of("ADMIN", "RECEPTION", "TRAINER", "LEARNER").contains(role)) {
       return null;
     }
     return new Actor(Long.parseLong(id), role, "true".equals(request.getHeader("X-Actor-Adjust")));

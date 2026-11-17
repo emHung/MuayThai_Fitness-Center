@@ -10,10 +10,12 @@ Client dùng JSON qua gateway cho các thao tác và `text/event-stream` để n
 | `POST /api/auth/change-password` | Phiên của chính mình | Nhận mật khẩu hiện tại và mật khẩu mới. Trả phiên mới sau đổi mật khẩu. |
 | `POST /api/auth/logout` | Phiên của chính mình | Thu hồi phiên hiện tại. |
 | `GET /api/users/me`, `PUT /api/users/me` | Tài khoản đang hoạt động | Xem/sửa thông tin được phép. Role và trạng thái lấy từ hệ thống. |
-| `GET /api/learners`, `GET /api/learners/{id}` | ADMIN hoặc HLV trong phạm vi được phân công | Tìm theo `q` và tra hồ sơ. |
+| `GET /api/learners`, `GET /api/learners/{id}` | ADMIN, lễ tân, hoặc HLV trong phạm vi được phân công | Tìm theo `q` và tra hồ sơ. |
 | `POST /api/learners`, `PUT /api/learners/{id}` | ADMIN | Tạo/sửa hồ sơ. |
 | `GET /api/trainers`, `GET /api/trainers/{id}`, `POST /api/trainers`, `PUT /api/trainers/{id}` | ADMIN | Xem, tạo, sửa hồ sơ HLV và cấp mật khẩu tạm khi tạo. |
-| `PATCH /api/users/{id}/status` | ADMIN | Nhận `status` và `reason`; áp dụng quyền trên đối tượng và thu hồi phiên khi khóa. |
+| `GET /api/receptionists`, `GET /api/receptionists/{id}`, `POST /api/receptionists` | ADMIN | Xem hoặc tạo tài khoản lễ tân. Tài khoản mới phải đổi mật khẩu khi đăng nhập lần đầu. |
+| `PATCH /api/users/{id}/status` | ADMIN | Nhận `status` và `reason`. Áp dụng quyền trên đối tượng và thu hồi phiên khi khóa. |
+| `POST /api/users/{id}/password-reset` | ADMIN, đối với tài khoản lễ tân, HLV hoặc học viên | Nhận `reason` và trả mật khẩu tạm với `Cache-Control: no-store`. Phiên và mật khẩu cũ mất hiệu lực. |
 
 Phiên cần đổi mật khẩu lần đầu có thể gọi đổi mật khẩu hoặc đăng xuất. Sau khi đổi thành công, app dùng phiên mới để điều hướng theo vai trò.
 
@@ -28,7 +30,7 @@ Phiên cần đổi mật khẩu lần đầu có thể gọi đổi mật khẩ
 | `GET /api/classes10/{id}`, `GET /api/classes30/{id}` | Theo phạm vi | Chi tiết hồ sơ lớp. |
 | `POST /api/classes30`, `PUT /api/classes30/{id}`, `POST /api/classes30/{id}/stop` | ADMIN | Quản lý lớp, HLV phụ trách, các thứ và giờ mở lớp. |
 | `GET /api/sessions`, `GET /api/sessions/{id}` | Theo phạm vi | Buổi tập gồm loại, giờ, HLV, lớp hoặc học viên, trạng thái. Danh sách hỗ trợ `from`, `to` và `q` để lọc khoảng ngày và tên buổi. |
-| `GET /api/sessions/events` | ADMIN, HLV, học viên | Luồng SSE gửi `ready` lúc kết nối và `calendar` khi lịch có thay đổi. App tải lại `GET /api/sessions` với ngày đang xem để áp dụng đúng phạm vi của tài khoản. |
+| `GET /api/sessions/events` | ADMIN, lễ tân, HLV, học viên | Luồng SSE gửi `ready` lúc kết nối và `calendar` khi lịch có thay đổi. App tải lại `GET /api/sessions` với ngày đang xem để áp dụng đúng phạm vi của tài khoản. |
 | `GET /api/pt/availability` | Học viên | Nhận `packageId`, `startAt`. Trả khả dụng tại thời điểm đọc. |
 | `POST /api/pt/bookings` | Học viên | Nhận `packageId`, `startAt`. Trả lịch `PENDING_TRAINER`. |
 | `POST /api/pt/direct` | ADMIN | Xếp buổi PT đã xác nhận và gửi ngay thông báo cho học viên, HLV. |
@@ -41,8 +43,8 @@ Phiên cần đổi mật khẩu lần đầu có thể gọi đổi mật khẩ
 
 | Phương thức và đường dẫn | Quyền | Dữ liệu chính |
 | --- | --- | --- |
-| `POST /api/checkins/preview` | ADMIN | Nhận code, codeKind và packageId nếu đã chọn gói. Trả học viên, buổi gợi ý, gói và lượt hiện tại. Nếu tra theo mã hội viên và chưa có gói, trả danh sách gói có thể chọn. |
-| `POST /api/checkins/confirm` | ADMIN | Nhận `sessionId`, `packageId`, `method` và header `Idempotency-Key`. Kiểm lại dữ liệu rồi ghi. |
+| `POST /api/checkins/preview` | ADMIN hoặc lễ tân | Nhận code, codeKind và packageId nếu đã chọn gói. Trả học viên, buổi gợi ý, gói và lượt hiện tại. Nếu tra theo mã hội viên và chưa có gói, trả danh sách gói có thể chọn. |
+| `POST /api/checkins/confirm` | ADMIN hoặc lễ tân | Nhận `sessionId`, `packageId`, `method` và header `Idempotency-Key`. Kiểm lại dữ liệu rồi ghi. |
 | `POST /api/checkins/manual` | ADMIN hoặc HLV phụ trách | Nhận `sessionId`, `packageId`, `reason` và `Idempotency-Key`. |
 | `GET /api/checkins`, `GET /api/checkins/{id}` | Theo phạm vi | Lọc `learnerId`, `sessionId` hoặc ngày. Học viên mặc định chỉ thấy lượt của mình. |
 | `POST /api/checkins/{id}/adjustments` | ADMIN có quyền điều chỉnh | Nhận `reason` và `Idempotency-Key`. Hoàn lượt theo lượt gốc và ghi lịch sử. |

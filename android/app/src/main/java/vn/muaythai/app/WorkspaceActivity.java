@@ -100,6 +100,10 @@ public final class WorkspaceActivity extends AppCompatActivity {
           tab("Lịch", R.drawable.ic_calendar, "Lịch toàn trung tâm", schedule::calendar),
           tab("Học viên", R.drawable.ic_group, "Học viên", body -> directory.list(body, false)),
           tab("Quản lý", R.drawable.ic_grid, "Quản lý", this::manage));
+      case "RECEPTION" -> Arrays.asList(
+          tab("Quét", R.drawable.ic_scan, "Quét QR check-in", attendance::scanner),
+          tab("Lịch", R.drawable.ic_calendar, "Lịch toàn trung tâm", schedule::calendar),
+          tab("Học viên", R.drawable.ic_group, "Học viên", body -> directory.list(body, false)));
       case "TRAINER" -> Arrays.asList(
           tab("Lịch dạy", R.drawable.ic_calendar, "Lịch dạy của tôi", schedule::calendar),
           tab("Yêu cầu", R.drawable.ic_inbox, "Chờ xác nhận", schedule::requests),
@@ -111,7 +115,7 @@ public final class WorkspaceActivity extends AppCompatActivity {
           tab("Hành trình", R.drawable.ic_trend, "Hành trình", body -> progress.journey(body, null)));
     };
     int accent = ContextCompat.getColor(this, switch (role()) {
-      case "ADMIN" -> R.color.admin;
+      case "ADMIN", "RECEPTION" -> R.color.admin;
       case "TRAINER" -> R.color.trainer;
       default -> R.color.learner;
     });
@@ -136,6 +140,7 @@ public final class WorkspaceActivity extends AppCompatActivity {
   }
 
   private void manage(LinearLayout body) {
+    ui.row(body, "Lễ tân", "Tài khoản tại quầy", () -> open("Lễ tân", directory::receptionists));
     ui.row(body, "Huấn luyện viên", "Tài khoản, chuyên môn và trạng thái",
         () -> open("Huấn luyện viên", content -> directory.list(content, true)));
     ui.row(body, "Lớp nhóm", "Lớp 30, lớp 10 và lịch lặp", () -> open("Lớp nhóm", schedule::classes));

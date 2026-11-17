@@ -45,7 +45,7 @@ class ProfileApi {
     this.trainers = trainers;
   }
 
-  @GetMapping("/api/{directory:learners|trainers}")
+  @GetMapping("/api/{directory:learners|trainers|receptionists}")
   Page list(@AuthenticationPrincipal Jwt jwt, @PathVariable String directory,
       @RequestParam(defaultValue = "") @Size(max = 120) String q,
       @RequestParam(defaultValue = "0") @Min(0) @Max(100000) int page,
@@ -53,12 +53,12 @@ class ProfileApi {
     return profiles.list(auth.me(jwt), role(directory), q, page, size);
   }
 
-  @GetMapping("/api/{directory:learners|trainers}/{id}")
+  @GetMapping("/api/{directory:learners|trainers|receptionists}/{id}")
   Profile detail(@AuthenticationPrincipal Jwt jwt, @PathVariable String directory, @PathVariable long id) {
     return profiles.detail(auth.me(jwt), role(directory), id);
   }
 
-  @PostMapping("/api/{directory:learners|trainers}")
+  @PostMapping("/api/{directory:learners|trainers|receptionists}")
   @ResponseStatus(HttpStatus.CREATED)
   Created create(@AuthenticationPrincipal Jwt jwt, @PathVariable String directory, @Valid @RequestBody Create form) {
     return profiles.create(auth.me(jwt), role(directory), form);
@@ -105,6 +105,11 @@ class ProfileApi {
   }
 
   private static UserAccount.Role role(String directory) {
-    return "learners".equals(directory) ? UserAccount.Role.LEARNER : UserAccount.Role.TRAINER;
+    return switch (directory) {
+      case "learners" -> UserAccount.Role.LEARNER;
+      case "trainers" -> UserAccount.Role.TRAINER;
+      case "receptionists" -> UserAccount.Role.RECEPTION;
+      default -> throw new IllegalArgumentException("Unknown directory");
+    };
   }
 }

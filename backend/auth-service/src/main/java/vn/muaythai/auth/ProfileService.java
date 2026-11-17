@@ -51,16 +51,16 @@ class ProfileService {
     allowed.add(-1L);
     String query = q.strip().toLowerCase(Locale.ROOT);
     long total = db.sql("SELECT count(*) " + DIRECTORY_FILTER)
-        .param("role", role.name()).param("q", query).param("admin", actor.role() == UserAccount.Role.ADMIN).param("allowed", allowed)
+        .param("role", role.name()).param("q", query).param("admin", canReadDirectory(actor, role)).param("allowed", allowed)
         .query(Long.class).single();
     List<ProfileApi.Profile> items = db.sql("SELECT * " + DIRECTORY_FILTER + " ORDER BY display_name, id LIMIT :size OFFSET :offset")
-        .param("role", role.name()).param("q", query).param("admin", actor.role() == UserAccount.Role.ADMIN).param("allowed", allowed).param("size", size).param("offset", (long) page * size)
+        .param("role", role.name()).param("q", query).param("admin", canReadDirectory(actor, role)).param("allowed", allowed).param("size", size).param("offset", (long) page * size)
         .query(PROFILE).list();
     return new ProfileApi.Page(items, page, size, total);
   }
 
   ProfileApi.Profile detail(AuthApi.User actor, UserAccount.Role role, long id) {
-    if (actor.role() != UserAccount.Role.ADMIN && !allowedLearners(actor, role).contains(id)) {
+    if (!canReadDirectory(actor, role) && !allowedLearners(actor, role).contains(id)) {
       throw new ApiError(HttpStatus.FORBIDDEN, "FORBIDDEN", "Bạn không có quyền xem hồ sơ này.");
     }
     return typed(id, role);
@@ -88,7 +88,7 @@ class ProfileService {
           """)
           .param("username", form.username().strip().toLowerCase(Locale.ROOT))
           .param("name", form.displayName().strip()).param("password", passwords.encode(password))
-          .param("role", role.name()).param("temporary", role == UserAccount.Role.TRAINER)
+          .param("role", role.name()).param("temporary", role != UserAccount.Role.LEARNER)
           .param("phone", optional(form.phone())).param("specialty", role == UserAccount.Role.TRAINER
               ? optional(form.specialty()) : null).query(PROFILE).single();
       return new ProfileApi.Created(profile, password);
@@ -142,8 +142,13 @@ class ProfileService {
     return value == null || value.isBlank() ? null : value.strip();
   }
 
+  private static boolean canReadDirectory(AuthApi.User actor, UserAccount.Role directory) {
+    return actor.role() == UserAccount.Role.ADMIN
+        || actor.role() == UserAccount.Role.RECEPTION && directory == UserAccount.Role.LEARNER;
+  }
+
   private List<Long> allowedLearners(AuthApi.User actor, UserAccount.Role role) {
-    if (actor.role() == UserAccount.Role.ADMIN) {
+    if (canReadDirectory(actor, role)) {
       return List.of();
     }
     if (actor.role() != UserAccount.Role.TRAINER || role != UserAccount.Role.LEARNER) {

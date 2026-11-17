@@ -17,6 +17,49 @@ final class DirectoryPane {
     this.work = work;
   }
 
+  void receptionists(LinearLayout body) {
+    work.ui.action(body, "Thêm lễ tân", () -> work.open("Thêm lễ tân", panel -> {
+      EditText name = work.ui.field(panel, "Họ và tên", "");
+      EditText email = work.ui.field(panel, "Email đăng nhập", "", InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
+      work.ui.action(panel, "Tạo tài khoản", () -> work.request(work.api.service.post("api/receptionists", null,
+          Jsons.body("displayName", WorkspaceUi.read(name), "username", WorkspaceUi.read(email))), created -> {
+            var result = Jsons.object(created);
+            work.back();
+            showTemporaryPassword(WorkspaceUi.read(email), Jsons.text(result, "initialPassword"));
+          }));
+    }));
+    work.request(work.api.service.get("api/receptionists"), value -> Jsons.rows(value).forEach(profile ->
+        work.ui.row(body, Jsons.text(profile, "displayName"), info(profile), () -> work.open(
+            Jsons.text(profile, "displayName"), panel -> accountActions(panel, profile)))));
+  }
+
+  private void accountActions(LinearLayout body, JsonObject profile) {
+    long id = Jsons.id(profile);
+    boolean locked = Jsons.text(profile, "status").equals("LOCKED");
+    String action = locked ? "Mở khóa tài khoản" : "Khóa tài khoản";
+    work.ui.action(body, action, () -> work.open(action, panel -> {
+      EditText reason = work.ui.field(panel, "Lý do", "");
+      work.ui.action(panel, action, () -> work.request(work.api.service.patch("api/users/" + id + "/status",
+          Jsons.body("status", locked ? "ACTIVE" : "LOCKED", "reason", WorkspaceUi.read(reason))), done -> {
+            work.back();
+            work.back();
+          }));
+    }));
+    work.ui.action(body, "Cấp lại mật khẩu", () -> work.open("Cấp lại mật khẩu", panel -> {
+      EditText reason = work.ui.field(panel, "Lý do", "");
+      work.ui.action(panel, "Cấp mật khẩu tạm", () -> work.request(work.api.service.post(
+          "api/users/" + id + "/password-reset", null, Jsons.body("reason", WorkspaceUi.read(reason))), value -> {
+            work.back();
+            showTemporaryPassword(Jsons.text(profile, "username"), Jsons.text(Jsons.object(value), "password"));
+          }));
+    }));
+  }
+
+  private void showTemporaryPassword(String email, String password) {
+    work.confirm("Mật khẩu tạm", "Email " + email + "\nMật khẩu " + password
+        + "\nGửi riêng cho người được cấp. Các phiên cũ đã hết hiệu lực.", "Đóng", () -> {});
+  }
+
   void list(LinearLayout body, boolean trainers) {
     String label = trainers ? "HLV" : "học viên";
     EditText query = work.ui.field(body, "Tìm " + label, "");
@@ -74,15 +117,14 @@ final class DirectoryPane {
               work.back();
             })));
       }
-      boolean locked = Jsons.text(profile, "status").equals("LOCKED");
-      String action = locked ? "Mở khóa tài khoản" : "Khóa tài khoản";
-      work.ui.action(body, action, () -> work.open(action, panel -> {
-        EditText reason = work.ui.field(panel, "Lý do", "");
-        work.ui.action(panel, action, () -> work.request(work.api.service.patch("api/users/" + id + "/status",
-            Jsons.body("status", locked ? "ACTIVE" : "LOCKED", "reason", WorkspaceUi.read(reason))), done -> work.back()));
-      }));
+      accountActions(body, profile);
     }
     if (!trainers) {
+      if (work.role().equals("RECEPTION")) {
+        work.ui.row(body, "Lịch sử điểm danh", "Các lượt do bạn ghi", () -> work.open("Lịch sử điểm danh",
+            list -> work.attendance.history(list, id, null)));
+        return;
+      }
       work.ui.row(body, "Gói tập", "Hạn và số lượt còn lại", () -> work.open("Gói tập", list -> work.packages.forLearner(list, id)));
       work.ui.row(body, "Lịch sử điểm danh", "", () -> work.open("Lịch sử điểm danh", list -> work.attendance.history(list, id, null)));
       work.ui.row(body, "Xếp lịch PT", work.role().equals("TRAINER") ? "Buổi đã thỏa thuận ngoài ca" : "Tạo lịch đã xác nhận",

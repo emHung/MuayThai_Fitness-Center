@@ -78,11 +78,7 @@ class AuthService {
 
   @Transactional
   public AuthApi.User updateStatus(Jwt jwt, long targetId, AuthApi.UpdateStatus input) {
-    UserAccount admin = users.findById(userId(jwt)).orElseThrow(AuthService::expiredSession);
-    requireReady(jwt, admin);
-    if (admin.role != UserAccount.Role.ADMIN) {
-      throw new ApiError(HttpStatus.FORBIDDEN, "FORBIDDEN", "Bạn không có quyền đổi trạng thái tài khoản.");
-    }
+    UserAccount admin = requireAdmin(jwt);
     UserAccount target = users.lockById(targetId).orElseThrow(() -> new ApiError(
         HttpStatus.NOT_FOUND, "RESOURCE_NOT_FOUND", "Không tìm thấy tài khoản."));
     if (target.deletedAt != null) {
@@ -99,6 +95,31 @@ class AuthService {
           .params(target.id, admin.id, locked, input.reason().trim(), java.sql.Timestamp.from(now)).update();
     }
     return AuthApi.User.from(target);
+  }
+
+  @Transactional
+  public String resetPassword(Jwt jwt, long targetId, String reason) {
+    UserAccount admin = requireAdmin(jwt);
+    UserAccount target = users.lockById(targetId).filter(user -> user.deletedAt == null)
+        .orElseThrow(() -> new ApiError(HttpStatus.NOT_FOUND, "RESOURCE_NOT_FOUND", "Không tìm thấy tài khoản."));
+    if (target.role == UserAccount.Role.ADMIN) {
+      throw new ApiError(HttpStatus.FORBIDDEN, "FORBIDDEN", "Không thể cấp lại mật khẩu cho tài khoản quản trị tại đây.");
+    }
+    String temporary = UUID.randomUUID().toString();
+    target.passwordHash = passwords.encode(temporary);
+    target.mustChangePassword = true;
+    Instant now = clock.instant();
+    sessions.revokeForUser(target.id, now);
+    jdbc.sql("insert into password_reset_events (user_id, actor_id, reason, recorded_at) values (?, ?, ?, ?)")
+        .params(target.id, admin.id, reason.strip(), java.sql.Timestamp.from(now)).update();
+    return temporary;
+  }
+
+  private UserAccount requireAdmin(Jwt jwt) {
+    UserAccount admin = users.findById(userId(jwt)).orElseThrow(AuthService::expiredSession);
+    requireReady(jwt, admin);
+    ProfileService.requireAdmin(AuthApi.User.from(admin));
+    return admin;
   }
 
   private UserAccount lockCurrentUser(Jwt jwt) {

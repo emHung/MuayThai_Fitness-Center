@@ -5,6 +5,10 @@ public record Actor(long id, String role, boolean canAdjustCheckins) {
     return role.equals(value);
   }
 
+  public boolean canCheckInAtDesk() {
+    return is("ADMIN") || is("RECEPTION");
+  }
+
   public void require(String value) {
     if (!is(value)) {
       throw Problem.forbidden();

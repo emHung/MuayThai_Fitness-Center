@@ -1,0 +1,75 @@
+x-runtime: &runtime
+  restart: unless-stopped
+  volumes:
+    - ./production-sql:/production-sql:ro
+
+x-migrate: &migrate
+  SPRING_FLYWAY_LOCATIONS: classpath:db/migration,filesystem:/production-sql
+
+services:
+  db:
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: db_bootstrap
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "db_bootstrap", "-d", "postgres"]
+
+  db-init:
+    environment:
+      AUTH_DB_PASSWORD: ${AUTH_DB_PASSWORD:?Set AUTH_DB_PASSWORD}
+      AUTH_MIGRATION_PASSWORD: ${AUTH_MIGRATION_PASSWORD:?Set AUTH_MIGRATION_PASSWORD}
+      SCHEDULE_MIGRATION_PASSWORD: ${SCHEDULE_MIGRATION_PASSWORD:?Set SCHEDULE_MIGRATION_PASSWORD}
+      CHECKIN_MIGRATION_PASSWORD: ${CHECKIN_MIGRATION_PASSWORD:?Set CHECKIN_MIGRATION_PASSWORD}
+      PROGRESS_MIGRATION_PASSWORD: ${PROGRESS_MIGRATION_PASSWORD:?Set PROGRESS_MIGRATION_PASSWORD}
+    volumes:
+      - ./init-production-databases.sh:/scripts/init-production-databases.sh:ro
+    entrypoint: ["/bin/sh", "/scripts/init-production-databases.sh"]
+
+  gateway:
+    restart: unless-stopped
+
+  auth:
+    <<: *runtime
+    environment:
+      <<: *migrate
+      SPRING_FLYWAY_USER: auth_migrate
+      SPRING_FLYWAY_PASSWORD: ${AUTH_MIGRATION_PASSWORD:?Set AUTH_MIGRATION_PASSWORD}
+      SPRING_DATASOURCE_PASSWORD: ${AUTH_DB_PASSWORD:?Set AUTH_DB_PASSWORD}
+      APP_DEMO_ENABLED: "false"
+      APP_DEMO_ADMIN_PASSWORD: ""
+      APP_DEMO_TRAINER_PASSWORD: ""
+      APP_DEMO_LEARNER_PASSWORD: ""
+      APP_BOOTSTRAP_ADMIN_ENABLED: ${BOOTSTRAP_ADMIN_ENABLED:-false}
+      APP_BOOTSTRAP_ADMIN_EMAIL: ${BOOTSTRAP_ADMIN_EMAIL:-}
+      APP_BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:-}
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+
+  schedule:
+    <<: *runtime
+    environment:
+      <<: *migrate
+      SPRING_FLYWAY_USER: schedule_migrate
+      SPRING_FLYWAY_PASSWORD: ${SCHEDULE_MIGRATION_PASSWORD:?Set SCHEDULE_MIGRATION_PASSWORD}
+
+  checkin:
+    <<: *runtime
+    environment:
+      <<: *migrate
+      SPRING_FLYWAY_USER: checkin_migrate
+      SPRING_FLYWAY_PASSWORD: ${CHECKIN_MIGRATION_PASSWORD:?Set CHECKIN_MIGRATION_PASSWORD}
+      APP_ATTENDANCE_RETENTION: ${ATTENDANCE_RETENTION:?Set the agreed attendance retention as an ISO-8601 period}
+      APP_RETENTION_CRON: ${ATTENDANCE_RETENTION_CRON:-0 20 3 * * *}
+
+  progress:
+    <<: *runtime
+    environment:
+      <<: *migrate
+      SPRING_FLYWAY_USER: progress_migrate
+      SPRING_FLYWAY_PASSWORD: ${PROGRESS_MIGRATION_PASSWORD:?Set PROGRESS_MIGRATION_PASSWORD}
+
+volumes:
+  auth_data:
+    name: ${PRODUCTION_DB_VOLUME:?Set a dedicated database volume name for this environment}

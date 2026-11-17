@@ -14,7 +14,8 @@
     <string name="change_hint">Đổi mật khẩu tạm để vào ứng dụng.</string>
     <string name="welcome">Xin chào, %1$s</string>
     <string name="logged_in">Đăng nhập thành công</string>
-    <string name="role_admin">Quản lý / Sale</string>
+    <string name="role_admin">Quản lý</string>
+    <string name="role_reception">Lễ tân</string>
     <string name="role_trainer">Huấn luyện viên</string>
     <string name="role_learner">Học viên</string>
     <string name="back">Quay lại</string>

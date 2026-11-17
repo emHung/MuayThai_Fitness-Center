@@ -8,6 +8,7 @@ import java.time.Instant;
 class UserAccount {
   enum Role {
     ADMIN,
+    RECEPTION,
     TRAINER,
     LEARNER
   }

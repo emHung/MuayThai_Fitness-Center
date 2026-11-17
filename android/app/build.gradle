@@ -1,6 +1,16 @@
 plugins {
     id 'com.android.application' version '9.0.1'
 }
+
+def releaseUrl = providers.gradleProperty('authBaseUrl').orElse('').get()
+def releaseSigning = [
+    store: providers.environmentVariable('ANDROID_RELEASE_KEYSTORE').orNull,
+    storePassword: providers.environmentVariable('ANDROID_RELEASE_STORE_PASSWORD').orNull,
+    alias: providers.environmentVariable('ANDROID_RELEASE_KEY_ALIAS').orNull,
+    keyPassword: providers.environmentVariable('ANDROID_RELEASE_KEY_PASSWORD').orNull
+]
+def buildConfigUrl = { url -> groovy.json.JsonOutput.toJson(url.endsWith('/') ? url : url + '/') }
+
 android {
     namespace = 'vn.muaythai.app'
     compileSdk 36
@@ -11,8 +21,26 @@ android {
         targetSdk 36
         versionCode 1
         versionName '0.1.0'
-        def baseUrl = providers.gradleProperty('authBaseUrl').orElse('http://10.0.2.2:8080/').get()
-        buildConfigField 'String', 'AUTH_BASE_URL', groovy.json.JsonOutput.toJson(baseUrl.endsWith('/') ? baseUrl : baseUrl + '/')
+    }
+    signingConfigs {
+        release {
+            if (releaseSigning.values().every { it }) {
+                storeFile file(releaseSigning.store)
+                storePassword releaseSigning.storePassword
+                keyAlias releaseSigning.alias
+                keyPassword releaseSigning.keyPassword
+            }
+        }
+    }
+    buildTypes {
+        debug {
+            def url = providers.gradleProperty('authBaseUrl').orElse('http://10.0.2.2:8080/').get()
+            buildConfigField 'String', 'AUTH_BASE_URL', buildConfigUrl(url)
+        }
+        release {
+            signingConfig signingConfigs.release
+            buildConfigField 'String', 'AUTH_BASE_URL', buildConfigUrl(releaseUrl)
+        }
     }
     buildFeatures {
         viewBinding = true
@@ -24,6 +52,25 @@ android {
         targetCompatibility JavaVersion.VERSION_17
     }
 }
+
+def validateRelease = tasks.register('validateProductionRelease') {
+    doLast {
+        def endpoint
+        try {
+            endpoint = new URI(releaseUrl)
+        } catch (URISyntaxException ignored) {
+            throw new GradleException('Set -PauthBaseUrl to a valid HTTPS gateway URL.')
+        }
+        if (endpoint.scheme != 'https' || !endpoint.host || endpoint.userInfo || endpoint.query || endpoint.fragment) {
+            throw new GradleException('Set -PauthBaseUrl to a valid HTTPS gateway URL.')
+        }
+        if (!releaseSigning.values().every { it } || !file(releaseSigning.store).isFile()) {
+            throw new GradleException('Set ANDROID_RELEASE_KEYSTORE, ANDROID_RELEASE_STORE_PASSWORD, ANDROID_RELEASE_KEY_ALIAS and ANDROID_RELEASE_KEY_PASSWORD.')
+        }
+    }
+}
+tasks.matching { it.name == 'preReleaseBuild' }.configureEach { dependsOn(validateRelease) }
+
 dependencies {
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
     implementation 'com.journeyapps:zxing-android-embedded:4.3.0'

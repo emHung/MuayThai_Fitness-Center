@@ -127,13 +127,13 @@ class AttendanceService {
 
   private void validateSession(Actor actor, Pack pack, Session session, OffsetDateTime now) {
     if (session == null) {
-      actor.require("ADMIN");
+      actor.require(actor.canCheckInAtDesk());
       if (!pack.type().equals("MEMBERSHIP")) {
         throw Problem.invalid("Chọn buổi tập cho gói này.");
       }
       return;
     }
-    actor.require(actor.is("ADMIN") || actor.is("TRAINER") && actor.id() == session.trainerId());
+    actor.require(actor.canCheckInAtDesk() || actor.is("TRAINER") && actor.id() == session.trainerId());
     if (!pack.type().equals(session.type()) || !session.type().equals("GROUP10") && !matches(pack, session)) {
       throw Problem.conflict("WRONG_PACKAGE", "Mã gói không khớp với buổi đã đặt.");
     }
@@ -156,7 +156,7 @@ class AttendanceService {
     if (signup != null && signup.registered()) {
       return;
     }
-    actor.require("ADMIN");
+    actor.require(actor.canCheckInAtDesk());
     http.to(schedule, client -> client.post().uri("/internal/sessions/{id}/walk-in", session.id())
         .body(Map.of("learnerId", pack.learnerId(), "packageId", pack.id())).retrieve().body(Session.class));
   }
@@ -209,6 +209,7 @@ class AttendanceService {
   List<Entry> list(Actor actor, Long learner, Long session, LocalDate date) {
     return repository.jdbc().sql(AttendanceRepository.ENTRIES + """
         WHERE (:role='ADMIN' OR (:role='LEARNER' AND c.learner_id=:viewer)
+          OR (:role='RECEPTION' AND c.actor_id=:viewer)
           OR (:role='TRAINER' AND c.trainer_id=:viewer))
           AND (CAST(:learner AS bigint) IS NULL OR c.learner_id=:learner)
           AND (CAST(:session AS bigint) IS NULL OR c.session_id=:session)
@@ -220,7 +221,8 @@ class AttendanceService {
 
   Entry detail(Actor actor, long id) {
     Entry entry = repository.entry(id);
-    actor.require(actor.is("ADMIN") || actor.is("TRAINER") && Objects.equals(entry.trainerId(), actor.id())
+    actor.require(actor.is("ADMIN") || actor.is("RECEPTION") && entry.actorId() == actor.id()
+        || actor.is("TRAINER") && Objects.equals(entry.trainerId(), actor.id())
         || actor.is("LEARNER") && entry.learnerId() == actor.id());
     return entry;
   }

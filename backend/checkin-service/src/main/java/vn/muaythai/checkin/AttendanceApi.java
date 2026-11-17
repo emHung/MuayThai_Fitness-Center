@@ -34,14 +34,14 @@ class AttendanceApi {
 
   @PostMapping("/api/checkins/preview")
   Preview preview(Actor actor, @Valid @RequestBody PreviewForm form) {
-    actor.require("ADMIN");
+    actor.require(actor.canCheckInAtDesk());
     return attendance.preview(form);
   }
 
   @PostMapping("/api/checkins/confirm")
   @ResponseStatus(HttpStatus.CREATED)
   Entry confirm(Actor actor, @RequestHeader("Idempotency-Key") UUID key, @Valid @RequestBody Confirm form) {
-    actor.require("ADMIN");
+    actor.require(actor.canCheckInAtDesk());
     if (form.method() == Method.MANUAL) {
       throw vn.muaythai.shared.Problem.invalid("Dùng chức năng điểm danh thủ công và nhập lý do.");
     }

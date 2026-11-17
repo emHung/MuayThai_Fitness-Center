@@ -52,6 +52,8 @@ try {
         Invoke-Docker @stack stop -t 30
     }
 
+    & (Join-Path $PSScriptRoot 'production-smoke.ps1') -Port $Port -CoverageDirectory $work
+
     $reportArgs = @('report')
     foreach ($service in 'auth','schedule','checkin','progress','gateway') {
         $out = Join-Path $work $service

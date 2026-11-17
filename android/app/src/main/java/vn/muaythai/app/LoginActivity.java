@@ -87,6 +87,7 @@ public final class LoginActivity extends AppCompatActivity {
   private int roleName(String role) {
     switch (role) {
       case "ADMIN": return R.string.role_admin;
+      case "RECEPTION": return R.string.role_reception;
       case "TRAINER": return R.string.role_trainer;
       default: return R.string.role_learner;
     }

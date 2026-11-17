@@ -9,7 +9,10 @@ Giao diện ứng dụng Android tuân theo chuẩn Material 3 và sitemap bên 
 | ADMIN | Quét `ad-scan` | Nhập mã, xem trước check-in, kết quả thành công/trùng/lỗi, điều chỉnh có quyền |
 | ADMIN | Lịch `ad-cal` | Chi tiết buổi, điểm danh thủ công, quản lý và tạo lịch lớp 30 |
 | ADMIN | Học viên `ad-students` | Tìm danh sách, hồ sơ, gán gói, lịch sử điểm danh |
-| ADMIN | Quản lý `ad-more` | HLV, lớp 30 và tài khoản |
+| ADMIN | Quản lý `ad-more` | HLV, lớp 30, tạo và quản lý tài khoản lễ tân |
+| Lễ tân | Quét | Tra mã, xem trước, xác nhận và xem các lượt mình đã ghi |
+| Lễ tân | Lịch | Xem lịch và chi tiết buổi |
+| Lễ tân | Học viên | Tìm và xem hồ sơ học viên |
 | HLV | Lịch dạy `hl-cal` | Chi tiết PT hoặc lớp 30, điểm danh thủ công, ghi nội dung buổi |
 | HLV | Chờ xác nhận `hl-req` | Duyệt hoặc từ chối yêu cầu PT |
 | HLV | Học viên PT `hl-students` | Tìm danh sách được phân công, hồ sơ và đánh giá |

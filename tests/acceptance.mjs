@@ -70,6 +70,19 @@ async function calendarStream(token, stop) {
 async function main() {
   assert.equal((await request('GET', '/actuator/health')).status, 'UP');
   const { token: admin } = await login('admin@example.test', settings.DEMO_ADMIN_PASSWORD);
+  const receptionist = await create(admin, 'receptionists', 'desk');
+  const deskTemporary = await login(receptionist.profile.username, receptionist.initialPassword);
+  assert.equal(deskTemporary.mustChangePassword, true);
+  const deskPassword = randomUUID();
+  const { token: desk } = await request('POST', '/api/auth/change-password', {
+    token: deskTemporary.token, body: { currentPassword: receptionist.initialPassword, newPassword: deskPassword },
+  });
+  await request('GET', '/api/learners', { token: desk });
+  await request('GET', '/api/sessions', { token: desk });
+  await request('GET', '/api/receptionists', { token: desk, status: 403 });
+  await request('POST', '/api/packages', { token: desk, status: 403, body: {
+    learnerId: 1, type: 'MEMBERSHIP', startDate: date(later()), endDate: date(later(1440)),
+  } });
   const temporaryPassword = randomUUID();
   const [learner, trainer] = await Promise.all([
     create(admin, 'learners', 'learner'), create(admin, 'trainers', 'trainer', { temporaryPassword }),
@@ -145,17 +158,28 @@ async function main() {
     token: admin, body: { code: secondPack.code, codeKind: 'QR' }, status: 409, code: 'WRONG_PACKAGE',
   });
   const preview = await request('POST', '/api/checkins/preview', {
-    token: admin, body: { code: pack.code, codeKind: 'QR' },
+    token: desk, body: { code: pack.code, codeKind: 'QR' },
   });
   assert.equal(preview.session.id, appointment.id);
   const key = randomUUID();
   const body = { sessionId: appointment.id, packageId: pack.id, method: 'QR' };
   const calls = await Promise.all([1, 2].map(() => request('POST', '/api/checkins/confirm', {
-    token: admin, key, body, status: 201,
+    token: desk, key, body, status: 201,
   })));
   const entry = calls[0];
   assert.equal(entry.id, calls[1].id);
   assert.equal(entry.remainingAfterEvent, 4);
+  assert.ok((await request('GET', '/api/checkins', { token: desk })).some(value => value.id === entry.id));
+  await request('POST', '/api/checkins/' + entry.id + '/adjustments', {
+    token: desk, key: randomUUID(), body: { reason: 'QA quyền hoàn lượt' }, status: 403,
+  });
+  const reset = '/api/users/' + receptionist.profile.id + '/password-reset';
+  await request('POST', reset, { token: desk, status: 403, body: { reason: 'QA phân quyền' } });
+  const reissued = await request('POST', reset, { token: admin, body: { reason: 'QA cấp mật khẩu mới' } });
+  await request('GET', '/api/users/me', { token: desk, status: 401 });
+  await request('POST', '/api/auth/login', { status: 401, code: 'BAD_CREDENTIALS',
+    body: { username: receptionist.profile.username, password: deskPassword } });
+  assert.equal((await login(receptionist.profile.username, reissued.password)).mustChangePassword, true);
   await request('POST', '/api/checkins/confirm', {
     token: admin, key: randomUUID(), body, status: 409, code: 'ALREADY_CHECKED_IN',
   });
@@ -484,7 +508,7 @@ async function main() {
     assert.ok(restored, 'Yêu cầu hủy cần tự hoàn tất khi Check-in hoạt động lại.');
     console.log('PASS phục hồi yêu cầu hủy sau gián đoạn Check-in.');
   }
-  console.log('PASS hồ sơ, 3 vai trò, xóa HLV, đổi mật khẩu, nhóm 30, duyệt và đổi lớp 10, gói, PT, QR, tập tự do, ghi đồng thời, hoàn lượt, đổi lịch PT, thông báo, mục tiêu.');
+  console.log('PASS hồ sơ, 4 vai trò, phân quyền lễ tân, thu hồi phiên khi cấp mật khẩu, gói, nhóm, PT, QR, ghi đồng thời, hoàn lượt, thông báo và mục tiêu.');
 }
 
 main().catch(error => {

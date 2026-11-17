@@ -19,5 +19,6 @@ Thanh tiến độ đếm các mốc bàn giao đã kiểm chứng. Phạm vi v�
 | --- | --- |
 | 2026-11-17 | Ghi nhận bản demo đầu tiên trên GitHub và đặt lịch cập nhật lúc 18:00. Backend đã kiểm qua các luồng chính, APK debug đã build và bảng nghiệm thu có đủ 59 mục cần đối chiếu. |
 | 2026-11-17 | Kiểm thử trên emulator với ba vai trò, từ HLV duyệt PT đến quản trị viên điểm danh bằng mã và trừ lượt gói. Android lint có 0 lỗi. SonarQube đã quét backend và đạt Quality Gate sau khi nhập báo cáo JaCoCo của bộ kiểm thử Docker. |
+| 2026-11-17 | Chuẩn bị pilot doanh nghiệp. Đã tách quyền lễ tân, kiểm thử cấp lại mật khẩu và thu hồi phiên, dựng stack production thử nghiệm với quyền PostgreSQL riêng, xác minh APK ký bằng khóa QA và khôi phục thử bản sao demo. SonarQube đạt Quality Gate với 81,0% độ phủ mã mới, có đo ca lưu trữ hồ sơ trên stack production thử nghiệm. [Hướng dẫn production](docs/PRODUCTION.md). |
 
 Khi sửa hoặc xác nhận một chức năng, thêm mục theo ngày và gắn ca kiểm thử hoặc tệp liên quan. Cập nhật thanh tiến độ khi một mốc có đủ bằng chứng.
