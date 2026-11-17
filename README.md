@@ -6,7 +6,9 @@
 
 ## Cập nhật Git hằng ngày
 
-Ghi thay đổi và bằng chứng kiểm thử vào [nhật ký tiến độ](PROGRESS.md) cùng commit của ngày đó. Công việc định kỳ trên Windows kiểm tra và đẩy các commit đã có trên `main`. Có thể chạy tệp [push-daily.ps1](scripts/push-daily.ps1) với `-WhatIf` để xem trước.
+Ghi thay đổi và bằng chứng kiểm thử vào [nhật ký tiến độ](PROGRESS.md) cùng commit của ngày đó. Windows Task Scheduler chạy lúc **18:00 giờ Việt Nam** trên máy dự án khi tài khoản đã đăng nhập Windows. Lịch đẩy các commit trên `main` và bỏ qua lần chạy nếu GitHub đã có commit đó.
+
+Dùng [push-daily.ps1](scripts/push-daily.ps1) với `-WhatIf` để xem trước. Nhật ký lượt chạy nằm tại `%LOCALAPPDATA%\MuayThaiFitness\DailyPublish\history.jsonl`.
 
 ## Chạy bản demo
 

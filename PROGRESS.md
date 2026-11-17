@@ -17,6 +17,6 @@ Thanh tiến độ đếm các mốc bàn giao đã kiểm chứng. Phạm vi v�
 
 | Ngày | Cập nhật |
 | --- | --- |
-| 2026-11-17 | Ghi nhận bản demo đầu tiên trên Git. Backend đã kiểm qua các luồng chính, APK debug đã build, và đã đối chiếu 59 yêu cầu. |
+| 2026-11-17 | Ghi nhận bản demo đầu tiên trên GitHub và đặt lịch cập nhật lúc 18:00. Backend đã kiểm qua các luồng chính, APK debug đã build và bảng nghiệm thu có đủ 59 mục cần đối chiếu. |
 
 Khi sửa hoặc xác nhận một chức năng, thêm mục theo ngày và gắn ca kiểm thử hoặc tệp liên quan. Cập nhật thanh tiến độ khi một mốc có đủ bằng chứng.
