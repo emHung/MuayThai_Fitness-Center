@@ -21,4 +21,11 @@
     <string name="back">Quay lại</string>
     <string name="account">Tài khoản</string>
     <string name="notifications">Thông báo</string>
+    <string name="app_update_title">Có bản cập nhật mới</string>
+    <string name="app_update_message">MuayThai Fitness Center %1$s đã sẵn sàng. Bạn có thể tải ngay hoặc để ứng dụng nhắc lại sau 24 giờ.</string>
+    <string name="app_update_now">Cập nhật ngay</string>
+    <string name="app_update_later">Để sau</string>
+    <string name="app_update_download_title">MuayThai Fitness Center %1$s</string>
+    <string name="app_update_downloading">Đang tải bản cập nhật. Mở thông báo tải xuống của Android khi hoàn tất để cài đặt.</string>
+    <string name="app_update_download_error">Chưa thể tải bản cập nhật. Vui lòng thử lại.</string>
 </resources>

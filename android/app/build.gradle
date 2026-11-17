@@ -10,6 +10,9 @@ def releaseSigning = [
     keyPassword: providers.environmentVariable('ANDROID_RELEASE_KEY_PASSWORD').orNull
 ]
 def buildConfigUrl = { url -> groovy.json.JsonOutput.toJson(url.endsWith('/') ? url : url + '/') }
+def updateAsset = { fallback ->
+    groovy.json.JsonOutput.toJson(providers.gradleProperty('appUpdateApkName').orElse(fallback).get())
+}
 
 android {
     namespace = 'vn.muaythai.app'
@@ -19,8 +22,8 @@ android {
         applicationId 'vn.muaythai.app'
         minSdk 24
         targetSdk 36
-        versionCode 1
-        versionName '0.1.0'
+        versionCode providers.gradleProperty('appVersionCode').orElse('2').get().toInteger()
+        versionName providers.gradleProperty('appVersionName').orElse('0.1.1').get()
     }
     signingConfigs {
         release {
@@ -36,10 +39,14 @@ android {
         debug {
             def url = providers.gradleProperty('authBaseUrl').orElse('http://10.0.2.2:8080/').get()
             buildConfigField 'String', 'AUTH_BASE_URL', buildConfigUrl(url)
+            def tailscale = java.net.URI.create(url).host?.endsWith('.ts.net')
+            buildConfigField 'String', 'APP_UPDATE_APK_NAME',
+                    updateAsset(tailscale ? 'app-debug-tailscale.apk' : 'app-debug.apk')
         }
         release {
             signingConfig signingConfigs.release
             buildConfigField 'String', 'AUTH_BASE_URL', buildConfigUrl(releaseUrl)
+            buildConfigField 'String', 'APP_UPDATE_APK_NAME', updateAsset('muaythai-release.apk')
         }
     }
     buildFeatures {

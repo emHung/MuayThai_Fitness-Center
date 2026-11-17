@@ -3,11 +3,11 @@
 > Hệ thống quản lý phòng tập Muay Thai & Fitness toàn diện: Ứng dụng Android Java Native cho Quản trị viên, Huấn luyện viên, Học viên kết hợp Backend Microservices Spring Boot chạy trên nền Docker Compose & PostgreSQL.
 
 [![GitHub Release](https://img.shields.io/github/v/release/emHung/MuayThai_Fitness-Center?style=for-the-badge&logo=github&color=blue)](https://github.com/emHung/MuayThai_Fitness-Center/releases/latest)
-[![Download APK](https://img.shields.io/badge/Download-Android_APK_(v0.1.0)-success?style=for-the-badge&logo=android)](https://github.com/emHung/MuayThai_Fitness-Center/releases/tag/v0.1.0)
+[![Download APK](https://img.shields.io/badge/Download-Android_APK_(v0.1.1)-success?style=for-the-badge&logo=android)](https://github.com/emHung/MuayThai_Fitness-Center/releases/tag/v0.1.1)
 
 > 📱 **Tải về bộ cài đặt APK theo phiên bản mới nhất:**
-> - 📥 [Tải APK Tiêu chuẩn (app-debug.apk v0.1.0)](https://github.com/emHung/MuayThai_Fitness-Center/releases/download/v0.1.0/app-debug.apk)
-> - 📥 [Tải APK Tailscale VPN (app-debug-tailscale.apk v0.1.0)](https://github.com/emHung/MuayThai_Fitness-Center/releases/download/v0.1.0/app-debug-tailscale.apk)
+> - 📥 [Tải APK Tiêu chuẩn (app-debug.apk v0.1.1)](https://github.com/emHung/MuayThai_Fitness-Center/releases/download/v0.1.1/app-debug.apk)
+> - 📥 [Tải APK Tailscale VPN (app-debug-tailscale.apk v0.1.1)](https://github.com/emHung/MuayThai_Fitness-Center/releases/download/v0.1.1/app-debug-tailscale.apk)
 > - 📦 Xem toàn bộ lịch sử các bản phát hành tại [GitHub Releases](https://github.com/emHung/MuayThai_Fitness-Center/releases).
 
 ---
@@ -175,6 +175,16 @@ $adb = Join-Path $env:ANDROID_HOME 'platform-tools\adb.exe'
 - Trên **Android Emulator**, APK debug mặc định dùng `http://10.0.2.2:8080/`.
 - Trên **điện thoại kết nối USB**, bật gỡ lỗi USB và build với `'-PauthBaseUrl=http://127.0.0.1:8080/'`. Chạy `adb reverse tcp:8080 tcp:8080` trước khi mở app. Chỉ định `adb -s <serial>` nếu có nhiều thiết bị.
 - Khi dùng máy chủ HTTPS, truyền `-PauthBaseUrl=https://<tên-miền>/` lúc build.
+
+### Phát hành bản cập nhật Android
+
+Khi mở hoặc quay lại ứng dụng, Android kiểm tra bản stable mới nhất trên GitHub Releases nếu đã qua một giờ kể từ lần kiểm tra trước. **Cập nhật ngay** bắt đầu tải APK và Android gửi thông báo để người dùng mở trình cài đặt. **Để sau** hoãn nhắc phiên bản đó trong 24 giờ.
+
+1. Đặt tag theo dạng `vX.Y.Z`. Dùng cùng giá trị `X.Y.Z` làm `appVersionName`. Tăng `appVersionCode` cho mỗi bản phát hành và ký APK bằng cùng khóa với bản đang cài.
+2. Build bằng `.\gradlew.bat :app:assembleRelease -PappVersionName=0.1.2 -PappVersionCode=3 -PauthBaseUrl=https://<tên-miền>/`. Đính kèm APK đã ký với tên `muaythai-release.apk`, sau đó xuất bản release ổn định.
+3. Với bản debug cho emulator, tải lên `app-debug.apk`. Bản debug dùng địa chỉ `*.ts.net` tìm tệp `app-debug-tailscale.apk`. Nếu cần tên khác, dùng `-PappUpdateApkName=<tên-tệp>` khi build.
+
+Người đang dùng APK ra trước tính năng này cần cài thủ công một lần. GitHub Release phải có thể truy cập công khai để ứng dụng kiểm tra phiên bản và tải tệp.
 
 ---
 

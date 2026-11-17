@@ -60,6 +60,7 @@ public final class WorkspaceActivity extends AppCompatActivity {
     setContentView(layout.getRoot());
     ui = new WorkspaceUi(this);
     api = new ApiClient(session.authorization());
+    getLifecycle().addObserver(new AppUpdatePrompt(this));
     directory = new DirectoryPane(this);
     packages = new PackagesPane(this);
     schedule = new SchedulePane(this);
