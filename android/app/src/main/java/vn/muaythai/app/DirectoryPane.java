@@ -186,6 +186,7 @@ final class DirectoryPane {
               "specialty", specialty == null ? null : WorkspaceUi.read(specialty))),
           done -> { work.message("Đã lưu thông tin."); work.refresh(); }));
       work.ui.action(body, "Đổi mật khẩu", () -> work.open("Đổi mật khẩu", this::password));
+      work.ui.action(body, "Kiểm tra cập nhật", () -> AppUpdatePrompt.checkNow(work));
       work.ui.action(body, "Đăng xuất", work::logout);
     }));
   }

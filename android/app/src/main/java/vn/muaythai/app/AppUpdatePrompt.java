@@ -15,6 +15,7 @@ import androidx.lifecycle.LifecycleOwner;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import java.util.concurrent.TimeUnit;
 import okhttp3.OkHttpClient;
 import retrofit2.Call;
@@ -46,6 +47,13 @@ final class AppUpdatePrompt implements DefaultLifecycleObserver {
   private final SharedPreferences settings;
   private Call<JsonObject> check;
   private AlertDialog prompt;
+  private boolean manual;
+
+  static void checkNow(AppCompatActivity activity) {
+    var observer = new AppUpdatePrompt(activity);
+    observer.manual = true;
+    activity.getLifecycle().addObserver(observer);
+  }
 
   AppUpdatePrompt(AppCompatActivity activity) {
     this.activity = activity;
@@ -57,7 +65,19 @@ final class AppUpdatePrompt implements DefaultLifecycleObserver {
       return;
     }
     long now = System.currentTimeMillis();
-    if (settings.getLong("next_check", 0) > now) {
+    if (!manual) {
+      String cached = settings.getString("latest_release", "");
+      if (!cached.isEmpty()) {
+        try {
+          var release = JsonParser.parseString(cached);
+          if (release.isJsonObject()) show(release.getAsJsonObject());
+        } catch (com.google.gson.JsonParseException error) {
+          settings.edit().remove("latest_release").apply();
+          android.util.Log.w("AppUpdate", "Discarded unreadable release cache", error);
+        }
+      }
+    }
+    if (prompt != null || (!manual && settings.getLong("next_check", 0) > now)) {
       return;
     }
     Call<JsonObject> request = RELEASES.latest();
@@ -71,15 +91,25 @@ final class AppUpdatePrompt implements DefaultLifecycleObserver {
           return;
         }
         check = null;
-        settings.edit().putLong("next_check", now + CHECK_INTERVAL_MS).apply();
         if (response.isSuccessful() && response.body() != null) {
+          settings.edit().putLong("next_check", now + CHECK_INTERVAL_MS)
+              .putString("latest_release", response.body().toString()).apply();
           show(response.body());
+          if (manual && prompt == null) {
+            Toast.makeText(activity, "Bạn đang dùng phiên bản mới nhất có bản cài phù hợp.", Toast.LENGTH_LONG).show();
+            activity.getLifecycle().removeObserver(AppUpdatePrompt.this);
+          }
+        } else {
+          android.util.Log.w("AppUpdate", "Release check returned HTTP " + response.code());
+          failed();
         }
       }
 
       @Override public void onFailure(Call<JsonObject> call, Throwable error) {
         if (check == call) {
           check = null;
+          android.util.Log.w("AppUpdate", "Release check failed", error);
+          failed();
         }
       }
     });
@@ -93,13 +123,21 @@ final class AppUpdatePrompt implements DefaultLifecycleObserver {
     if (prompt != null) {
       prompt.dismiss();
     }
+    if (manual) activity.getLifecycle().removeObserver(this);
+  }
+
+  private void failed() {
+    if (manual && !activity.isFinishing() && !activity.isDestroyed()) {
+      Toast.makeText(activity, "Chưa thể kiểm tra cập nhật. Vui lòng thử lại.", Toast.LENGTH_LONG).show();
+      activity.getLifecycle().removeObserver(this);
+    }
   }
 
   private void show(JsonObject release) {
     String tag = Jsons.text(release, "tag_name");
     String version = tag.startsWith("v") ? tag.substring(1) : tag;
     if (!newerThan(version, BuildConfig.VERSION_NAME)
-        || settings.getLong("snooze_" + version, 0) > System.currentTimeMillis()
+        || (!manual && settings.getLong("snooze_" + version, 0) > System.currentTimeMillis())
         || "true".equals(Jsons.text(release, "draft")) || "true".equals(Jsons.text(release, "prerelease"))) {
       return;
     }
@@ -116,7 +154,10 @@ final class AppUpdatePrompt implements DefaultLifecycleObserver {
         .setNegativeButton(R.string.app_update_later, (dialog, which) -> snooze(version))
         .setOnCancelListener(dialog -> snooze(version))
         .create();
-    prompt.setOnDismissListener(dialog -> prompt = null);
+    prompt.setOnDismissListener(dialog -> {
+      prompt = null;
+      if (manual) activity.getLifecycle().removeObserver(this);
+    });
     prompt.show();
   }
 
