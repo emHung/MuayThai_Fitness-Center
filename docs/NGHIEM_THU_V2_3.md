@@ -1,6 +1,6 @@
 # Đối chiếu 59 yêu cầu v2.3
 
-Đối chiếu với [đặc tả v2.3](Dac_ta_v2.docx). Cột **Kiểm thử** ghi ca cụ thể có trong [bộ kiểm thử API](../tests/acceptance.mjs) hoặc việc cần chạy trên APK. Mỗi ca API chỉ bao phủ hành vi được mô tả tại hàng đó.
+Đối chiếu với [đặc tả v2.3](SCOPE.md). Cột **Kiểm thử** ghi ca cụ thể có trong [bộ kiểm thử API](../tests/acceptance.mjs) hoặc việc cần chạy trên APK. Mỗi ca API chỉ bao phủ hành vi được mô tả tại hàng đó.
 
 | Mã | Phần triển khai | Kiểm thử và phần còn lại |
 | --- | --- | --- |

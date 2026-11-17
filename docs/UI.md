@@ -1,6 +1,6 @@
 # Sitemap và giao diện Android
 
-[Prototype Giai đoạn 1 Tối giản](<Prototype Giai đoạn 1 - MuayThai & Fitness Center - Tối giản.html>) là chuẩn hình ảnh. Tra màn bằng `id` của section. Có thể nối `#shot:ad-scan` hoặc `#grid:ad-scan,hv-cal,hv-journey` vào URL file HTML để xem bố cục. Thanh chuyển vai trò, danh sách bước, mã FR và tình huống quét mẫu thuộc trình xem prototype. Khi chạy APK, vai trò lấy từ phiên đăng nhập.
+Giao diện ứng dụng Android tuân theo chuẩn Material 3 và sitemap bên dưới. Tra màn bằng `id` của section. Khi chạy APK, vai trò lấy từ phiên đăng nhập.
 
 ## Sitemap
 

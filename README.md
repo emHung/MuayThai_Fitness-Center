@@ -42,7 +42,7 @@ flowchart TD
 
     subgraph Frontend["2. Giao diện người dùng"]
         APP["Android Native App (Java, Material 3, ViewBinding, Retrofit, OkHttp SSE)"]
-        WEB["Web Interactive Prototypes (docs/Prototype)"]
+        SPEC["Tài liệu thiết kế & Chuẩn UI (docs/UI.md)"]
     end
 
     subgraph Gateway["3. API Gateway (Port 8080)"]

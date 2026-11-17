@@ -28,7 +28,7 @@
 
 - `android/app/src/main/java/vn/muaythai/app` chứa các màn Java. Màn theo nghiệp vụ dùng chung điều hướng, bảng màu và thành phần nhập liệu của workspace.
 - `backend` chứa các module Maven. API xử lý hợp đồng và phân quyền, service áp dụng quy tắc nghiệp vụ, repository truy vấn dữ liệu, migration đặt ràng buộc ở PostgreSQL.
-- `deploy` chứa cấu hình Docker, khởi tạo database và sao lưu. Giao diện tham chiếu là [Prototype Tối giản](Prototype%20Giai%20đoạn%201%20-%20MuayThai%20%26%20Fitness%20Center%20-%20Tối%20giản.html).
+- `deploy` chứa cấu hình Docker, khởi tạo database và sao lưu. Giao diện tham chiếu là [Hướng dẫn UI](UI.md).
 
 ## Phạm vi còn phải chốt
 

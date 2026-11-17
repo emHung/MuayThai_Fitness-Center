@@ -1,6 +1,6 @@
 # Phạm vi và nghiệp vụ
 
-Mốc triển khai đầu tiên bám theo prototype Giai đoạn 1 Tối giản. Mọi thao tác được đưa vào demo phải đi từ app Android qua API tới cơ sở dữ liệu. Dữ liệu thử có thể tạo sẵn bằng bộ seed riêng.
+Mốc triển khai đầu tiên bám theo tài liệu thiết kế nghiệp vụ. Mọi thao tác được đưa vào demo phải đi từ app Android qua API tới cơ sở dữ liệu. Dữ liệu thử có thể tạo sẵn bằng bộ seed riêng.
 
 ## Người dùng và quyền
 
@@ -44,4 +44,4 @@ Mốc đầu dùng danh sách FR01–05, FR07–08, FR10–13, FR17–18, FR20, 
 - Xác định quy trình khi cần hủy một buổi đã có check-in, gồm quyền xử lý và việc điều chỉnh số lượt đã dùng.
 - Chốt thời gian giữ suất đã đăng ký của lớp 10 trước khi mở cho walk-in.
 
-[Nguồn nghiệp vụ v2.3](Dac_ta_v2.docx) · [Tiêu chí nghiệm thu](IMPLEMENTATION.md)
+[Đặc tả 59 yêu cầu](NGHIEM_THU_V2_3.md) · [Tiêu chí nghiệm thu](IMPLEMENTATION.md)
