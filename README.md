@@ -2,6 +2,14 @@
 
 > Hệ thống quản lý phòng tập Muay Thai & Fitness toàn diện: Ứng dụng Android Java Native cho Quản trị viên, Huấn luyện viên, Học viên kết hợp Backend Microservices Spring Boot chạy trên nền Docker Compose & PostgreSQL.
 
+[![GitHub Release](https://img.shields.io/github/v/release/emHung/MuayThai_Fitness-Center?style=for-the-badge&logo=github&color=blue)](https://github.com/emHung/MuayThai_Fitness-Center/releases/latest)
+[![Download APK](https://img.shields.io/badge/Download-Android_APK_(v0.1.0)-success?style=for-the-badge&logo=android)](https://github.com/emHung/MuayThai_Fitness-Center/releases/tag/v0.1.0)
+
+> 📱 **Tải về bộ cài đặt APK theo phiên bản mới nhất:**
+> - 📥 [Tải APK Tiêu chuẩn (app-debug.apk v0.1.0)](https://github.com/emHung/MuayThai_Fitness-Center/releases/download/v0.1.0/app-debug.apk)
+> - 📥 [Tải APK Tailscale VPN (app-debug-tailscale.apk v0.1.0)](https://github.com/emHung/MuayThai_Fitness-Center/releases/download/v0.1.0/app-debug-tailscale.apk)
+> - 📦 Xem toàn bộ lịch sử các bản phát hành tại [GitHub Releases](https://github.com/emHung/MuayThai_Fitness-Center/releases).
+
 ---
 
 ## Báo cáo hệ thống & Tiến độ bàn giao
