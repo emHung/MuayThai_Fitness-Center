@@ -8,6 +8,9 @@ import java.util.concurrent.TimeUnit;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.ResponseBody;
+import okhttp3.MultipartBody;
+import retrofit2.http.Multipart;
+import retrofit2.http.Part;
 import okhttp3.sse.EventSource;
 import okhttp3.sse.EventSourceListener;
 import okhttp3.sse.EventSources;
@@ -27,6 +30,7 @@ import retrofit2.http.Url;
 
 final class ApiClient {
   interface Service {
+    @Multipart @PUT Call<JsonElement> image(@Url String path, @Part MultipartBody.Part file);
     @GET Call<JsonElement> get(@Url String path);
     @POST Call<JsonElement> post(@Url String path, @Header("Idempotency-Key") String key, @Body JsonObject body);
     @PUT Call<JsonElement> put(@Url String path, @Body JsonObject body);
@@ -42,8 +46,10 @@ final class ApiClient {
   private final Gson gson = new Gson();
   private final EventSource.Factory calendarEvents;
   final Service service;
+  final String authorization;
 
   ApiClient(String authorization) {
+    this.authorization = authorization;
     OkHttpClient client = new OkHttpClient.Builder()
         .callTimeout(15, TimeUnit.SECONDS)
         .addInterceptor(chain -> chain.proceed(chain.request().newBuilder()

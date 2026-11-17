@@ -52,6 +52,8 @@ final class ClassPane {
     String base = path(type) + "/" + id;
     work.request(work.api.service.get(base), response -> {
       JsonObject info = Jsons.object(response);
+      work.images.show(body, base + "/image", "api/packages/types/" + type + "/image", false,
+          work.role().equals("ADMIN"));
       String status = Jsons.text(info, "status");
       work.ui.row(body, Jsons.text(info, "title"), label(info), null);
       if (status.equals("PENDING")) {

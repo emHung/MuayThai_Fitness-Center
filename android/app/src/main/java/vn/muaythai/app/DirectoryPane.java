@@ -98,6 +98,7 @@ final class DirectoryPane {
 
   private void renderProfile(LinearLayout body, boolean trainers, JsonObject profile) {
     long id = Jsons.id(profile);
+    work.images.show(body, "api/users/" + id + "/image", true, work.role().equals("ADMIN"));
     work.ui.row(body, Jsons.text(profile, "displayName"), info(profile), null);
     showField(body, "Điện thoại", Jsons.text(profile, "phone"));
     if (trainers) {
@@ -174,6 +175,7 @@ final class DirectoryPane {
   void account() {
     work.open("Tài khoản của tôi", body -> work.request(work.api.service.get("api/users/me/profile"), value -> {
       JsonObject profile = Jsons.object(value);
+      work.images.show(body, "api/users/me/image", true, true);
       work.ui.row(body, Jsons.text(profile, "displayName"), info(profile), null);
       EditText name = work.ui.field(body, "Họ và tên", Jsons.text(profile, "displayName"));
       EditText phone = work.ui.field(body, "Điện thoại", Jsons.text(profile, "phone"), InputType.TYPE_CLASS_PHONE);

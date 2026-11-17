@@ -123,6 +123,11 @@ final class SchedulePane {
     long id = Jsons.id(session);
     String state = Jsons.text(session, "status");
     String type = Jsons.text(session, "type");
+    long classId = Jsons.number(session, "classId");
+    String kindImage = "api/packages/types/" + type + "/image";
+    String classImage = classId > 0
+        ? "api/" + (type.equals("GROUP10") ? "classes10" : "classes30") + "/" + classId + "/image" : kindImage;
+    work.images.show(body, classImage, kindImage, false, false);
     boolean admin = work.role().equals("ADMIN");
     boolean trainer = work.role().equals("TRAINER");
     boolean learner = work.role().equals("LEARNER");
@@ -207,8 +212,10 @@ final class SchedulePane {
   }
 
   void bookingHub(LinearLayout body) {
+    work.images.show(body, "api/packages/types/PT/image", false, false);
     work.ui.row(body, "Đặt PT với HLV phụ trách", "Chọn gói, ngày và giờ",
         () -> work.packages.selectMine("PT", pack -> work.open("Đặt buổi PT", panel -> book(panel, pack))));
+    work.images.show(body, "api/packages/types/GROUP10/image", false, false);
     work.ui.row(body, "Lớp nhóm 10", "Xem buổi có thể đăng ký", () -> work.open("Lịch lớp 10", panel -> {
       work.request(work.api.service.get("api/sessions"), result -> showSessions(panel,
           Jsons.rows(result).stream().filter(session -> Jsons.text(session, "type").equals("GROUP10"))

@@ -35,6 +35,7 @@ public final class WorkspaceActivity extends AppCompatActivity {
   private int inFlight;
   WorkspaceUi ui;
   ApiClient api;
+  ImagesPane images;
   DirectoryPane directory;
   PackagesPane packages;
   SchedulePane schedule;
@@ -60,6 +61,7 @@ public final class WorkspaceActivity extends AppCompatActivity {
     setContentView(layout.getRoot());
     ui = new WorkspaceUi(this);
     api = new ApiClient(session.authorization());
+    images = new ImagesPane(this);
     getLifecycle().addObserver(new AppUpdatePrompt(this));
     directory = new DirectoryPane(this);
     packages = new PackagesPane(this);
@@ -141,6 +143,7 @@ public final class WorkspaceActivity extends AppCompatActivity {
   }
 
   private void manage(LinearLayout body) {
+    ui.row(body, getString(R.string.package_images), "", () -> open(getString(R.string.package_images), images::kinds));
     ui.row(body, "Lễ tân", "Tài khoản tại quầy", () -> open("Lễ tân", directory::receptionists));
     ui.row(body, "Huấn luyện viên", "Tài khoản, chuyên môn và trạng thái",
         () -> open("Huấn luyện viên", content -> directory.list(content, true)));

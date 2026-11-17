@@ -28,4 +28,14 @@
     <string name="app_update_download_title">MuayThai Fitness Center %1$s</string>
     <string name="app_update_downloading">Đang tải bản cập nhật. Mở thông báo tải xuống của Android khi hoàn tất để cài đặt.</string>
     <string name="app_update_download_error">Chưa thể tải bản cập nhật. Vui lòng thử lại.</string>
+    <string name="choose_image">Chọn ảnh</string>
+    <string name="delete_image">Xóa ảnh</string>
+    <string name="delete_image_prompt">Xóa ảnh đang sử dụng?</string>
+    <string name="profile_image">Ảnh đại diện</string>
+    <string name="course_image">Ảnh khóa học</string>
+    <string name="save_image">Lưu ảnh</string>
+    <string name="cancel_image">Hủy</string>
+    <string name="image_saved">Đã lưu ảnh.</string>
+    <string name="image_failed">Không thể đọc ảnh. Chọn ảnh tối đa 5 MB và thử lại.</string>
+    <string name="package_images">Ảnh loại gói</string>
 </resources>

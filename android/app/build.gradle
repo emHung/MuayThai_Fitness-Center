@@ -22,8 +22,8 @@ android {
         applicationId 'vn.muaythai.app'
         minSdk 24
         targetSdk 36
-        versionCode providers.gradleProperty('appVersionCode').orElse('2').get().toInteger()
-        versionName providers.gradleProperty('appVersionName').orElse('0.1.1').get()
+        versionCode providers.gradleProperty('appVersionCode').orElse('3').get().toInteger()
+        versionName providers.gradleProperty('appVersionName').orElse('0.1.2').get()
     }
     signingConfigs {
         release {
@@ -79,6 +79,7 @@ def validateRelease = tasks.register('validateProductionRelease') {
 tasks.matching { it.name == 'preReleaseBuild' }.configureEach { dependsOn(validateRelease) }
 
 dependencies {
+    implementation 'com.github.bumptech.glide:glide:4.16.0'
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
     implementation 'com.journeyapps:zxing-android-embedded:4.3.0'
     implementation 'androidx.appcompat:appcompat:1.7.1'
