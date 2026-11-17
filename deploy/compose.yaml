@@ -1,0 +1,131 @@
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: auth_db
+      POSTGRES_USER: auth_app
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Run init-demo.ps1 before starting}
+    volumes:
+      - auth_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "auth_app", "-d", "auth_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+
+  db-init:
+    image: postgres:17-alpine
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD:?Run init-demo.ps1 before starting}
+      SCHEDULE_DB_PASSWORD: ${SCHEDULE_DB_PASSWORD:?Run init-demo.ps1 before starting}
+      CHECKIN_DB_PASSWORD: ${CHECKIN_DB_PASSWORD:?Run init-demo.ps1 before starting}
+      PROGRESS_DB_PASSWORD: ${PROGRESS_DB_PASSWORD:?Run init-demo.ps1 before starting}
+    volumes:
+      - ./init-databases.sh:/scripts/init-databases.sh:ro
+    entrypoint: ["/bin/sh", "/scripts/init-databases.sh"]
+    depends_on:
+      db:
+        condition: service_healthy
+
+  auth:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile
+      args:
+        SERVICE: auth-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/auth_db
+      SPRING_DATASOURCE_USERNAME: auth_app
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:?Run init-demo.ps1 before starting}
+      APP_JWT_SECRET: ${JWT_SECRET:?Run init-demo.ps1 before starting}
+      APP_INTERNAL_KEY: ${INTERNAL_KEY:?Run init-demo.ps1 before starting}
+      APP_DEMO_ENABLED: ${DEMO_ENABLED:-false}
+      APP_DEMO_ADMIN_PASSWORD: ${DEMO_ADMIN_PASSWORD:-}
+      APP_DEMO_TRAINER_PASSWORD: ${DEMO_TRAINER_PASSWORD:-}
+      APP_DEMO_LEARNER_PASSWORD: ${DEMO_LEARNER_PASSWORD:-}
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck: &http_health
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/actuator/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  schedule:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile
+      args:
+        SERVICE: schedule-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/schedule_db
+      SPRING_DATASOURCE_USERNAME: schedule_app
+      SPRING_DATASOURCE_PASSWORD: ${SCHEDULE_DB_PASSWORD:?Run init-demo.ps1 before starting}
+      APP_INTERNAL_KEY: ${INTERNAL_KEY:?Run init-demo.ps1 before starting}
+      APP_CLASS_CALENDAR_CRON: ${CLASS_CALENDAR_CRON:-0 10 * * * *}
+    depends_on: &initialized_database
+      db-init:
+        condition: service_completed_successfully
+    healthcheck: *http_health
+
+  checkin:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile
+      args:
+        SERVICE: checkin-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/checkin_db
+      SPRING_DATASOURCE_USERNAME: checkin_app
+      SPRING_DATASOURCE_PASSWORD: ${CHECKIN_DB_PASSWORD:?Run init-demo.ps1 before starting}
+      APP_INTERNAL_KEY: ${INTERNAL_KEY:?Run init-demo.ps1 before starting}
+    depends_on: *initialized_database
+    healthcheck: *http_health
+
+  progress:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile
+      args:
+        SERVICE: progress-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/progress_db
+      SPRING_DATASOURCE_USERNAME: progress_app
+      SPRING_DATASOURCE_PASSWORD: ${PROGRESS_DB_PASSWORD:?Run init-demo.ps1 before starting}
+      APP_INTERNAL_KEY: ${INTERNAL_KEY:?Run init-demo.ps1 before starting}
+    depends_on: *initialized_database
+    healthcheck: *http_health
+
+  gateway:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile
+      args:
+        SERVICE: gateway
+    environment:
+      APP_JWT_SECRET: ${JWT_SECRET:?Run init-demo.ps1 before starting}
+      APP_INTERNAL_KEY: ${INTERNAL_KEY:?Run init-demo.ps1 before starting}
+      APP_AUTH_URI: http://auth:8080
+      APP_SCHEDULE_URI: http://schedule:8080
+      APP_CHECKIN_URI: http://checkin:8080
+      APP_PROGRESS_URI: http://progress:8080
+    ports:
+      - "127.0.0.1:${GATEWAY_PORT:-8080}:8080"
+    depends_on:
+      auth:
+        condition: service_healthy
+        restart: true
+      schedule:
+        condition: service_healthy
+        restart: true
+      checkin:
+        condition: service_healthy
+        restart: true
+      progress:
+        condition: service_healthy
+        restart: true
+    healthcheck: *http_health
+
+volumes:
+  auth_data:

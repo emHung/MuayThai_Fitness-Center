@@ -1,0 +1,17 @@
+spring:
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
+app:
+  jwt:
+    issuer: muaythai-auth
+    lifetime: PT8H
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health

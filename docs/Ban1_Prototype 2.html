@@ -1,0 +1,1319 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prototype Bản 1 – MuayThai & Fitness Center</title>
+<!--
+  PROTOTYPE BẢN 1 – HỆ THỐNG HOÀN CHỈNH (59 FR)
+  Một file duy nhất, mở bằng Chrome là chạy, không cần mạng.
+
+  CÁCH SỬA NHANH
+  - Mỗi màn hình là một thẻ <section class="scr" ...>:
+      id         : mã màn (ví dụ ad-scan). Tiền tố ad = ADMIN, hl = HLV, hv = học viên.
+      data-role  : ad | hl | hv | * (dùng chung)
+      data-title : tiêu đề hiện trên thanh trên cùng
+      data-fr    : các FR màn này phủ (dùng cho bảng danh mục và sơ đồ luồng)
+      data-tab   : số thứ tự tab ở thanh dưới (0..3) nếu là màn gốc của tab
+      data-back  : có thuộc tính này thì hiện nút quay lại và ẩn thanh tab
+  - Bấm chuyển màn: thêm data-go="mã-màn" vào nút bất kỳ.
+  - Hiện thông báo nhỏ: data-toast="nội dung".
+  - Mở bảng trượt (popup) đặt trong màn: data-open="mã-popup"; đóng: data-close.
+  - Đổi các tab trong một màn: nút có data-t="x" trong .seg[data-tg="nhóm"], vùng nội dung .pane[data-tg="nhóm"][data-t="x"].
+  - Chụp ảnh một màn: thêm #shot:mã-màn vào cuối đường dẫn. Nhiều màn cạnh nhau: #grid:mã1,mã2,mã3
+-->
+<style>
+:root{
+  --ink:#14213D; --red:#C8102E; --teal:#0E6E62;
+  --bg:#F3F1EC; --card:#FFFFFF; --line:#E5E1D8; --line2:#EFECE6;
+  --tx:#1B1C20; --mu:#6D6A65; --mu2:#9A968F;
+  --ok:#17784A; --okb:#E1F2E8; --wa:#8F5D00; --wab:#FFF0CC; --er:#B42318; --erb:#FDE6E3; --in:#1F5FA8; --inb:#E4EDF9;
+  --role:var(--ink); --roleb:#E7EAF2;
+  --font:"Inter","Segoe UI",Roboto,system-ui,-apple-system,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:var(--font);color:var(--tx);background:#DCD8CF;display:grid;grid-template-columns:330px 1fr;min-height:100vh;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+/* ----- Bảng điều khiển bên trái ----- */
+#panel{background:#FBFAF7;border-right:1px solid var(--line);height:100vh;overflow:auto;padding:18px 16px 40px;position:sticky;top:0}
+#panel h1{font-size:16px;line-height:1.3}
+#panel .sub{font-size:12px;color:var(--mu);margin:4px 0 14px}
+.rolesw{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:14px}
+.rolesw button{padding:8px 4px;border:1px solid var(--line);border-radius:10px;font-size:12px;font-weight:600;background:#fff}
+.rolesw button.on[data-r=ad]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.rolesw button.on[data-r=hl]{background:var(--teal);color:#fff;border-color:var(--teal)}
+.rolesw button.on[data-r=hv]{background:var(--red);color:#fff;border-color:var(--red)}
+.ph{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);margin:16px 0 6px}
+.demo-list button,.cat button{display:flex;gap:8px;width:100%;text-align:left;padding:7px 8px;border-radius:8px;font-size:12.5px;align-items:baseline}
+.demo-list button:hover,.cat button:hover{background:#EFECE5}
+.demo-list button.on,.cat button.on{background:var(--roleb);font-weight:600}
+.demo-list b{min-width:18px;color:var(--mu)}
+.cat small{margin-left:auto;color:var(--mu2);font-size:10.5px;white-space:nowrap}
+/* ----- Khu điện thoại ----- */
+#main{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:28px 16px 40px;gap:14px}
+.phone{width:360px;height:760px;background:var(--bg);border-radius:38px;border:10px solid #1A1A1E;box-shadow:0 24px 60px rgba(20,20,30,.28);display:flex;flex-direction:column;overflow:hidden;position:relative}
+.status{height:26px;display:flex;justify-content:space-between;align-items:center;padding:0 18px;font-size:12px;font-weight:600;background:var(--role);color:#fff;flex:none}
+.status i{display:inline-block;width:22px;height:10px;border:1.5px solid #fff;border-radius:3px;position:relative;opacity:.9}
+.status i:after{content:"";position:absolute;inset:1.5px 5px 1.5px 1.5px;background:#fff;border-radius:1px}
+.stage{flex:1;position:relative;overflow:hidden}
+.scr{position:absolute;inset:0;display:none;flex-direction:column;background:var(--bg)}
+.scr.on{display:flex;animation:fade .18s ease}
+@keyframes fade{from{opacity:.4;transform:translateX(8px)}to{opacity:1;transform:none}}
+.appbar{height:54px;flex:none;display:flex;align-items:center;gap:6px;padding:0 8px 0 14px;background:var(--role);color:#fff}
+.appbar .t{font-size:16.5px;font-weight:650;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.appbar button{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;color:#fff;position:relative}
+.appbar button:hover{background:rgba(255,255,255,.12)}
+.appbar .dot{position:absolute;top:8px;right:8px;width:8px;height:8px;border-radius:50%;background:#FFC53D;border:1.5px solid var(--role)}
+.body{flex:1;overflow:auto;padding:14px 14px 24px;display:flex;flex-direction:column;gap:12px;scrollbar-width:none}
+.body::-webkit-scrollbar{display:none}
+.body>*,.pane>*{flex-shrink:0}
+.scr:has(.fab) .body{padding-bottom:86px}
+.tabbar{height:62px;flex:none;display:flex;background:#fff;border-top:1px solid var(--line)}
+.tabbar button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:11px;color:var(--mu2);font-weight:550}
+.tabbar button.on{color:var(--role)}
+.tabbar button.on svg{stroke-width:2.2}
+svg.ic{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+svg.ic.s{width:17px;height:17px}
+/* ----- Khối giao diện dùng chung ----- */
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 13px}
+.list{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.row{display:flex;gap:11px;align-items:center;padding:11px 12px;border-bottom:1px solid var(--line2);width:100%;text-align:left}
+.row:last-child{border-bottom:0}
+button.row:hover,.tap:hover{background:#FAF8F4}
+.row .grow{flex:1;min-width:0}
+.t1{font-size:14px;font-weight:600;line-height:1.3}
+.t2{font-size:12.3px;color:var(--mu);line-height:1.4;margin-top:1px}
+.t3{font-size:11.5px;color:var(--mu2)}
+.sec{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--mu);margin:4px 2px -4px;display:flex;justify-content:space-between;align-items:center}
+.sec a{text-transform:none;letter-spacing:0;font-weight:600;color:var(--role);font-size:12.5px;cursor:pointer}
+.av{width:38px;height:38px;border-radius:50%;background:var(--roleb);color:var(--role);display:grid;place-items:center;font-weight:700;font-size:13px;flex:none}
+.av.lg{width:52px;height:52px;font-size:17px}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:3px 8px;border-radius:999px;white-space:nowrap;line-height:1.2}
+.ok{background:var(--okb);color:var(--ok)} .wa{background:var(--wab);color:var(--wa)} .er{background:var(--erb);color:var(--er)} .in{background:var(--inb);color:var(--in)} .mu{background:#EEEBE5;color:var(--mu)}
+.type{font-size:10.5px;font-weight:700;padding:2px 6px;border-radius:5px;letter-spacing:.02em}
+.type.pt{background:#FCE4E7;color:var(--red)} .type.g10{background:#DDF1EC;color:var(--teal)} .type.g30{background:#E2E6F1;color:var(--ink)} .type.mb{background:#F2ECDD;color:#7A5B12}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:46px;border-radius:12px;background:var(--role);color:#fff;font-weight:650;font-size:14.5px}
+.btn:hover{filter:brightness(1.08)}
+.btn.ghost{background:#fff;color:var(--tx);border:1px solid var(--line)}
+.btn.danger{background:#fff;color:var(--er);border:1px solid #F1C3BD}
+.btn.okb{background:var(--ok)} .btn.erb{background:var(--er)}
+.btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mini{height:32px;padding:0 12px;border-radius:9px;font-size:12.5px;font-weight:600;border:1px solid var(--line);background:#fff;white-space:nowrap}
+.mini.p{background:var(--role);color:#fff;border-color:var(--role)}
+.mini.e{color:var(--er);border-color:#F1C3BD}
+.fld{display:flex;flex-direction:column;gap:5px}
+.fld label{font-size:12px;font-weight:600;color:var(--mu)}
+.inp,.fld input,.fld select,.fld textarea{width:100%;height:44px;border:1px solid var(--line);border-radius:11px;background:#fff;padding:0 12px;font-size:14px;outline:none}
+.fld textarea{height:auto;min-height:74px;padding:10px 12px;resize:none;line-height:1.4}
+.fld input:focus,.fld select:focus,.fld textarea:focus{border-color:var(--role);box-shadow:0 0 0 3px var(--roleb)}
+.ro{background:#F7F5F1;color:var(--mu)}
+.help{font-size:11.5px;color:var(--mu);line-height:1.45}
+.err-t{font-size:11.8px;color:var(--er)}
+.seg{display:flex;background:#E9E6DF;border-radius:11px;padding:3px;gap:3px}
+.seg button{flex:1;height:32px;border-radius:9px;font-size:12.5px;font-weight:600;color:var(--mu)}
+.seg button.on{background:#fff;color:var(--tx);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.pane{display:none;flex-direction:column;gap:12px}.pane.on{display:flex}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{height:32px;padding:0 12px;border-radius:999px;border:1px solid var(--line);background:#fff;font-size:12.5px;font-weight:600;display:inline-flex;align-items:center;gap:5px;color:var(--mu)}
+.chip.on{background:var(--role);border-color:var(--role);color:#fff}
+.days{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.days button{height:52px;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;color:var(--mu);font-weight:600;background:#fff;border:1px solid var(--line)}
+.days button b{font-size:15px;color:var(--tx)}
+.days button.on{background:var(--role);border-color:var(--role);color:#fff}.days button.on b{color:#fff}
+.days button.has:after{content:"";width:4px;height:4px;border-radius:50%;background:var(--red);margin-top:2px}
+.slots{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.slot{height:40px;border-radius:10px;font-size:12.5px;font-weight:650;display:grid;place-items:center}
+.slot.free{background:var(--okb);color:var(--ok);border:1px solid #BFE3CD}
+.slot.busy{background:#E9E6DF;color:var(--mu2);border:1px solid #DDD9D0;text-decoration:line-through}
+.slot.closed{background:repeating-linear-gradient(135deg,#E9E6DF 0 6px,#DEDAD1 6px 12px);color:var(--mu2);border:1px solid #DDD9D0}
+.slot.sel{background:var(--role);color:#fff;border:1px solid var(--role)}
+.legend{display:flex;gap:12px;font-size:11.5px;color:var(--mu);flex-wrap:wrap}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+.kv{display:flex;justify-content:space-between;gap:12px;font-size:13px;padding:7px 0;border-bottom:1px solid var(--line2)}
+.kv:last-child{border-bottom:0}.kv span{color:var(--mu)}.kv b{font-weight:600;text-align:right}
+.note{display:flex;gap:9px;padding:10px 12px;border-radius:12px;font-size:12.3px;line-height:1.45}
+.note svg{margin-top:1px}
+.note.i{background:var(--inb);color:#1B4F8A}.note.w{background:var(--wab);color:#7A5000}.note.e{background:var(--erb);color:#8E1C12}.note.s{background:var(--okb);color:#135F3B}
+.bar{height:8px;border-radius:99px;background:#ECE8E1;overflow:hidden}.bar i{display:block;height:100%;background:var(--role);border-radius:99px}
+.fab{position:absolute;right:16px;bottom:16px;width:56px;height:56px;border-radius:18px;background:var(--role);color:#fff;display:grid;place-items:center;box-shadow:0 8px 20px rgba(0,0,0,.22)}
+.live{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;color:var(--ok);font-weight:600}
+.live:before{content:"";width:7px;height:7px;border-radius:50%;background:#22A06B;box-shadow:0 0 0 3px #CFEFDD}
+.rate{display:flex;gap:8px}.rate button{width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:#fff;font-weight:700}.rate button.on{background:var(--role);color:#fff;border-color:var(--role)}
+.hero{border-radius:18px;padding:18px 16px;color:#fff;display:flex;flex-direction:column;gap:6px}
+.hero.g{background:linear-gradient(160deg,#1C8A55,#12663F)}.hero.r{background:linear-gradient(160deg,#C8382B,#97231A)}
+.hero .big{font-size:21px;font-weight:750}.hero .sm{font-size:13px;opacity:.9}
+.hero .ring{width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.18);display:grid;place-items:center}
+.cam{height:250px;border-radius:18px;background:radial-gradient(circle at 50% 45%,#3A3F4C,#16181D);position:relative;display:grid;place-items:center;color:#C9CCD3;font-size:12.5px}
+.cam .fr{position:absolute;top:22px;left:50%;margin-left:-85px;width:170px;height:170px;border-radius:16px;
+ background:linear-gradient(#fff,#fff) top left/28px 3px,linear-gradient(#fff,#fff) top left/3px 28px,linear-gradient(#fff,#fff) top right/28px 3px,linear-gradient(#fff,#fff) top right/3px 28px,linear-gradient(#fff,#fff) bottom left/28px 3px,linear-gradient(#fff,#fff) bottom left/3px 28px,linear-gradient(#fff,#fff) bottom right/28px 3px,linear-gradient(#fff,#fff) bottom right/3px 28px;background-repeat:no-repeat}
+.cam .ln{position:absolute;top:106px;left:50%;margin-left:-75px;width:150px;height:2px;background:#FF4D5E;box-shadow:0 0 10px #FF4D5E;animation:scan 2.2s ease-in-out infinite}
+@keyframes scan{0%,100%{transform:translateY(-70px)}50%{transform:translateY(70px)}}
+.cam span{position:absolute;bottom:14px}
+.qrbox{background:#fff;border-radius:18px;padding:16px;display:flex;flex-direction:column;align-items:center;gap:8px;border:1px solid var(--line)}
+.qrbox svg{width:210px;height:210px}
+.tl{display:flex;flex-direction:column;gap:0}
+.tl .it{display:flex;gap:11px;padding:0 0 14px;position:relative}
+.tl .it:before{content:"";position:absolute;left:6px;top:14px;bottom:0;width:2px;background:var(--line)}
+.tl .it:last-child:before{display:none}
+.tl .dt{width:14px;height:14px;border-radius:50%;background:#fff;border:3px solid var(--role);flex:none;margin-top:2px}
+.cmp{display:grid;grid-template-columns:1fr 26px 1fr;align-items:center;gap:4px}
+.cmp .card{padding:10px}
+.sheet{position:absolute;inset:0;background:rgba(15,15,20,.42);display:none;align-items:flex-end;z-index:5}
+.sheet.on{display:flex;animation:fadein .15s}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+.sheet .pnl{background:#fff;width:100%;border-radius:22px 22px 0 0;padding:10px 16px 18px;display:flex;flex-direction:column;gap:12px;max-height:88%;overflow:auto;animation:up .2s ease}
+@keyframes up{from{transform:translateY(40px)}to{transform:none}}
+.sheet .grab{width:40px;height:4px;border-radius:9px;background:#DDD8CE;margin:2px auto 0}
+.sheet h3{font-size:16px}
+.menu .row .ic{color:var(--role)}
+.sp{flex:1}
+.cnt{font-size:28px;font-weight:750;color:var(--role);line-height:1}
+.stat{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat .card{padding:10px;text-align:center}.stat .t3{margin-top:4px}
+.login{background:linear-gradient(170deg,var(--ink) 0 40%,var(--bg) 40%)}
+.brand{color:#fff;padding:34px 22px 22px}
+.brand .lg{width:58px;height:58px;border-radius:16px;background:var(--red);display:grid;place-items:center;font-weight:800;font-size:20px;letter-spacing:-.02em;margin-bottom:14px}
+.brand h2{font-size:22px;line-height:1.25}.brand p{font-size:13px;opacity:.8;margin-top:6px}
+.toast{position:absolute;left:16px;right:16px;bottom:80px;background:#1F2025;color:#fff;border-radius:12px;padding:12px 14px;font-size:13px;z-index:9;display:none;box-shadow:0 10px 24px rgba(0,0,0,.25)}
+.toast.on{display:block;animation:up .2s}
+/* Gợi ý dưới điện thoại */
+.hint{width:360px;background:#FBFAF7;border:1px solid var(--line);border-radius:14px;padding:10px 12px;font-size:12.5px;display:flex;flex-direction:column;gap:6px}
+.hint .h{display:flex;justify-content:space-between;gap:8px;font-weight:650}
+.hint .tags{display:flex;gap:5px;flex-wrap:wrap}
+.hint .tags span{font-size:11px;padding:2px 7px;border-radius:6px;background:#EEEBE5;color:var(--mu);font-weight:600}
+.hint .tags span.b{background:var(--roleb);color:var(--role)}
+.demo{width:360px;display:none;align-items:center;gap:8px;background:var(--role);color:#fff;border-radius:14px;padding:10px 12px;font-size:12.5px}
+.demo.on{display:flex}.demo .sp{font-weight:600}.demo button{color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:9px;height:30px;padding:0 10px;font-size:12px;font-weight:600}
+/* Vai trò đổi màu chủ đạo */
+.r-ad{--role:#14213D;--roleb:#E6E9F1}
+.r-hl{--role:#0E6E62;--roleb:#DCEFEA}
+.r-hv{--role:#C8102E;--roleb:#FBE3E6}
+/* Chế độ chụp ảnh */
+body.shot{display:block;background:transparent}
+body.shot #panel,body.shot .hint,body.shot .demo{display:none!important}
+body.shot #main{padding:0;display:block}
+body.shot .phone{border-radius:0;border:0;box-shadow:none}
+body.grid{display:block;background:#fff}
+body.grid #panel,body.grid #main{display:none}
+#gridwrap{display:none;gap:26px;padding:18px 20px 16px;background:#fff;align-items:flex-start}
+body.grid #gridwrap{display:flex}
+.gcell{display:flex;flex-direction:column;gap:10px;align-items:center}
+.gcell .phone{border-width:8px;border-radius:32px;box-shadow:0 6px 18px rgba(20,20,30,.18)}
+.gcell .cap{font-size:15px;font-weight:650;text-align:center;max-width:360px}
+.gcell .cap small{display:block;font-weight:500;color:var(--mu);font-size:12.5px;margin-top:2px}
+@media (max-width:820px){
+  body{display:block;background:var(--bg)}
+  #panel{position:static;height:auto;border:0;padding:10px 12px 4px;background:transparent}
+  #panel .sub,#panel .ph,#panel .cat,#panel .demo-list,#panel .catwrap{display:none}
+  #panel h1{font-size:14px;margin-bottom:8px}
+  #main{padding:6px 0 20px}
+  .phone{border-width:6px;border-radius:28px;width:360px;max-width:100vw}
+}
+</style>
+</head>
+<body class="r-ad">
+
+<aside id="panel">
+  <h1>Prototype Bản 1 – Hệ thống hoàn chỉnh</h1>
+  <p class="sub">MuayThai & Fitness Center · 3 vai trò · 56 màn hình · phủ đủ FR01–FR59 (đặc tả v2.3)</p>
+  <div class="rolesw" id="rolesw">
+    <button data-r="ad">ADMIN</button><button data-r="hl">HLV</button><button data-r="hv">Học viên</button>
+  </div>
+  <div class="ph">Luồng demo chính (9 bước)</div>
+  <div class="demo-list" id="demolist"></div>
+  <div class="ph">Danh mục màn hình của vai trò</div>
+  <div class="cat" id="cat"></div>
+</aside>
+
+<main id="main">
+ <div class="demo" id="demobar"><span class="sp" id="demotxt"></span><button id="dprev">Trước</button><button id="dnext">Tiếp</button><button id="dstop">Thoát</button></div>
+ <div class="phone" id="phone">
+  <div class="status"><span>9:41</span><span>4G &nbsp;<i></i></span></div>
+  <div class="stage" id="stage">
+
+<!-- ===================================================================
+     DÙNG CHUNG
+     =================================================================== -->
+
+<!-- Đăng nhập · FR01, FR02 -->
+<section class="scr login" id="login" data-role="*" data-title="Đăng nhập" data-fr="FR01 FR02" data-noappbar>
+  <div class="brand"><div class="lg">MT</div><h2>MuayThai &amp; Fitness Center</h2><p>Đăng nhập để xem lịch, điểm danh và hành trình tập luyện</p></div>
+  <div class="body" style="padding-top:0">
+    <div class="card" style="display:flex;flex-direction:column;gap:12px;padding:16px">
+      <div class="fld"><label>Email (tên đăng nhập)</label><input value="an.nguyen@gmail.com"></div>
+      <div class="fld"><label>Mật khẩu</label><input type="password" value="12345678"></div>
+      <div class="err-t" style="display:none" id="loginerr">Sai tên đăng nhập hoặc mật khẩu</div>
+      <button class="btn" data-go="hv-cal" data-as="hv">Đăng nhập</button>
+      <p class="help">Tài khoản bị khóa sẽ thấy: “Tài khoản đã bị khóa, liên hệ trung tâm”. Sau khi đăng nhập, app tự mở đúng màn theo vai trò (FR02). HLV mới đăng nhập bằng mật khẩu tạm sẽ bị chuyển sang màn đổi mật khẩu trước (BR30).</p>
+    </div>
+    <div class="sec">Tài khoản mẫu để bấm thử</div>
+    <div class="list">
+      <button class="row" data-go="ad-scan" data-as="ad"><div class="av" style="background:#E6E9F1;color:#14213D">M</div><div class="grow"><div class="t1">Chị Mẫn · Sale</div><div class="t2">Vai trò ADMIN</div></div><svg class="ic s" data-ic="chev"></svg></button>
+      <button class="row" data-go="hl-cal" data-as="hl"><div class="av" style="background:#DCEFEA;color:#0E6E62">Đ</div><div class="grow"><div class="t1">Anh Đồng · HLV</div><div class="t2">Vai trò HLV</div></div><svg class="ic s" data-ic="chev"></svg></button>
+      <button class="row" data-go="hl-pw-first" data-as="hl"><div class="av" style="background:#DCEFEA;color:#0E6E62">B</div><div class="grow"><div class="t1">Anh Bảo · HLV mới tạo</div><div class="t2">Đăng nhập lần đầu bằng mật khẩu tạm</div></div><svg class="ic s" data-ic="chev"></svg></button>
+      <button class="row" data-go="hv-cal" data-as="hv"><div class="av" style="background:#FBE3E6;color:#C8102E">A</div><div class="grow"><div class="t1">Nguyễn Văn An · HV0012</div><div class="t2">Vai trò Học viên</div></div><svg class="ic s" data-ic="chev"></svg></button>
+    </div>
+  </div>
+</section>
+
+<!-- Đổi mật khẩu bắt buộc ở lần đăng nhập đầu của HLV · FR01, FR07 -->
+<section class="scr login" id="hl-pw-first" data-role="hl" data-title="Đổi mật khẩu lần đầu" data-fr="FR01 FR07" data-noappbar>
+  <div class="brand"><div class="lg">MT</div><h2>Đặt mật khẩu mới</h2><p>Xin chào Anh Bảo. Bạn đang dùng mật khẩu tạm do trung tâm cấp, hãy đổi trước khi vào ứng dụng.</p></div>
+  <div class="body" style="padding-top:0">
+    <div class="card" style="display:flex;flex-direction:column;gap:12px;padding:16px">
+      <div class="fld"><label>Mật khẩu tạm</label><input type="password" value="Bao@2611"></div>
+      <div class="fld"><label>Mật khẩu mới</label><input type="password" placeholder="Tối thiểu 8 ký tự"></div>
+      <div class="fld"><label>Nhập lại mật khẩu mới</label><input type="password"></div>
+      <button class="btn" data-toast="Đã đổi mật khẩu" data-go="hl-cal" data-reset>Đổi mật khẩu và vào ứng dụng</button>
+      <p class="help">Chưa đổi thì chưa vào được màn nào khác. Mật khẩu mới phải khác mật khẩu tạm (BR30).</p>
+      <button class="btn ghost" data-go="login" data-reset>Đăng xuất</button>
+    </div>
+  </div>
+</section>
+
+<!-- Tài khoản và đổi mật khẩu · FR07 -->
+<section class="scr" id="acc" data-role="*" data-title="Tài khoản của tôi" data-fr="FR07 FR01" data-back>
+  <div class="body">
+    <div class="card" style="display:flex;gap:12px;align-items:center"><div class="av lg" id="accav">A</div><div><div class="t1" id="accname">Nguyễn Văn An</div><div class="t2" id="accrole">Học viên · HV0012</div></div></div>
+    <div class="sec">Thông tin cơ bản</div>
+    <div class="card" style="display:flex;flex-direction:column;gap:10px">
+      <div class="fld"><label>Email (tên đăng nhập)</label><input class="ro" value="an.nguyen@gmail.com" readonly></div>
+      <div class="fld"><label>Số điện thoại</label><input value="0901 234 567"></div>
+    </div>
+    <div class="sec">Đổi mật khẩu</div>
+    <div class="card" style="display:flex;flex-direction:column;gap:10px">
+      <div class="fld"><label>Mật khẩu hiện tại</label><input type="password" value="12345678"></div>
+      <div class="fld"><label>Mật khẩu mới</label><input type="password" placeholder="Tối thiểu 8 ký tự"></div>
+      <div class="fld"><label>Nhập lại mật khẩu mới</label><input type="password"></div>
+    </div>
+    <button class="btn" data-toast="Đã lưu thông tin tài khoản" data-backgo>Lưu thay đổi</button>
+    <button class="btn danger" data-go="login" data-reset>Đăng xuất</button>
+  </div>
+</section>
+
+<!-- ===================================================================
+     ADMIN (Sale / Quản lý) · tab: Quét | Lịch | Học viên | Quản lý
+     =================================================================== -->
+
+<!-- Quét QR · FR32 -->
+<section class="scr" id="ad-scan" data-role="ad" data-tab="0" data-title="Quét QR check-in" data-fr="FR32">
+  <div class="body">
+    <div class="cam"><div class="fr"></div><div class="ln"></div><span>Đưa mã QR của gói tập vào khung</span></div>
+    <button class="btn ghost" data-open="sh-manual"><svg class="ic s" data-ic="edit"></svg>Nhập mã thủ công</button>
+    <div class="sec">Mô phỏng quét (chỉ có trong prototype)</div>
+    <div class="list">
+      <button class="row" data-go="ad-confirm"><span class="type pt">PT</span><div class="grow"><div class="t1">Nguyễn Văn An</div><div class="t2">Đến đúng lịch PT 17:00</div></div><svg class="ic s" data-ic="chev"></svg></button>
+      <button class="row" data-go="ad-confirm-out"><span class="type g10">L10</span><div class="grow"><div class="t1">Trần Thị Bích</div><div class="t2">Đặt 19:00 nhưng tới 17:25 (ngoài dự tính)</div></div><svg class="ic s" data-ic="chev"></svg></button>
+      <button class="row" data-go="ad-confirm-walkin"><span class="type g10">L10</span><div class="grow"><div class="t1">Lê Minh Cường</div><div class="t2">Chưa đặt lịch, lớp còn chỗ (walk-in)</div></div><svg class="ic s" data-ic="chev"></svg></button>
+      <button class="row" data-go="ad-result-free"><span class="type mb">TV</span><div class="grow"><div class="t1">Phạm Dũng</div><div class="t2">Gói thành viên, không có buổi</div></div><svg class="ic s" data-ic="chev"></svg></button>
+      <button class="row" data-go="ad-result-err"><span class="type pt">PT</span><div class="grow"><div class="t1">Hoàng Em</div><div class="t2">Gói đã hết hạn</div></div><svg class="ic s" data-ic="chev"></svg></button>
+    </div>
+  </div>
+  <div class="sheet" id="sh-manual"><div class="pnl"><div class="grab"></div><h3>Nhập mã thủ công</h3>
+    <div class="fld"><label>Mã gói tập hoặc mã hội viên</label><input value="PKG-0012-01"></div>
+    <p class="help">Dùng khi camera hỏng hoặc thẻ bị mờ. Hệ thống xử lý giống như quét.</p>
+    <button class="btn" data-close data-go="ad-confirm">Tiếp tục</button><button class="btn ghost" data-close>Hủy</button></div></div>
+</section>
+
+<!-- Xác nhận buổi hệ thống đã chọn · FR33, FR34 -->
+<section class="scr" id="ad-confirm" data-role="ad" data-title="Xác nhận check-in" data-fr="FR33 FR34" data-back>
+  <div class="body">
+    <div class="card" style="display:flex;gap:12px;align-items:center"><div class="av lg">AN</div><div class="grow"><div class="t1">Nguyễn Văn An</div><div class="t2">HV0012 · tài khoản đang hoạt động</div></div><span class="badge ok">Hợp lệ</span></div>
+    <div class="sec">Hệ thống đã chọn buổi</div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center"><span class="type pt">PT 1-1</span><span class="badge ok">Đã xác nhận</span></div>
+      <div class="t1" style="margin-top:8px;font-size:16px">17:00 – 18:00 · HLV Đồng</div>
+      <div class="kv"><span>Gói bị trừ</span><b>PT · còn 3/10 · HSD 30/12</b></div>
+      <div class="kv"><span>Thời điểm quét</span><b>16:52</b></div>
+    </div>
+    <div class="note i"><svg class="ic s" data-ic="info"></svg><span>Đến đúng lịch: được check-in từ 16:30 đến hết 18:00 (BR12). Sale chỉ xác nhận, không tự chọn buổi khác.</span></div>
+    <div class="sp"></div>
+    <div class="btns"><button class="btn danger" data-toast="Đã từ chối, không ghi check-in" data-go="ad-scan">Từ chối</button><button class="btn okb" data-go="ad-result-ok">Cho vào</button></div>
+  </div>
+</section>
+
+<!-- Tới ngoài dự tính, quy tắc 20 phút · FR33, FR34, FR12 -->
+<section class="scr" id="ad-confirm-out" data-role="ad" data-title="Xác nhận check-in" data-fr="FR33 FR34 FR12" data-back>
+  <div class="body">
+    <div class="card" style="display:flex;gap:12px;align-items:center"><div class="av lg">TB</div><div class="grow"><div class="t1">Trần Thị Bích</div><div class="t2">HV0020 · gói Lớp 10 · HLV Lâm</div></div><span class="badge wa">Ngoài dự tính</span></div>
+    <div class="note w"><svg class="ic s" data-ic="alert"></svg><span>Đặt buổi 19:00 nhưng quét lúc 17:25, lệch hơn 1 giờ nên tính là tới ngoài dự tính (BR12).</span></div>
+    <div class="sec">Hệ thống xếp theo quy tắc 20 phút</div>
+    <div class="list">
+      <div class="row"><span class="type g10">L10</span><div class="grow"><div class="t1">17:00 – 18:00 · đang diễn ra</div><div class="t2">Đã bắt đầu 25 phút, quá 20 phút</div></div><span class="badge mu">Bỏ qua</span></div>
+      <div class="row" style="background:#F2FAF5"><span class="type g10">L10</span><div class="grow"><div class="t1">18:00 – 19:00 · buổi kế tiếp</div><div class="t2">HLV Lâm · còn 3 chỗ (7/10)</div></div><span class="badge ok">Xếp vào</span></div>
+    </div>
+    <p class="help">Lịch 19:00 cũ được giải phóng. Sale báo học viên tập ca 18:00.</p>
+    <div class="sp"></div>
+    <div class="btns"><button class="btn danger" data-toast="Đã từ chối" data-go="ad-scan">Từ chối</button><button class="btn okb" data-go="ad-result-ok">Cho vào 18:00</button></div>
+  </div>
+</section>
+
+<!-- Walk-in lớp 10 · FR42, FR12, FR33 -->
+<section class="scr" id="ad-confirm-walkin" data-role="ad" data-title="Check-in walk-in" data-fr="FR42 FR12 FR33" data-back>
+  <div class="body">
+    <div class="card" style="display:flex;gap:12px;align-items:center"><div class="av lg">LC</div><div class="grow"><div class="t1">Lê Minh Cường</div><div class="t2">HV0031 · gói Lớp 10 · HLV Lâm · còn 6 buổi</div></div><span class="badge in">Walk-in</span></div>
+    <div class="note i"><svg class="ic s" data-ic="info"></svg><span>Học viên chưa đặt lịch. Buổi gần nhất của HLV phụ trách còn chỗ nên có thể check-in trực tiếp, không cần đặt trước.</span></div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between"><span class="type g10">LỚP 10</span><span class="badge ok">Còn 2 chỗ</span></div>
+      <div class="t1" style="margin-top:8px;font-size:16px">18:00 – 19:00 · Boxing · HLV Lâm</div>
+      <div class="bar" style="margin-top:10px"><i style="width:80%"></i></div><div class="t3" style="margin-top:4px">8/10 chỗ đã dùng</div>
+    </div>
+    <div class="note w"><svg class="ic s" data-ic="alert"></svg><span>Nếu buổi đã đủ 10 chỗ hoặc quét trái lịch, hệ thống chỉ cảnh báo, Sale tự quyết định có cho vào hay không.</span></div>
+    <div class="sp"></div>
+    <div class="btns"><button class="btn danger" data-toast="Đã từ chối" data-go="ad-scan">Không cho vào</button><button class="btn okb" data-go="ad-result-ok">Cho vào</button></div>
+  </div>
+</section>
+
+<!-- Kết quả thành công · FR34, FR35, FR40 -->
+<section class="scr" id="ad-result-ok" data-role="ad" data-title="Kết quả check-in" data-fr="FR34 FR35 FR40" data-back>
+  <div class="body">
+    <div class="hero g"><div class="ring"><svg class="ic" data-ic="check"></svg></div><div class="big">Check-in thành công</div><div class="sm">Nguyễn Văn An · PT 17:00 · HLV Đồng</div></div>
+    <div class="card"><div style="display:flex;align-items:baseline;gap:8px"><span class="cnt">2</span><span class="t2">buổi còn lại của gói PT (đã trừ 1, còn 2/10)</span></div></div>
+    <div class="note w"><svg class="ic s" data-ic="alert"></svg><span><b>Gói sắp hết:</b> còn 2 buổi. Nhắc học viên gia hạn.</span></div>
+    <div class="card">
+      <div class="kv"><span>Thời gian</span><b>16:52 · 18/11/2026</b></div>
+      <div class="kv"><span>Hình thức</span><b>Quét QR</b></div>
+      <div class="kv"><span>Người thực hiện</span><b>Chị Mẫn (Sale)</b></div>
+      <div class="kv"><span>Gói bị trừ</span><b>PKG-0012-01</b></div>
+    </div>
+    <div class="sp"></div>
+    <button class="btn" data-go="ad-scan" data-reset>Quét người tiếp theo</button>
+  </div>
+</section>
+
+<!-- Check-in tự do · FR43, FR35 -->
+<section class="scr" id="ad-result-free" data-role="ad" data-title="Kết quả check-in" data-fr="FR43 FR35" data-back>
+  <div class="body">
+    <div class="hero g"><div class="ring"><svg class="ic" data-ic="check"></svg></div><div class="big">Check-in tự do</div><div class="sm">Phạm Dũng · HV0007 · gói Thành viên</div></div>
+    <div class="card">
+      <div class="kv"><span>Gói</span><b>Thành viên · đến 31/12/2026</b></div>
+      <div class="kv"><span>Trừ buổi</span><b>Không trừ</b></div>
+      <div class="kv"><span>Lượt hôm nay</span><b>1/1</b></div>
+    </div>
+    <div class="note i"><svg class="ic s" data-ic="info"></svg><span>Không có buổi nào nhưng gói thành viên còn hạn nên ghi nhận check-in tự do, tối đa một lần mỗi ngày (BR13, BR14).</span></div>
+    <div class="sp"></div>
+    <button class="btn" data-go="ad-scan" data-reset>Quét người tiếp theo</button>
+  </div>
+</section>
+
+<!-- Kết quả lỗi · FR34 -->
+<section class="scr" id="ad-result-err" data-role="ad" data-title="Kết quả check-in" data-fr="FR34" data-back>
+  <div class="body">
+    <div class="hero r"><div class="ring"><svg class="ic" data-ic="x"></svg></div><div class="big">Không check-in được</div><div class="sm">Gói đã hết hạn ngày 30/10/2026</div></div>
+    <div class="card"><div class="kv"><span>Học viên</span><b>Hoàng Em · HV0044</b></div><div class="kv"><span>Gói</span><b>PT · HLV Tuấn · còn 4 buổi</b></div></div>
+    <div class="sec">Các lý do khác hệ thống có thể báo</div>
+    <div class="list">
+      <div class="row"><div class="grow t2">Không có buổi nào trong khung giờ này</div></div>
+      <div class="row"><div class="grow t2">Gói đã hết buổi</div></div>
+      <div class="row"><div class="grow t2">Đã check-in buổi này lúc 16:40</div></div>
+      <div class="row"><div class="grow t2">Buổi đã đủ chỗ</div></div>
+      <div class="row"><div class="grow t2">Tài khoản đã bị khóa</div></div>
+    </div>
+    <button class="btn ghost" data-go="ad-student">Mở hồ sơ để gia hạn gói</button>
+    <button class="btn" data-go="ad-scan" data-reset>Xong</button>
+  </div>
+</section>
+
+<!-- Lịch mọi HLV · FR20, FR19 -->
+<section class="scr" id="ad-cal" data-role="ad" data-tab="1" data-title="Lịch toàn trung tâm" data-fr="FR20 FR19">
+  <div class="body">
+    <div style="display:flex;justify-content:space-between;align-items:center"><div class="seg" style="width:170px" data-tg="adv"><button class="on" data-t="d">Ngày</button><button data-t="w">Tuần</button></div><span class="live">Đồng bộ trực tiếp</span></div>
+    <div class="days"><button>T2<b>16</b></button><button class="has">T3<b>17</b></button><button class="on has">T4<b>18</b></button><button class="has">T5<b>19</b></button><button class="has">T6<b>20</b></button><button>T7<b>21</b></button><button>CN<b>22</b></button></div>
+    <div class="chips"><span class="chip on">Tất cả HLV</span><span class="chip">Lâm</span><span class="chip">Đồng</span><span class="chip">Tuấn</span></div>
+    <button class="note w tap" data-go="ad-approve" style="text-align:left"><svg class="ic s" data-ic="clock"></svg><span><b>2 khung lớp 10 chờ duyệt.</b> Bấm để xem.</span></button>
+    <div class="pane on" data-tg="adv" data-t="d">
+    <div class="list">
+      <button class="row" data-go="ad-session"><span class="type g10">L10</span><div class="grow"><div class="t1">18:00 – 19:00 · Boxing</div><div class="t2">HLV Lâm · đăng ký 9/10 · đã vào 7</div></div><svg class="ic s" data-ic="chev"></svg></button>
+      <button class="row" data-go="ad-session"><span class="type pt">PT</span><div class="grow"><div class="t1">17:00 – 18:00 · Nguyễn Văn An</div><div class="t2">HLV Đồng · đã xác nhận</div></div><span class="badge ok">Đã vào</span></button>
+      <button class="row" data-go="ad-session"><span class="type g30">L30</span><div class="grow"><div class="t1">19:30 – 20:30 · Muay cơ bản</div><div class="t2">HLV Tuấn · 22/30 check-in</div></div><svg class="ic s" data-ic="chev"></svg></button>
+      <button class="row" data-go="ad-session"><span class="type pt">PT</span><div class="grow"><div class="t1">20:00 – 21:00 · Lê Minh Cường</div><div class="t2">HLV Đồng · chờ HLV xác nhận</div></div><span class="badge wa">Chờ</span></button>
+    </div></div>
+    <div class="pane" data-tg="adv" data-t="w">
+      <div class="list">
+        <div class="row"><div class="grow"><div class="t1">Thứ 2, 16/11</div><div class="t2">6 buổi · 2 PT · 2 lớp 10 · 2 lớp 30</div></div></div>
+        <div class="row"><div class="grow"><div class="t1">Thứ 3, 17/11</div><div class="t2">5 buổi · 3 PT · 2 lớp 10</div></div></div>
+        <div class="row"><div class="grow"><div class="t1">Thứ 4, 18/11 (hôm nay)</div><div class="t2">4 buổi · 2 PT · 1 lớp 10 · 1 lớp 30</div></div></div>
+        <div class="row"><div class="grow"><div class="t1">Thứ 5, 19/11</div><div class="t2">7 buổi · 4 PT · 2 lớp 10 · 1 lớp 30</div></div></div>
+      </div>
+    </div>
+  </div>
+  <button class="fab" data-open="sh-adadd"><svg class="ic" data-ic="plus"></svg></button>
+  <div class="sheet" id="sh-adadd"><div class="pnl"><div class="grab"></div><h3>Tạo mới</h3>
+    <div class="list menu">
+      <button class="row" data-close data-go="ad-pt-new"><svg class="ic" data-ic="cal"></svg><div class="grow"><div class="t1">Tạo lịch PT cho học viên</div><div class="t2">Khi học viên liên hệ trực tiếp trung tâm</div></div></button>
+      <button class="row" data-close data-go="ad-c30-form"><svg class="ic" data-ic="users"></svg><div class="grow"><div class="t1">Tạo lớp 30 người</div><div class="t2">Lịch cố định lặp hằng tuần</div></div></button>
+    </div><button class="btn ghost" data-close>Đóng</button></div></div>
+</section>
+
+<!-- Chi tiết buổi (ADMIN) · FR36, FR37, FR38, FR39, FR44, FR21 -->
+<section class="scr" id="ad-session" data-role="ad" data-title="Chi tiết buổi" data-fr="FR36 FR37 FR38 FR39 FR44 FR21" data-back>
+  <div class="body">
+    <div class="card"><div style="display:flex;justify-content:space-between"><span class="type g10">LỚP 10</span><span class="badge in">Đang diễn ra</span></div>
+      <div class="t1" style="font-size:16px;margin-top:8px">Boxing · 18:00 – 19:00</div><div class="t2">HLV Lâm · Thứ 4, 18/11/2026</div></div>
+    <div class="stat"><div class="card"><div class="cnt">7</div><div class="t3">đã check-in</div></div><div class="card"><div class="cnt" style="color:var(--wa)">2</div><div class="t3">chưa check-in</div></div><div class="card"><div class="cnt" style="color:var(--mu)">9/10</div><div class="t3">đăng ký</div></div></div>
+    <div class="seg" data-tg="ads"><button class="on" data-t="in">Đã check-in (7)</button><button data-t="no">Chưa check-in (2)</button></div>
+    <div class="pane on" data-tg="ads" data-t="in"><div class="list">
+      <div class="row"><div class="av">TB</div><div class="grow"><div class="t1">Trần Thị Bích · HV0020</div><div class="t2">17:55 · QR · gói còn 11 buổi</div></div></div>
+      <div class="row"><div class="av">LC</div><div class="grow"><div class="t1">Lê Minh Cường · HV0031</div><div class="t2">17:58 · QR · walk-in · còn 5 buổi</div></div></div>
+      <div class="row"><div class="av">VH</div><div class="grow"><div class="t1">Võ Gia Huy · HV0038</div><div class="t2">18:02 · Thủ công · còn 2 buổi</div></div><span class="badge wa">Sắp hết</span></div>
+      <div class="row"><div class="grow t2" style="text-align:center">và 4 học viên khác</div></div>
+    </div></div>
+    <div class="pane" data-tg="ads" data-t="no"><div class="list">
+      <div class="row"><div class="av">HE</div><div class="grow"><div class="t1">Hoàng Em · HV0044</div><div class="t2">Đã đăng ký, chưa đến</div></div><button class="mini" data-open="sh-manual-ad">Điểm danh</button></div>
+      <div class="row"><div class="av">NT</div><div class="grow"><div class="t1">Ngô Thảo · HV0051</div><div class="t2">Đã đăng ký, chưa đến</div></div><button class="mini e" data-toast="Đã đánh dấu vắng, không trừ buổi (BR16)">Vắng</button></div>
+    </div></div>
+    <button class="btn ghost" data-go="ad-history">Lịch sử điểm danh của buổi</button>
+    <button class="btn danger" data-open="sh-cancel-ad">Hủy buổi</button>
+  </div>
+  <div class="sheet" id="sh-manual-ad"><div class="pnl"><div class="grab"></div><h3>Ghi nhận điểm danh thủ công</h3>
+    <div class="kv"><span>Học viên</span><b>Hoàng Em · HV0044</b></div>
+    <div class="fld"><label>Lý do</label><select><option>Quên thẻ và điện thoại hết pin</option><option>Camera không quét được</option><option>Khác</option></select></div>
+    <p class="help">Lưu người thực hiện, thời điểm, hình thức Thủ công và lý do. Vẫn kiểm tra gói, sức chứa và trừ buổi như quét QR (BR17).</p>
+    <button class="btn" data-close data-toast="Đã ghi nhận thủ công, trừ 1 buổi">Ghi nhận</button><button class="btn ghost" data-close>Hủy</button></div></div>
+  <div class="sheet" id="sh-cancel-ad"><div class="pnl"><div class="grab"></div><h3>Hủy buổi này?</h3>
+    <div class="fld"><label>Lý do (bắt buộc)</label><textarea>HLV Lâm nghỉ đột xuất</textarea></div>
+    <p class="help">9 học viên đã đăng ký và HLV sẽ nhận thông báo. Hủy hợp lệ không trừ buổi.</p>
+    <button class="btn erb" data-close data-toast="Đã hủy buổi và gửi thông báo" data-backgo>Hủy buổi</button><button class="btn ghost" data-close>Giữ lại</button></div></div>
+</section>
+
+<!-- ADMIN tạo lịch PT · FR25, FR10, FR27, FR11 -->
+<section class="scr" id="ad-pt-new" data-role="ad" data-title="Tạo lịch PT cho học viên" data-fr="FR25 FR10 FR27 FR11" data-back>
+  <div class="body">
+    <div class="fld"><label>Học viên (có gói PT còn hiệu lực)</label><input value="Nguyễn Văn An · HV0012 · PT còn 3 buổi"></div>
+    <div class="card" style="display:flex;align-items:center;gap:10px"><div class="av">Đ</div><div class="grow"><div class="t1">HLV Đồng</div><div class="t2">HLV phụ trách của gói</div></div><button class="mini" data-toast="Chọn HLV khác khi HLV phụ trách nghỉ (BR24)">Đổi HLV</button></div>
+    <div class="days"><button>T2<b>16</b></button><button>T3<b>17</b></button><button>T4<b>18</b></button><button class="on">T5<b>19</b></button><button>T6<b>20</b></button><button>T7<b>21</b></button><button>CN<b>22</b></button></div>
+    <div class="seg" data-tg="adpt"><button class="on" data-t="g">Chọn ô trống</button><button data-t="m">Nhập giờ</button></div>
+    <div class="pane on" data-tg="adpt" data-t="g">
+      <div class="t3">Ca sáng 07:00 – 11:00</div>
+      <div class="slots"><span class="slot free">07:00</span><span class="slot busy">08:00</span><span class="slot free">09:00</span><span class="slot free">10:00</span></div>
+      <div class="t3">Ca chiều 15:00 – 21:00</div>
+      <div class="slots"><span class="slot free">15:00</span><span class="slot busy">16:00</span><span class="slot sel">17:00</span><span class="slot busy">18:00</span><span class="slot free">19:00</span><span class="slot closed">20:00</span></div>
+      <div class="legend"><span><i style="background:var(--okb);border:1px solid #BFE3CD"></i>Trống</span><span><i style="background:#E9E6DF"></i>Kẹt</span><span><i style="background:repeating-linear-gradient(135deg,#E9E6DF 0 3px,#D6D1C6 3px 6px)"></i>Đã đóng</span><span><i style="background:var(--role)"></i>Đang chọn</span></div>
+    </div>
+    <div class="pane" data-tg="adpt" data-t="m">
+      <div class="fld"><label>Giờ bắt đầu (trong ca làm)</label><input value="17:30"></div>
+      <div class="err-t">HLV Đồng đã có lịch 17:00 – 18:00. Chọn giờ khác (BR01).</div>
+    </div>
+    <div class="note s"><svg class="ic s" data-ic="check"></svg><span>Không trùng lịch HLV và học viên. Lịch tạo ở trạng thái <b>đã xác nhận</b> ngay và báo cho cả hai.</span></div>
+    <button class="btn" data-toast="Đã tạo lịch PT T5 19/11 17:00 (đã xác nhận)" data-go="ad-cal" data-reset>Tạo lịch PT</button>
+  </div>
+</section>
+
+<!-- Danh sách lớp 30 · FR08, FR18 -->
+<section class="scr" id="ad-c30-list" data-role="ad" data-title="Lớp 30 người" data-fr="FR08 FR18" data-back>
+  <div class="body">
+    <div class="list">
+      <button class="row" data-go="ad-c30-form"><span class="type g30">L30</span><div class="grow"><div class="t1">Muay cơ bản</div><div class="t2">T2 · T4 · T6 · 18:00 – 19:00 · HLV Lâm</div><div class="t3">24 học viên có gói · sinh sẵn 4 tuần</div></div><svg class="ic s" data-ic="chev"></svg></button>
+      <button class="row" data-go="ad-c30-form"><span class="type g30">L30</span><div class="grow"><div class="t1">Muay nâng cao</div><div class="t2">T3 · T5 · 19:30 – 20:30 · HLV Tuấn</div><div class="t3">18 học viên có gói</div></div><svg class="ic s" data-ic="chev"></svg></button>
+      <button class="row" data-go="ad-c30-form"><span class="type g30">L30</span><div class="grow"><div class="t1">Fitness sáng</div><div class="t2">T7 · CN · 07:00 – 08:00 · HLV Đồng</div><div class="t3">11 học viên có gói</div></div><svg class="ic s" data-ic="chev"></svg></button>
+    </div>
+    <button class="btn" data-go="ad-c30-form"><svg class="ic s" data-ic="plus"></svg>Tạo lớp 30</button>
+  </div>
+</section>
+
+<!-- Tạo / sửa lớp 30 · FR08, FR18, FR11 -->
+<section class="scr" id="ad-c30-form" data-role="ad" data-title="Lớp 30 · Muay cơ bản" data-fr="FR08 FR18 FR11" data-back>
+  <div class="body">
+    <div class="fld"><label>Tên lớp</label><input value="Muay cơ bản"></div>
+    <div class="fld"><label>HLV phụ trách</label><select><option>Lâm</option><option>Đồng</option><option>Tuấn</option></select></div>
+    <div class="fld"><label>Lặp vào các thứ</label><div class="chips multi"><span class="chip on">T2</span><span class="chip">T3</span><span class="chip on">T4</span><span class="chip">T5</span><span class="chip on">T6</span><span class="chip">T7</span><span class="chip">CN</span></div></div>
+    <div class="btns"><div class="fld"><label>Giờ bắt đầu</label><input value="18:00"></div><div class="fld"><label>Giờ kết thúc</label><input value="19:00"></div></div>
+    <div class="fld"><label>Bắt đầu từ ngày</label><input value="16/11/2026"></div>
+    <div class="note i"><svg class="ic s" data-ic="info"></svg><span>Lịch lặp mỗi tuần cho tới khi xóa lịch. Hệ thống luôn sinh sẵn các buổi của 4 tuần tới và kiểm tra trùng giờ HLV.</span></div>
+    <button class="btn" data-toast="Đã lưu lớp, sinh 12 buổi cho 4 tuần tới" data-backgo>Lưu</button>
+    <button class="btn danger" data-open="sh-del30">Xóa lịch lớp này</button>
+  </div>
+  <div class="sheet" id="sh-del30"><div class="pnl"><div class="grab"></div><h3>Xóa lịch lớp Muay cơ bản?</h3>
+    <p class="help" style="font-size:13px">Các buổi sắp tới chưa có check-in sẽ bị xóa. Có <b>24 học viên</b> đang có gói gắn với lớp này; gói của họ giữ nguyên số buổi. Các buổi đã diễn ra và lịch sử điểm danh được giữ lại.</p>
+    <button class="btn erb" data-close data-toast="Đã xóa lịch lớp. Lịch sử vẫn giữ" data-go="ad-c30-list">Xóa lịch</button><button class="btn ghost" data-close>Hủy</button></div></div>
+</section>
+
+<!-- Duyệt khung lớp 10 · FR24 -->
+<section class="scr" id="ad-approve" data-role="ad" data-title="Duyệt khung lớp 10" data-fr="FR24" data-back>
+  <div class="body">
+    <p class="help">HLV đăng ký khung lớp 10 cố định. Chỉ khung đã duyệt mới mở cho học viên đăng ký (BR03).</p>
+    <div class="card" style="display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;justify-content:space-between"><span class="type g10">LỚP 10</span><span class="badge wa">Chờ duyệt</span></div>
+      <div class="t1">Boxing · T3, T5 · 18:00 – 19:00</div><div class="t2">HLV Lâm · lặp hằng tuần · trong ca làm · không trùng lịch</div>
+      <div class="btns"><button class="mini e" data-open="sh-reject">Từ chối</button><button class="mini p" data-toast="Đã duyệt. Buổi mở cho học viên của HLV Lâm">Duyệt</button></div>
+    </div>
+    <div class="card" style="display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;justify-content:space-between"><span class="type g10">LỚP 10</span><span class="badge wa">Chờ duyệt</span></div>
+      <div class="t1">Kickboxing · T7 · 09:00 – 10:00</div><div class="t2">HLV Tuấn · lặp hằng tuần</div>
+      <div class="btns"><button class="mini e" data-open="sh-reject">Từ chối</button><button class="mini p" data-toast="Đã duyệt">Duyệt</button></div>
+    </div>
+  </div>
+  <div class="sheet" id="sh-reject"><div class="pnl"><div class="grab"></div><h3>Từ chối khung lớp 10</h3>
+    <div class="fld"><label>Lý do gửi HLV</label><textarea>Trùng giờ phòng tập với lớp 30</textarea></div>
+    <button class="btn erb" data-close data-toast="Đã từ chối và báo HLV">Từ chối</button><button class="btn ghost" data-close>Hủy</button></div></div>
+</section>
+
+<!-- Danh sách học viên · FR03, FR06 -->
+<section class="scr" id="ad-students" data-role="ad" data-tab="2" data-title="Học viên" data-fr="FR03 FR06">
+  <div class="body">
+    <div class="fld"><input placeholder="Tìm theo tên, mã hội viên, số điện thoại"></div>
+    <div class="chips"><span class="chip on">Tất cả</span><span class="chip">PT</span><span class="chip">Lớp 10</span><span class="chip">Lớp 30</span><span class="chip">Thành viên</span></div>
+    <div class="list">
+      <button class="row" data-go="ad-student"><div class="av">AN</div><div class="grow"><div class="t1">Nguyễn Văn An · HV0012</div><div class="t2">0901 234 567 · PT còn 3 · Lớp 30 còn 14</div></div><span class="badge wa">Sắp hết</span></button>
+      <button class="row" data-go="ad-student"><div class="av">TB</div><div class="grow"><div class="t1">Trần Thị Bích · HV0020</div><div class="t2">0912 345 678 · Lớp 10 còn 11</div></div><span class="badge ok">Hoạt động</span></button>
+      <button class="row" data-go="ad-student"><div class="av">LC</div><div class="grow"><div class="t1">Lê Minh Cường · HV0031</div><div class="t2">0933 111 222 · Lớp 10 còn 6 · PT còn 8</div></div><span class="badge ok">Hoạt động</span></button>
+      <button class="row" data-go="ad-student"><div class="av">PD</div><div class="grow"><div class="t1">Phạm Dũng · HV0007</div><div class="t2">0987 654 321 · Thành viên đến 31/12</div></div><span class="badge ok">Hoạt động</span></button>
+      <button class="row" data-go="ad-student"><div class="av">HE</div><div class="grow"><div class="t1">Hoàng Em · HV0044</div><div class="t2">0977 000 111 · PT hết hạn</div></div><span class="badge er">Hết hạn</span></button>
+      <button class="row" data-go="ad-student"><div class="av">VK</div><div class="grow"><div class="t1">Vũ Khoa · HV0003</div><div class="t2">0966 222 333</div></div><span class="badge mu">Đã khóa</span></button>
+    </div>
+  </div>
+  <button class="fab" data-go="ad-st-form"><svg class="ic" data-ic="plus"></svg></button>
+</section>
+
+<!-- Thêm / sửa học viên · FR03 -->
+<section class="scr" id="ad-st-form" data-role="ad" data-title="Thêm học viên" data-fr="FR03" data-back>
+  <div class="body">
+    <div class="fld"><label>Họ tên</label><input value="Đặng Minh Khôi"></div>
+    <div class="fld"><label>Số điện thoại</label><input value="0905 678 901"></div>
+    <div class="fld"><label>Email (tên đăng nhập)</label><input value="khoi.dang@gmail.com"></div>
+    <div class="fld"><label>Ngày sinh</label><input value="12/04/2003"></div>
+    <div class="fld"><label>Mã hội viên</label><input class="ro" value="Tự sinh: HV0052" readonly></div>
+    <div class="fld"><label>Mật khẩu ban đầu</label><input value="678901"><span class="help">Gợi ý là 6 số cuối điện thoại; học viên tự đổi sau khi đăng nhập.</span></div>
+    <button class="btn" data-toast="Đã tạo tài khoản và hồ sơ HV0052" data-go="ad-student">Lưu học viên</button>
+  </div>
+</section>
+
+<!-- Chi tiết học viên · FR03, FR05, FR41 -->
+<section class="scr" id="ad-student" data-role="ad" data-title="Nguyễn Văn An" data-fr="FR03 FR05 FR41" data-back>
+  <div class="body">
+    <div class="card" style="display:flex;gap:12px;align-items:center"><div class="av lg">AN</div><div class="grow"><div class="t1">Nguyễn Văn An</div><div class="t2">HV0012 · 0901 234 567</div><div class="t3">an.nguyen@gmail.com</div></div><span class="badge ok">Hoạt động</span></div>
+    <div class="btns"><button class="btn ghost" data-go="ad-st-form">Sửa thông tin</button><button class="btn danger" data-open="sh-lock">Khóa</button></div>
+    <div class="sec">Gói tập <a data-go="ad-pkg-form">+ Gán gói</a></div>
+    <div class="list">
+      <div class="row"><span class="type pt">PT</span><div class="grow"><div class="t1">PT 1-1 · HLV Đồng</div><div class="t2">Còn 3/10 buổi · HSD 30/12/2026</div><div class="bar" style="margin-top:6px"><i style="width:70%"></i></div></div><span class="badge wa">Sắp hết</span></div>
+      <div class="row"><span class="type g30">L30</span><div class="grow"><div class="t1">Lớp 30 · Muay cơ bản</div><div class="t2">Còn 14/24 buổi · HSD 20/01/2027</div></div><span class="badge ok">ACTIVE</span></div>
+      <div class="row"><span class="type mb">TV</span><div class="grow"><div class="t1">Thành viên 1 tháng</div><div class="t2">Đã hết hạn 31/10/2026</div></div><span class="badge mu">EXPIRED</span></div>
+    </div>
+    <div class="list menu">
+      <button class="row" data-go="ad-history"><svg class="ic" data-ic="clock"></svg><div class="grow t1">Lịch sử điểm danh</div><svg class="ic s" data-ic="chev"></svg></button>
+      <button class="row" data-go="ad-journey"><svg class="ic" data-ic="trend"></svg><div class="grow t1">Hành trình tập luyện (PT)</div><svg class="ic s" data-ic="chev"></svg></button>
+    </div>
+  </div>
+  <div class="sheet" id="sh-lock"><div class="pnl"><div class="grab"></div><h3>Khóa tài khoản Nguyễn Văn An?</h3>
+    <p class="help" style="font-size:13px">Dữ liệu cũ vẫn giữ, nhưng người này không đăng nhập, không đặt lịch và không check-in được nữa (BR18). Có thể mở khóa lại sau.</p>
+    <button class="btn erb" data-close data-toast="Đã khóa tài khoản">Khóa</button><button class="btn ghost" data-close>Hủy</button></div></div>
+</section>
+
+<!-- Gán gói tập · FR05, FR30, FR29 -->
+<section class="scr" id="ad-pkg-form" data-role="ad" data-title="Gán gói cho Nguyễn Văn An" data-fr="FR05 FR30 FR29" data-back>
+  <div class="body">
+    <div class="fld"><label>Loại hình</label><div class="seg" data-tg="pk"><button class="on" data-t="pt">PT</button><button data-t="g10">Nhóm 10</button><button data-t="g30">Nhóm 30</button><button data-t="mb">Tự do</button></div></div>
+    <div class="pane on" data-tg="pk" data-t="pt"><div class="fld"><label>HLV phụ trách</label><select><option>Đồng</option><option>Lâm</option><option>Tuấn</option></select></div></div>
+    <div class="pane" data-tg="pk" data-t="g10"><div class="fld"><label>HLV phụ trách</label><select><option>Lâm</option><option>Tuấn</option></select></div>
+      <div class="fld"><label>Lịch cố định: chọn khung lớp 10 có sẵn của HLV</label><div class="chips multi"><span class="chip on">T2-4-6 06:00 · 7/10</span><span class="chip">T3-5 18:00 · 10/10</span></div><span class="help">Khung đầy thì không thêm được (BR02, BR29).</span></div></div>
+    <div class="pane" data-tg="pk" data-t="g30"><div class="fld"><label>Lớp</label><select><option>Muay cơ bản (T2-4-6 18:00)</option><option>Muay nâng cao (T3-5 19:30)</option></select></div></div>
+    <div class="pane" data-tg="pk" data-t="mb"><p class="help">Gói thành viên không đếm buổi, check-in tự do một lần mỗi ngày.</p></div>
+    <div class="btns"><div class="fld"><label>Ngày bắt đầu</label><input value="18/11/2026"></div><div class="fld"><label>Ngày hết hạn</label><input value="18/02/2027"></div></div>
+    <div class="fld"><label>Tổng số buổi</label><input value="10"></div>
+    <div class="card" style="display:flex;flex-direction:column;gap:8px">
+      <div class="t1">Lịch cố định hằng tuần (tùy chọn)</div>
+      <div class="chips multi"><span class="chip">T2</span><span class="chip on">T3</span><span class="chip">T4</span><span class="chip on">T5</span><span class="chip">T6</span><span class="chip">T7</span></div>
+      <div class="fld"><label>Giờ PT</label><input value="17:00"></div>
+      <span class="help">Tạo sẵn lịch PT đã xác nhận theo tuần (có kiểm tra ca làm và trùng lịch), hoặc để trống để học viên tự đặt. Hết hiệu lực cùng gói.</span>
+    </div>
+    <div class="note i"><svg class="ic s" data-ic="qr"></svg><span>Lưu xong, hệ thống tự cấp <b>một mã QR và một thẻ tập riêng</b> cho gói này.</span></div>
+    <button class="btn" data-open="sh-qrok">Lưu gói</button>
+  </div>
+  <div class="sheet" id="sh-qrok"><div class="pnl" style="align-items:center"><div class="grab"></div><h3>Đã tạo gói và cấp mã QR</h3>
+    <div class="qrbox" style="border:0;padding:4px"><div data-qr="PKG-0012-03"></div><div class="t1">PKG-0012-03</div><div class="t2">PT 1-1 · HLV Đồng · 10 buổi</div></div>
+    <button class="btn" data-close data-go="ad-student">Xong</button><button class="btn ghost" data-close data-toast="Đã gửi lệnh in thẻ tập">In thẻ tập</button></div></div>
+</section>
+
+<!-- Lịch sử điểm danh (ADMIN) · FR41 -->
+<section class="scr" id="ad-history" data-role="ad" data-title="Lịch sử điểm danh" data-fr="FR41" data-back>
+  <div class="body">
+    <div class="seg" data-tg="adh"><button class="on" data-t="s">Theo học viên</button><button data-t="b">Theo buổi</button></div>
+    <div class="pane on" data-tg="adh" data-t="s">
+    <div class="t2">Nguyễn Văn An · HV0012 · tháng 11/2026</div>
+    <div class="list">
+      <div class="row"><span class="type pt">PT</span><div class="grow"><div class="t1">18/11 · 17:00 · HLV Đồng</div><div class="t2">16:52 · QR · trừ 1 buổi</div></div></div>
+      <div class="row"><span class="type g30">L30</span><div class="grow"><div class="t1">16/11 · 18:00 · Muay cơ bản</div><div class="t2">17:48 · QR · trừ 1 buổi</div></div></div>
+      <div class="row"><span class="type pt">PT</span><div class="grow"><div class="t1">14/11 · 17:00 · HLV Đồng</div><div class="t2">Vắng · không trừ buổi</div></div><span class="badge er">Vắng</span></div>
+      <div class="row"><span class="type pt">PT</span><div class="grow"><div class="t1">11/11 · 17:00 · HLV Đồng</div><div class="t2">17:05 · Thủ công (quên thẻ) · Chị Uyên</div></div></div>
+    </div></div>
+    <div class="pane" data-tg="adh" data-t="b">
+      <div class="t2">Boxing · 18/11 · 18:00 · HLV Lâm</div>
+      <div class="list"><div class="row"><div class="grow"><div class="t1">7 có mặt · 1 vắng · 1 chưa đến</div><div class="t2">5 QR · 1 thủ công · 1 walk-in</div></div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- Hành trình học viên PT (ADMIN xem) · FR47, FR53, FR54 -->
+<section class="scr" id="ad-journey" data-role="ad" data-title="Hành trình · Nguyễn Văn An" data-fr="FR47 FR53 FR54" data-back>
+  <div class="body">
+    <div class="note i"><svg class="ic s" data-ic="info"></svg><span>ADMIN chỉ xem. HLV phụ trách là người ghi nội dung, đánh giá và mục tiêu.</span></div>
+    <div class="card"><div style="display:flex;justify-content:space-between"><div class="t1">Mục tiêu tháng 11</div><span class="badge in">Đang thực hiện</span></div>
+      <div class="t2" style="margin:4px 0 8px">Đá vòng cầu chuẩn form, 3 hiệp liên tục</div><div class="bar"><i style="width:60%"></i></div><div class="t3" style="margin-top:4px">60% · HLV Đồng cập nhật 16/11</div></div>
+    <div class="sec">Lịch sử buổi tập và đánh giá</div>
+    <div class="card tl">
+      <div class="it"><span class="dt"></span><div><div class="t1">18/11 · PT · 4/5</div><div class="t2">Đòn chân vòng cầu, phối hợp tay chân. Giữ trụ tốt hơn.</div></div></div>
+      <div class="it"><span class="dt"></span><div><div class="t1">16/11 · PT · 3/5</div><div class="t2">Phản xạ né đòn. Cần thả lỏng vai.</div></div></div>
+      <div class="it"><span class="dt"></span><div><div class="t1">11/11 · PT · 4/5</div><div class="t2">Thể lực: 3 hiệp bao cát, sức bền ổn.</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- Danh sách cần chăm sóc · FR45, FR46 -->
+<section class="scr" id="ad-alerts" data-role="ad" data-title="Cần chăm sóc" data-fr="FR45 FR46" data-back>
+  <div class="body">
+    <div class="seg" data-tg="al"><button class="on" data-t="e">Sắp hết gói (6)</button><button data-t="i">Lâu không tập (3)</button></div>
+    <div class="pane on" data-tg="al" data-t="e"><p class="help">Còn từ 1 đến 3 buổi, hoặc còn dưới 7 ngày hạn.</p><div class="list">
+      <div class="row"><div class="av">AN</div><div class="grow"><div class="t1">Nguyễn Văn An</div><div class="t2">PT còn 2 buổi</div></div><button class="mini" data-toast="Đang gọi 0901 234 567">Gọi</button></div>
+      <div class="row"><div class="av">VH</div><div class="grow"><div class="t1">Võ Gia Huy</div><div class="t2">Lớp 10 còn 2 buổi</div></div><button class="mini" data-toast="Đang gọi">Gọi</button></div>
+      <div class="row"><div class="av">MT</div><div class="grow"><div class="t1">Mai Trang</div><div class="t2">Lớp 30 còn 5 ngày hạn</div></div><button class="mini" data-toast="Đang gọi">Gọi</button></div>
+    </div></div>
+    <div class="pane" data-tg="al" data-t="i"><p class="help">Từ 14 ngày trở lên không có check-in nào.</p><div class="list">
+      <div class="row"><div class="av">QL</div><div class="grow"><div class="t1">Quang Lộc</div><div class="t2">Lần cuối 28/10 · 21 ngày</div></div><button class="mini" data-toast="Đang gọi">Gọi</button></div>
+      <div class="row"><div class="av">HN</div><div class="grow"><div class="t1">Hà Nhi</div><div class="t2">Lần cuối 02/11 · 16 ngày</div></div><button class="mini" data-toast="Đang gọi">Gọi</button></div>
+    </div></div>
+  </div>
+</section>
+
+<!-- Danh sách HLV · FR04 -->
+<section class="scr" id="ad-trainers" data-role="ad" data-title="Huấn luyện viên" data-fr="FR04 FR26" data-back>
+  <div class="body">
+    <div class="list">
+      <button class="row" data-go="ad-trainer"><div class="av">Đ</div><div class="grow"><div class="t1">Anh Đồng</div><div class="t2">PT, Fitness · 12 học viên PT</div></div><svg class="ic s" data-ic="chev"></svg></button>
+      <button class="row" data-go="ad-trainer"><div class="av">L</div><div class="grow"><div class="t1">Anh Lâm</div><div class="t2">Muay Thái, Boxing · 2 lớp 30</div></div><svg class="ic s" data-ic="chev"></svg></button>
+      <button class="row" data-go="ad-trainer"><div class="av">T</div><div class="grow"><div class="t1">Anh Tuấn</div><div class="t2">Kickboxing · 1 lớp 30</div></div><svg class="ic s" data-ic="chev"></svg></button>
+      <button class="row" data-go="ad-trainer"><div class="av">B</div><div class="grow"><div class="t1">Anh Bảo</div><div class="t2">Boxing, Kickboxing · mới tạo, chưa đăng nhập</div></div><span class="badge wa">Mật khẩu tạm</span></button>
+    </div>
+    <button class="btn" data-go="ad-tr-form"><svg class="ic s" data-ic="plus"></svg>Thêm HLV</button>
+  </div>
+</section>
+
+<!-- Thêm HLV: tài khoản, mật khẩu tạm, ca làm · FR04, FR26, FR01 -->
+<section class="scr" id="ad-tr-form" data-role="ad" data-title="Thêm HLV" data-fr="FR04 FR26 FR01" data-back>
+  <div class="body">
+    <div class="fld"><label>Họ tên</label><input value="Trần Quốc Bảo"></div>
+    <div class="fld"><label>Số điện thoại</label><input value="0912 345 678"></div>
+    <div class="fld"><label>Email (tên đăng nhập)</label><input value="bao.hlv@muaythai.vn"></div>
+    <div class="fld"><label>Chuyên môn</label><input value="Boxing, Kickboxing"></div>
+    <div class="fld"><label>Mật khẩu tạm</label><input value="Bao@2611"><span class="help">ADMIN đặt và đưa cho HLV. HLV bắt buộc đổi mật khẩu ngay ở lần đăng nhập đầu tiên (BR30).</span></div>
+    <div class="sec">Ca làm việc</div>
+    <div class="list">
+      <div class="row"><div class="grow"><div class="t1">Ca sáng · 07:00 – 11:00</div><div class="t2">Áp dụng: T2, T4, T6</div></div><button class="mini">Sửa</button></div>
+      <div class="row"><div class="grow"><div class="t1">Ca chiều · 15:00 – 21:00</div><div class="t2">Áp dụng: T2 – T5</div></div><button class="mini">Sửa</button></div>
+    </div>
+    <button class="btn ghost"><svg class="ic s" data-ic="plus"></svg>Thêm ca</button>
+    <div class="note i"><svg class="ic s" data-ic="info"></svg><span>HLV chưa có ca làm thì lưới lịch trống chưa hiện ô nào và chưa ai đặt được. Có thể bổ sung ca sau trong hồ sơ HLV (BR25).</span></div>
+    <button class="btn" data-toast="Đã tạo tài khoản HLV. Mật khẩu tạm phải đổi ở lần đăng nhập đầu" data-go="ad-trainers">Lưu HLV</button>
+  </div>
+</section>
+
+<!-- Hồ sơ HLV và ca làm · FR04, FR26 -->
+<section class="scr" id="ad-trainer" data-role="ad" data-title="HLV Đồng" data-fr="FR04 FR26" data-back>
+  <div class="body">
+    <div class="seg" data-tg="tr"><button data-t="i">Thông tin</button><button class="on" data-t="s">Ca làm</button></div>
+    <div class="pane" data-tg="tr" data-t="i">
+      <div class="fld"><label>Họ tên</label><input value="Đồng"></div><div class="fld"><label>Số điện thoại</label><input value="0908 555 777"></div>
+      <div class="fld"><label>Email (tên đăng nhập)</label><input value="dong.hlv@muaythai.vn"></div><div class="fld"><label>Chuyên môn</label><input value="PT, Fitness"></div>
+      <button class="btn" data-toast="Đã lưu">Lưu</button><button class="btn danger" data-toast="Đã khóa tài khoản HLV">Khóa tài khoản</button>
+      <button class="btn ghost" data-open="sh-tr-del">Xóa HLV</button>
+    </div>
+    <div class="pane on" data-tg="tr" data-t="s">
+      <div class="days"><button>T2</button><button class="on">T3</button><button>T4</button><button>T5</button><button>T6</button><button>T7</button><button>CN</button></div>
+      <div class="list">
+        <div class="row"><div class="grow"><div class="t1">Ca sáng · 07:00 – 11:00</div><div class="t2">Áp dụng: T2, T3, T5</div></div><button class="mini">Sửa</button></div>
+        <div class="row"><div class="grow"><div class="t1">Ca chiều · 15:00 – 21:00</div><div class="t2">Áp dụng: T2 – T6</div></div><button class="mini">Sửa</button></div>
+      </div>
+      <button class="btn ghost"><svg class="ic s" data-ic="plus"></svg>Thêm ca</button>
+      <div class="note w"><svg class="ic s" data-ic="alert"></svg><span>Ca chốt từ đầu tháng. Nếu sửa ca mà đã có lịch ngoài ca mới, hệ thống liệt kê các lịch đó và chỉ lưu khi đã xử lý xong (BR25).</span></div>
+      <button class="btn" data-go="ad-trainer-grid">Xem lưới lịch và đóng khung giờ</button>
+    </div>
+  </div>
+  <div class="sheet" id="sh-tr-del"><div class="pnl"><div class="grab"></div><h3>Không thể xóa HLV Đồng</h3>
+    <p class="help" style="font-size:13px">HLV này đã có 12 học viên PT, lịch dạy và đánh giá. Chỉ xóa được HLV chưa có dữ liệu nào, ví dụ tài khoản vừa tạo nhầm (BR31). Hãy khóa tài khoản: dữ liệu cũ vẫn giữ, HLV không đăng nhập được.</p>
+    <button class="btn erb" data-close data-toast="Đã khóa tài khoản HLV">Khóa tài khoản thay vì xóa</button><button class="btn ghost" data-close>Đóng</button></div></div>
+</section>
+
+<!-- Lưới lịch HLV, đóng khung giờ · FR28, FR27 -->
+<section class="scr" id="ad-trainer-grid" data-role="ad" data-title="Lưới lịch HLV Đồng" data-fr="FR28 FR27" data-back>
+  <div class="body">
+    <div class="days"><button>T2<b>16</b></button><button>T3<b>17</b></button><button>T4<b>18</b></button><button>T5<b>19</b></button><button class="on">T6<b>20</b></button><button>T7<b>21</b></button><button>CN<b>22</b></button></div>
+    <div class="t3">Ca sáng</div><div class="slots"><span class="slot free" data-open="sh-close">07:00</span><span class="slot free" data-open="sh-close">08:00</span><span class="slot busy">09:00</span><span class="slot free" data-open="sh-close">10:00</span></div>
+    <div class="t3">Ca chiều</div><div class="slots"><span class="slot closed">15:00</span><span class="slot closed">16:00</span><span class="slot busy">17:00</span><span class="slot free" data-open="sh-close">18:00</span><span class="slot free" data-open="sh-close">19:00</span><span class="slot free" data-open="sh-close">20:00</span></div>
+    <div class="legend"><span><i style="background:var(--okb);border:1px solid #BFE3CD"></i>Trống</span><span><i style="background:#E9E6DF"></i>Kẹt</span><span><i style="background:repeating-linear-gradient(135deg,#E9E6DF 0 3px,#D6D1C6 3px 6px)"></i>Đã đóng</span></div>
+    <button class="btn ghost" data-open="sh-closeday">Đóng cả ngày T6 20/11</button>
+    <p class="help">HLV không tự chặn giờ; HLV báo bận thì ADMIN đóng. Ô đóng hiện xám với mọi người và không lộ lý do (BR28).</p>
+  </div>
+  <div class="sheet" id="sh-close"><div class="pnl"><div class="grab"></div><h3>Đóng khung giờ này?</h3>
+    <div class="fld"><label>Ghi chú nội bộ (không hiện cho học viên)</label><input value="HLV đi thi đấu"></div>
+    <button class="btn" data-close data-toast="Đã đóng khung giờ">Đóng khung</button><button class="btn ghost" data-close>Hủy</button></div></div>
+  <div class="sheet" id="sh-closeday"><div class="pnl"><div class="grab"></div><h3>Đóng cả ngày T6 20/11</h3>
+    <div class="note w"><svg class="ic s" data-ic="alert"></svg><span>Có 1 lịch bị ảnh hưởng. Hãy xếp HLV thay thế hoặc báo học viên tự hủy trước khi đóng.</span></div>
+    <div class="list"><div class="row"><span class="type pt">PT</span><div class="grow"><div class="t1">17:00 · Lê Minh Cường</div><div class="t2">Đã xác nhận</div></div><button class="mini">Xếp HLV khác</button></div></div>
+    <button class="btn" data-close data-toast="Đã đóng ngày sau khi xử lý lịch">Đóng ngày</button><button class="btn ghost" data-close>Hủy</button></div></div>
+</section>
+
+<!-- Gửi thông báo chung · FR59 -->
+<section class="scr" id="ad-notify" data-role="ad" data-title="Gửi thông báo chung" data-fr="FR59" data-back>
+  <div class="body">
+    <div class="fld"><label>Gửi tới</label><select><option>Tất cả học viên</option><option>Học viên lớp Muay cơ bản</option><option>Học viên PT</option></select></div>
+    <div class="fld"><label>Tiêu đề</label><input value="Lịch nghỉ Tết Dương lịch"></div>
+    <div class="fld"><label>Nội dung</label><textarea style="min-height:110px">Trung tâm nghỉ ngày 01/01/2027. Các buổi PT trong ngày này sẽ được HLV liên hệ xếp lại.</textarea></div>
+    <p class="help">Thông báo hiện trong app (không dùng thông báo đẩy của điện thoại).</p>
+    <button class="btn" data-toast="Đã gửi tới 186 học viên" data-backgo><svg class="ic s" data-ic="send"></svg>Gửi</button>
+  </div>
+</section>
+
+<!-- Tìm kiếm · FR06 -->
+<section class="scr" id="ad-search" data-role="ad" data-title="Tìm kiếm" data-fr="FR06" data-back>
+  <div class="body">
+    <div class="fld"><input value="Lâm"></div>
+    <div class="chips"><span class="chip on">Tất cả</span><span class="chip">Học viên</span><span class="chip">HLV</span><span class="chip">Lớp</span><span class="chip">Lịch</span></div>
+    <div class="sec">HLV</div><div class="list"><button class="row" data-go="ad-trainer"><div class="av">L</div><div class="grow t1">Anh Lâm</div></button></div>
+    <div class="sec">Lớp</div><div class="list"><button class="row" data-go="ad-c30-form"><span class="type g30">L30</span><div class="grow t1">Muay cơ bản · HLV Lâm</div></button><div class="row"><span class="type g10">L10</span><div class="grow t1">Boxing T3-5 18:00 · HLV Lâm</div></div></div>
+    <div class="sec">Lịch hôm nay</div><div class="list"><button class="row" data-go="ad-session"><span class="type g10">L10</span><div class="grow t1">18:00 Boxing · HLV Lâm</div></button></div>
+    <p class="help">Kết quả luôn theo quyền: ADMIN thấy tất cả; HLV chỉ thấy học viên, buổi của mình; học viên chỉ thấy dữ liệu của mình.</p>
+  </div>
+</section>
+
+<!-- Menu quản lý (tab 4) -->
+<section class="scr" id="ad-more" data-role="ad" data-tab="3" data-title="Quản lý" data-fr="">
+  <div class="body">
+    <div class="list menu">
+      <button class="row" data-go="ad-trainers"><svg class="ic" data-ic="users"></svg><div class="grow"><div class="t1">Huấn luyện viên và ca làm</div><div class="t2">Hồ sơ HLV, ca làm, lưới lịch, đóng khung giờ</div></div><svg class="ic s" data-ic="chev"></svg></button>
+      <button class="row" data-go="ad-c30-list"><svg class="ic" data-ic="cal"></svg><div class="grow"><div class="t1">Lớp 30 người</div><div class="t2">Tạo, sửa, xóa lịch lặp</div></div><svg class="ic s" data-ic="chev"></svg></button>
+      <button class="row" data-go="ad-approve"><svg class="ic" data-ic="check"></svg><div class="grow"><div class="t1">Duyệt khung lớp 10</div><div class="t2">2 khung đang chờ</div></div><span class="badge wa">2</span></button>
+      <button class="row" data-go="ad-alerts"><svg class="ic" data-ic="alert"></svg><div class="grow"><div class="t1">Cần chăm sóc</div><div class="t2">Sắp hết gói, lâu không tập</div></div><span class="badge er">9</span></button>
+      <button class="row" data-go="ad-notify"><svg class="ic" data-ic="send"></svg><div class="grow"><div class="t1">Gửi thông báo chung</div><div class="t2">Đến học viên trong app</div></div><svg class="ic s" data-ic="chev"></svg></button>
+      <button class="row" data-go="ad-search"><svg class="ic" data-ic="search"></svg><div class="grow"><div class="t1">Tìm kiếm</div><div class="t2">Học viên, HLV, lớp, lịch</div></div><svg class="ic s" data-ic="chev"></svg></button>
+      <button class="row" data-go="acc"><svg class="ic" data-ic="user"></svg><div class="grow"><div class="t1">Tài khoản của tôi</div><div class="t2">Thông tin, đổi mật khẩu, đăng xuất</div></div><svg class="ic s" data-ic="chev"></svg></button>
+    </div>
+  </div>
+</section>
+
+<!-- ===================================================================
+     HLV · tab: Lịch dạy | Yêu cầu | Học viên PT | Thông báo
+     =================================================================== -->
+
+<!-- Lịch dạy · FR20, FR19, FR57 -->
+<section class="scr" id="hl-cal" data-role="hl" data-tab="0" data-title="Lịch dạy của tôi" data-fr="FR20 FR19 FR57">
+  <div class="body">
+    <div style="display:flex;justify-content:space-between;align-items:center"><div class="seg" style="width:170px"><button class="on">Ngày</button><button>Tuần</button></div><span class="live">Đồng bộ trực tiếp</span></div>
+    <div class="days"><button>T2<b>16</b></button><button class="has">T3<b>17</b></button><button class="on has">T4<b>18</b></button><button class="has">T5<b>19</b></button><button class="has">T6<b>20</b></button><button>T7<b>21</b></button><button>CN<b>22</b></button></div>
+    <button class="note w tap" data-go="hl-note" style="text-align:left"><svg class="ic s" data-ic="alert"></svg><span><b>Nhắc:</b> buổi PT 16/11 với Nguyễn Văn An chưa nhập đánh giá.</span></button>
+    <div class="list">
+      <button class="row" data-go="hl-session-pt"><span class="type pt">PT</span><div class="grow"><div class="t1">17:00 – 18:00 · Nguyễn Văn An</div><div class="t2">Đã xác nhận · đã check-in 16:52</div></div><span class="badge ok">Đã vào</span></button>
+      <button class="row" data-go="hl-session"><span class="type g10">L10</span><div class="grow"><div class="t1">18:00 – 19:00 · Fitness nhóm</div><div class="t2">Đăng ký 6/10 · đã vào 5</div></div><svg class="ic s" data-ic="chev"></svg></button>
+      <button class="row" data-go="hl-session"><span class="type g30">L30</span><div class="grow"><div class="t1">19:30 – 20:30 · Fitness tối</div><div class="t2">ADMIN phân công · 18/30 check-in</div></div><svg class="ic s" data-ic="chev"></svg></button>
+      <button class="row" data-go="hl-req"><span class="type pt">PT</span><div class="grow"><div class="t1">20:00 – 21:00 · Lê Minh Cường</div><div class="t2">Chờ bạn xác nhận</div></div><span class="badge wa">Chờ</span></button>
+    </div>
+  </div>
+  <button class="fab" data-open="sh-hladd"><svg class="ic" data-ic="plus"></svg></button>
+  <div class="sheet" id="sh-hladd"><div class="pnl"><div class="grab"></div><h3>Tạo mới</h3>
+    <div class="list menu">
+      <button class="row" data-close data-go="hl-c10-form"><svg class="ic" data-ic="users"></svg><div class="grow"><div class="t1">Đăng ký khung lớp 10</div><div class="t2">Lặp hằng tuần, chờ ADMIN duyệt</div></div></button>
+      <button class="row" data-close data-go="hl-pt-out"><svg class="ic" data-ic="cal"></svg><div class="grow"><div class="t1">Xếp PT ngoài ca</div><div class="t2">Khi đã tự thỏa thuận với học viên</div></div></button>
+      <button class="row" data-close data-go="hl-shift"><svg class="ic" data-ic="clock"></svg><div class="grow"><div class="t1">Ca làm của tôi</div><div class="t2">Chỉ xem</div></div></button>
+    </div><button class="btn ghost" data-close>Đóng</button></div></div>
+</section>
+
+<!-- Chi tiết buổi lớp (HLV) · FR36, FR37, FR38, FR39, FR44 -->
+<section class="scr" id="hl-session" data-role="hl" data-title="Fitness nhóm · 18:00" data-fr="FR36 FR37 FR38 FR39 FR44" data-back>
+  <div class="body">
+    <div class="card"><div style="display:flex;justify-content:space-between"><span class="type g10">LỚP 10</span><span class="badge in">Đang diễn ra</span></div><div class="t1" style="font-size:16px;margin-top:8px">5/6 đã vào</div><div class="t2">Thứ 4, 18/11 · 18:00 – 19:00 · 6/10 đăng ký</div></div>
+    <div class="seg" data-tg="hls"><button class="on" data-t="in">Đã check-in (5)</button><button data-t="no">Chưa check-in (1)</button></div>
+    <div class="pane on" data-tg="hls" data-t="in"><div class="list">
+      <div class="row"><div class="av">PT</div><div class="grow"><div class="t1">Phan Tâm · HV0019</div><div class="t2">17:56 · gói còn 9 buổi</div></div></div>
+      <div class="row"><div class="av">MT</div><div class="grow"><div class="t1">Mai Trang · HV0024</div><div class="t2">17:59 · gói còn 2 buổi</div></div><span class="badge wa">Sắp hết</span></div>
+      <div class="row"><div class="grow t2" style="text-align:center">và 3 học viên khác</div></div>
+    </div></div>
+    <div class="pane" data-tg="hls" data-t="no"><div class="list">
+      <div class="row"><div class="av">KL</div><div class="grow"><div class="t1">Kiều Linh · HV0047</div><div class="t2">Đã đăng ký, chưa đến</div></div><button class="mini" data-toast="Đã ghi nhận thủ công (lý do: quên thẻ)">Điểm danh</button><button class="mini e" data-toast="Đã đánh dấu vắng">Vắng</button></div>
+    </div></div>
+    <p class="help">HLV chỉ điểm danh thủ công buổi mình dạy; không quét QR.</p>
+    <button class="btn" data-go="hl-note">Ghi nội dung và nhận xét chung</button>
+  </div>
+</section>
+
+<!-- Chi tiết buổi PT (HLV) · FR21, FR14, FR48 -->
+<section class="scr" id="hl-session-pt" data-role="hl" data-title="PT · Nguyễn Văn An" data-fr="FR21 FR14 FR48" data-back>
+  <div class="body">
+    <div class="card"><div style="display:flex;justify-content:space-between"><span class="type pt">PT 1-1</span><span class="badge ok">Đã check-in 16:52</span></div>
+      <div class="t1" style="font-size:16px;margin-top:8px">17:00 – 18:00 · Thứ 4, 18/11</div><div class="kv"><span>Gói</span><b>Còn 2/10 buổi</b></div><div class="kv"><span>Mục tiêu tháng</span><b>Đá vòng cầu · 60%</b></div></div>
+    <button class="btn" data-go="hl-note">Ghi nội dung và đánh giá</button>
+    <button class="btn ghost" data-go="hl-propose">Đề xuất đổi giờ buổi PT</button>
+    <button class="btn danger" data-open="sh-cancel-hl">Hủy buổi</button>
+  </div>
+  <div class="sheet" id="sh-cancel-hl"><div class="pnl"><div class="grab"></div><h3>Hủy buổi PT</h3>
+    <div class="fld"><label>Lý do</label><textarea>Bị chấn thương nhẹ, xin nghỉ</textarea></div><p class="help">Học viên nhận thông báo. Hủy hợp lệ không trừ buổi (BR11).</p>
+    <button class="btn erb" data-close data-toast="Đã hủy và báo học viên" data-backgo>Hủy buổi</button><button class="btn ghost" data-close>Giữ lại</button></div></div>
+</section>
+
+<!-- Ghi nội dung và đánh giá · FR48, FR49 -->
+<section class="scr" id="hl-note" data-role="hl" data-title="Nội dung buổi PT 18/11" data-fr="FR48 FR49" data-back>
+  <div class="body">
+    <div class="kv"><span>Học viên</span><b>Nguyễn Văn An · PT</b></div>
+    <div class="fld"><label>Nội dung kỹ thuật đã dạy</label><textarea>Đòn chân vòng cầu, phối hợp tay trước – chân sau, 3 hiệp bao cát</textarea></div>
+    <div class="fld"><label>Nhận xét</label><textarea>Giữ trụ tốt hơn buổi trước, cần xoay hông sâu hơn.</textarea></div>
+    <div class="fld"><label>Đánh giá kết quả (bắt buộc với PT)</label><div class="rate"><button>1</button><button>2</button><button>3</button><button class="on">4</button><button>5</button></div></div>
+    <div class="note i"><svg class="ic s" data-ic="info"></svg><span>Buổi lớp nhóm chỉ có nội dung và nhận xét chung, không đánh giá từng người (BR19).</span></div>
+    <button class="btn" data-toast="Đã lưu. Học viên xem được trong Hành trình" data-go="hl-cal" data-reset>Lưu</button>
+  </div>
+</section>
+
+<!-- HLV đề xuất đổi giờ PT · FR14, FR11, FR23 -->
+<section class="scr" id="hl-propose" data-role="hl" data-title="Đề xuất đổi giờ PT" data-fr="FR14 FR11 FR23" data-back>
+  <div class="body">
+    <div class="card"><div class="t3">Lịch hiện tại</div><div class="t1">T6 20/11 · 17:00 – 18:00 · Lê Minh Cường</div></div>
+    <div class="days"><button>T2<b>16</b></button><button>T3<b>17</b></button><button>T4<b>18</b></button><button>T5<b>19</b></button><button>T6<b>20</b></button><button class="on">T7<b>21</b></button><button>CN<b>22</b></button></div>
+    <div class="slots"><span class="slot free">07:00</span><span class="slot sel">08:00</span><span class="slot busy">09:00</span><span class="slot free">10:00</span></div>
+    <div class="note s"><svg class="ic s" data-ic="check"></svg><span>Bạn trống và học viên không trùng giờ lúc T7 08:00.</span></div>
+    <div class="note i"><svg class="ic s" data-ic="clock"></svg><span>Lịch cũ <b>giữ nguyên</b> đến khi học viên đồng ý. Yêu cầu tự hết hạn sau 24 giờ hoặc khi buổi cũ bắt đầu (BR10).</span></div>
+    <button class="btn" data-toast="Đã gửi đề xuất, chờ học viên xác nhận" data-go="hl-req">Gửi đề xuất</button>
+  </div>
+</section>
+
+<!-- Yêu cầu chờ xử lý · FR13, FR10, FR22, FR15 -->
+<section class="scr" id="hl-req" data-role="hl" data-tab="1" data-title="Yêu cầu" data-fr="FR13 FR10 FR22 FR15">
+  <div class="body">
+    <div class="sec">Học viên đặt PT, chờ bạn xác nhận</div>
+    <div class="card" style="display:flex;flex-direction:column;gap:8px"><div style="display:flex;gap:10px;align-items:center"><div class="av">AN</div><div class="grow"><div class="t1">Nguyễn Văn An</div><div class="t2">T5 19/11 · 17:00 – 18:00 · gói còn 2 buổi</div></div></div>
+      <div class="btns"><button class="mini e" data-open="sh-rej-hl">Từ chối</button><button class="mini p" data-toast="Đã xác nhận. Học viên nhận thông báo">Xác nhận</button></div></div>
+    <div class="card" style="display:flex;flex-direction:column;gap:8px"><div style="display:flex;gap:10px;align-items:center"><div class="av">LC</div><div class="grow"><div class="t1">Lê Minh Cường</div><div class="t2">T4 18/11 · 20:00 – 21:00</div></div></div>
+      <div class="btns"><button class="mini e" data-open="sh-rej-hl">Từ chối</button><button class="mini p" data-toast="Đã xác nhận">Xác nhận</button></div></div>
+    <div class="sec">Học viên đề xuất đổi lịch PT</div>
+    <div class="card" style="display:flex;flex-direction:column;gap:8px">
+      <div class="cmp"><div class="card"><div class="t3">Lịch cũ</div><div class="t1">T6 20/11 17:00</div></div><svg class="ic s" data-ic="chev"></svg><div class="card" style="border-color:var(--role)"><div class="t3">Giờ mới</div><div class="t1">T7 21/11 09:00</div></div></div>
+      <div class="t2">Phan Tâm · tự hết hạn sau <b>21 giờ</b></div>
+      <div class="btns"><button class="mini e" data-toast="Đã từ chối, giữ lịch cũ">Từ chối</button><button class="mini p" data-toast="Đã đồng ý, lịch cập nhật cho cả hai">Đồng ý</button></div></div>
+    <div class="sec">Đề xuất của bạn</div>
+    <div class="list"><div class="row"><div class="grow"><div class="t1">Lê Minh Cường · T6 17:00 → T7 08:00</div><div class="t2">Gửi 10 phút trước</div></div><span class="badge wa">Đang chờ</span></div>
+      <div class="row"><div class="grow"><div class="t1">Phan Tâm · T3 17:00 → T3 19:00</div><div class="t2">Gửi 15/11</div></div><span class="badge mu">Hết hạn</span></div></div>
+  </div>
+  <div class="sheet" id="sh-rej-hl"><div class="pnl"><div class="grab"></div><h3>Từ chối yêu cầu đặt PT</h3><div class="fld"><label>Lý do</label><textarea>Giờ này tôi có lịch thi đấu</textarea></div>
+    <button class="btn erb" data-close data-toast="Đã từ chối, ô lịch trống lại">Từ chối</button><button class="btn ghost" data-close>Hủy</button></div></div>
+</section>
+
+<!-- Đăng ký khung lớp 10 · FR09, FR11 -->
+<section class="scr" id="hl-c10-form" data-role="hl" data-title="Đăng ký khung lớp 10" data-fr="FR09 FR11" data-back>
+  <div class="body">
+    <div class="fld"><label>Tên lớp</label><input value="Fitness nhóm"></div>
+    <div class="fld"><label>Lặp vào các thứ</label><div class="chips multi"><span class="chip on">T2</span><span class="chip">T3</span><span class="chip on">T4</span><span class="chip">T5</span><span class="chip on">T6</span><span class="chip">T7</span></div></div>
+    <div class="btns"><div class="fld"><label>Giờ bắt đầu</label><input value="06:00"></div><div class="fld"><label>Giờ kết thúc</label><input value="07:00"></div></div>
+    <div class="kv"><span>Sức chứa</span><b>10 học viên</b></div>
+    <div class="note s"><svg class="ic s" data-ic="check"></svg><span>Nằm trong ca làm và không trùng lịch.</span></div>
+    <div class="note i"><svg class="ic s" data-ic="info"></svg><span>Hệ thống sinh buổi cho vài tuần tới ở trạng thái <b>chờ duyệt</b>. Chỉ khi ADMIN duyệt, học viên có gói lớp 10 với bạn mới đăng ký được.</span></div>
+    <button class="btn" data-toast="Đã gửi ADMIN duyệt" data-backgo>Gửi duyệt</button>
+  </div>
+</section>
+
+<!-- PT ngoài ca · FR10, FR11 -->
+<section class="scr" id="hl-pt-out" data-role="hl" data-title="Xếp PT ngoài ca" data-fr="FR10 FR11" data-back>
+  <div class="body">
+    <div class="fld"><label>Học viên PT của tôi</label><select><option>Nguyễn Văn An · còn 2 buổi</option><option>Phan Tâm · còn 9 buổi</option></select></div>
+    <div class="btns"><div class="fld"><label>Ngày</label><input value="CN 22/11"></div><div class="fld"><label>Giờ</label><input value="06:00"></div></div>
+    <label class="card" style="display:flex;gap:10px;align-items:flex-start;font-size:13px"><input type="checkbox" checked style="width:18px;height:18px;margin-top:1px"><span>Tôi đã tự thỏa thuận riêng với học viên về giờ này</span></label>
+    <div class="note i"><svg class="ic s" data-ic="info"></svg><span>Ngoài ca làm nên chỉ HLV tạo được. Lịch đi thẳng vào trạng thái <b>đã xác nhận</b>, học viên không phải xác nhận lại (BR26). Vẫn kiểm tra trùng lịch.</span></div>
+    <button class="btn" data-toast="Đã tạo lịch PT CN 06:00 (đã xác nhận)" data-backgo>Tạo lịch</button>
+  </div>
+</section>
+
+<!-- Ca làm của tôi · FR26 -->
+<section class="scr" id="hl-shift" data-role="hl" data-title="Ca làm của tôi" data-fr="FR26" data-back>
+  <div class="body">
+    <div class="list">
+      <div class="row"><div class="grow"><div class="t1">Thứ 2, 3, 5</div><div class="t2">07:00 – 11:00 · 15:00 – 21:00</div></div></div>
+      <div class="row"><div class="grow"><div class="t1">Thứ 4, 6</div><div class="t2">15:00 – 21:00</div></div></div>
+      <div class="row"><div class="grow"><div class="t1">Thứ 7</div><div class="t2">07:00 – 11:00</div></div></div>
+      <div class="row"><div class="grow"><div class="t1">Chủ nhật</div><div class="t2">Nghỉ</div></div></div>
+    </div>
+    <div class="note i"><svg class="ic s" data-ic="info"></svg><span>Chỉ xem. Muốn đổi ca hoặc báo bận, liên hệ ADMIN vào đầu tháng.</span></div>
+  </div>
+</section>
+
+<!-- Học viên PT của tôi · FR47, FR06 -->
+<section class="scr" id="hl-students" data-role="hl" data-tab="2" data-title="Học viên PT của tôi" data-fr="FR47 FR06">
+  <div class="body">
+    <div class="fld"><input placeholder="Tìm học viên của tôi"></div>
+    <div class="list">
+      <button class="row" data-go="hl-student"><div class="av">AN</div><div class="grow"><div class="t1">Nguyễn Văn An</div><div class="t2">Còn 2 buổi · mục tiêu 60%</div><div class="bar" style="margin-top:6px"><i style="width:60%"></i></div></div><span class="badge wa">Sắp hết</span></button>
+      <button class="row" data-go="hl-student"><div class="av">PT</div><div class="grow"><div class="t1">Phan Tâm</div><div class="t2">Còn 9 buổi · mục tiêu 30%</div><div class="bar" style="margin-top:6px"><i style="width:30%"></i></div></div></button>
+      <button class="row" data-go="hl-student"><div class="av">LC</div><div class="grow"><div class="t1">Lê Minh Cường</div><div class="t2">Còn 8 buổi · chưa có mục tiêu tháng</div></div><span class="badge mu">Chưa đặt</span></button>
+    </div>
+    <p class="help">Danh sách chỉ gồm học viên PT do bạn phụ trách.</p>
+  </div>
+</section>
+
+<!-- Chi tiết học viên PT · FR47, FR53, FR54 -->
+<section class="scr" id="hl-student" data-role="hl" data-title="Nguyễn Văn An" data-fr="FR47 FR53 FR54" data-back>
+  <div class="body">
+    <div class="card" style="display:flex;gap:12px;align-items:center"><div class="av lg">AN</div><div class="grow"><div class="t1">Nguyễn Văn An · HV0012</div><div class="t2">PT còn 2/10 · HSD 30/12 · 8 buổi đã tập</div></div></div>
+    <div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><div class="t1">Mục tiêu tháng 11</div><button class="mini" data-go="hl-goal">Cập nhật</button></div>
+      <div class="t2" style="margin:4px 0 8px">Đá vòng cầu chuẩn form, 3 hiệp liên tục</div><div class="bar"><i style="width:60%"></i></div><div class="t3" style="margin-top:4px">60% · Đang thực hiện</div></div>
+    <button class="btn ghost" data-go="hl-goal"><svg class="ic s" data-ic="plus"></svg>Mục tiêu tháng 12</button>
+    <div class="sec">Lịch sử nội dung và đánh giá</div>
+    <div class="card tl">
+      <div class="it"><span class="dt"></span><div><div class="t1">18/11 · 4/5</div><div class="t2">Đòn chân vòng cầu, phối hợp tay chân.</div></div></div>
+      <div class="it"><span class="dt"></span><div><div class="t1">16/11 · chưa đánh giá</div><div class="t2"><a style="color:var(--role);font-weight:600;cursor:pointer" data-go="hl-note">Nhập ngay</a></div></div></div>
+      <div class="it"><span class="dt"></span><div><div class="t1">11/11 · 4/5</div><div class="t2">Thể lực 3 hiệp, sức bền ổn.</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- Mục tiêu tháng · FR51, FR52 -->
+<section class="scr" id="hl-goal" data-role="hl" data-title="Mục tiêu tháng" data-fr="FR51 FR52" data-back>
+  <div class="body">
+    <div class="kv"><span>Học viên</span><b>Nguyễn Văn An</b></div><div class="kv"><span>Tháng</span><b>11/2026</b></div>
+    <div class="fld"><label>Tiêu đề mục tiêu</label><input value="Đá vòng cầu chuẩn form"></div>
+    <div class="fld"><label>Chỉ số cần đạt</label><textarea>3 hiệp liên tục, giữ trụ, xoay hông đúng</textarea></div>
+    <div class="fld"><label>Trạng thái</label><div class="chips"><span class="chip">Chưa bắt đầu</span><span class="chip on">Đang thực hiện</span><span class="chip">Đạt</span><span class="chip">Không đạt</span></div></div>
+    <div class="fld"><label>Mức hoàn thành: 60%</label><input type="range" value="60" style="height:auto;padding:0;border:0"></div>
+    <p class="help">Mục tiêu dựa trên trao đổi giữa HLV và học viên; chỉ áp dụng cho học viên PT (BR23).</p>
+    <button class="btn" data-toast="Đã lưu mục tiêu" data-backgo>Lưu mục tiêu</button>
+  </div>
+</section>
+
+<!-- Thông báo HLV · FR56, FR57 -->
+<section class="scr" id="hl-notif" data-role="hl" data-tab="3" data-title="Thông báo" data-fr="FR56 FR57">
+  <div class="body">
+    <div class="list">
+      <button class="row" data-go="hl-req"><div class="av" style="background:var(--wab);color:var(--wa)"><svg class="ic s" data-ic="cal"></svg></div><div class="grow"><div class="t1">Nguyễn Văn An đặt PT T5 17:00</div><div class="t2">Chờ bạn xác nhận · 5 phút trước</div></div></button>
+      <button class="row" data-go="hl-note"><div class="av" style="background:var(--erb);color:var(--er)"><svg class="ic s" data-ic="alert"></svg></div><div class="grow"><div class="t1">Chưa nhập đánh giá buổi PT 16/11</div><div class="t2">Nhắc khi mở app</div></div></button>
+      <div class="row"><div class="av" style="background:var(--okb);color:var(--ok)"><svg class="ic s" data-ic="check"></svg></div><div class="grow"><div class="t1">ADMIN đã duyệt khung lớp 10 T2-4-6 06:00</div><div class="t2">Hôm qua</div></div></div>
+      <div class="row"><div class="av"><svg class="ic s" data-ic="x"></svg></div><div class="grow"><div class="t1">Phan Tâm hủy buổi PT T3 17:00</div><div class="t2">16/11</div></div></div>
+      <div class="row"><div class="av"><svg class="ic s" data-ic="cal"></svg></div><div class="grow"><div class="t1">Bạn được phân dạy lớp 30 Fitness tối</div><div class="t2">15/11</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================================================================
+     HỌC VIÊN · tab: Lịch | Đặt lịch | Thẻ QR | Hành trình
+     =================================================================== -->
+
+<!-- Lịch của tôi · FR17, FR20, FR19 -->
+<section class="scr" id="hv-cal" data-role="hv" data-tab="0" data-title="Lịch của tôi" data-fr="FR17 FR20 FR19">
+  <div class="body">
+    <div style="display:flex;justify-content:space-between;align-items:center"><div class="seg" style="width:170px"><button class="on">Ngày</button><button>Tuần</button></div><span class="live">Đồng bộ trực tiếp</span></div>
+    <div class="days"><button>T2<b>16</b></button><button>T3<b>17</b></button><button class="on has">T4<b>18</b></button><button class="has">T5<b>19</b></button><button class="has">T6<b>20</b></button><button>T7<b>21</b></button><button>CN<b>22</b></button></div>
+    <button class="note w tap" data-go="hv-change-in" style="text-align:left"><svg class="ic s" data-ic="clock"></svg><span><b>HLV Đồng đề xuất đổi giờ PT T6.</b> Còn 21 giờ để trả lời.</span></button>
+    <div class="list">
+      <button class="row" data-go="hv-pt-detail"><span class="type pt">PT</span><div class="grow"><div class="t1">17:00 – 18:00 · HLV Đồng</div><div class="t2">Đã xác nhận</div></div><span class="badge ok">Đã vào</span></button>
+      <button class="row" data-toast="Lớp 30: lịch cố định, chỉ xem. Check-in tại quầy"><span class="type g30">L30</span><div class="grow"><div class="t1">19:30 – 20:30 · Muay cơ bản</div><div class="t2">Lịch cố định của lớp · chỉ xem</div></div></button>
+    </div>
+    <div class="sec">Sắp tới</div>
+    <div class="list">
+      <button class="row" data-go="hv-pt-detail"><span class="type pt">PT</span><div class="grow"><div class="t1">T5 19/11 · 17:00 · HLV Đồng</div><div class="t2">Chờ HLV xác nhận</div></div><span class="badge wa">Chờ</span></button>
+      <button class="row" data-go="hv-c10"><span class="type g10">L10</span><div class="grow"><div class="t1">T5 19/11 · 18:00 · HLV Lâm</div><div class="t2">Đã đăng ký · 9/10</div></div><svg class="ic s" data-ic="chev"></svg></button>
+    </div>
+  </div>
+</section>
+
+<!-- Chi tiết buổi PT (học viên) · FR21, FR22 -->
+<section class="scr" id="hv-pt-detail" data-role="hv" data-title="Buổi PT" data-fr="FR21 FR22" data-back>
+  <div class="body">
+    <div class="card"><div style="display:flex;justify-content:space-between"><span class="type pt">PT 1-1</span><span class="badge ok">Đã xác nhận</span></div>
+      <div class="t1" style="font-size:16px;margin-top:8px">T6 20/11 · 17:00 – 18:00</div><div class="kv"><span>HLV</span><b>Đồng</b></div><div class="kv"><span>Gói</span><b>Còn 2/10 buổi</b></div></div>
+    <button class="btn ghost" data-go="hv-propose">Đề xuất đổi giờ</button>
+    <button class="btn danger" data-open="sh-cancel-hv">Hủy buổi</button>
+    <p class="help">Chỉ hủy được trước giờ bắt đầu ít nhất 12 giờ. Hủy đúng hạn không trừ buổi.</p>
+  </div>
+  <div class="sheet" id="sh-cancel-hv"><div class="pnl"><div class="grab"></div><h3>Hủy buổi PT T6 17:00?</h3><p class="help" style="font-size:13px">Còn 46 giờ nên được hủy. HLV Đồng sẽ nhận thông báo.</p>
+    <button class="btn erb" data-close data-toast="Đã hủy buổi, không trừ buổi" data-backgo>Hủy buổi</button><button class="btn ghost" data-close>Giữ lại</button></div></div>
+</section>
+
+<!-- Học viên đề xuất đổi lịch PT · FR22, FR11 -->
+<section class="scr" id="hv-propose" data-role="hv" data-title="Đề xuất đổi giờ PT" data-fr="FR22 FR11" data-back>
+  <div class="body">
+    <div class="card"><div class="t3">Lịch hiện tại</div><div class="t1">T6 20/11 · 17:00 · HLV Đồng</div></div>
+    <div class="days"><button>T2<b>16</b></button><button>T3<b>17</b></button><button>T4<b>18</b></button><button>T5<b>19</b></button><button>T6<b>20</b></button><button class="on">T7<b>21</b></button><button>CN<b>22</b></button></div>
+    <div class="slots"><span class="slot free">07:00</span><span class="slot busy">08:00</span><span class="slot sel">09:00</span><span class="slot free">10:00</span></div>
+    <div class="note i"><svg class="ic s" data-ic="info"></svg><span>Lịch cũ giữ nguyên đến khi HLV đồng ý. Mỗi buổi PT chỉ có một đề xuất đang chờ.</span></div>
+    <button class="btn" data-toast="Đã gửi đề xuất đến HLV Đồng" data-go="hv-cal" data-reset>Gửi đề xuất</button>
+  </div>
+</section>
+
+<!-- Phản hồi đề xuất đổi lịch của HLV · FR15, FR55, FR23 -->
+<section class="scr" id="hv-change-in" data-role="hv" data-title="Đề xuất đổi lịch PT" data-fr="FR15 FR55 FR23" data-back>
+  <div class="body">
+    <p class="t2">HLV Đồng đề xuất đổi buổi PT của bạn:</p>
+    <div class="cmp"><div class="card"><div class="t3">Lịch cũ</div><div class="t1">T6 20/11</div><div class="t2">17:00 – 18:00</div></div><svg class="ic s" data-ic="chev"></svg><div class="card" style="border-color:var(--role);background:#FFF7F8"><div class="t3">Giờ mới</div><div class="t1">T7 21/11</div><div class="t2">08:00 – 09:00</div></div></div>
+    <div class="card" style="text-align:center"><div class="t3">Tự hết hạn sau</div><div class="cnt" style="margin-top:6px">21:14:05</div><div class="t3" style="margin-top:6px">hoặc khi buổi cũ bắt đầu</div></div>
+    <div class="note i"><svg class="ic s" data-ic="info"></svg><span>Từ chối hoặc để hết hạn thì giữ nguyên lịch cũ.</span></div>
+    <div class="sp"></div>
+    <div class="btns"><button class="btn danger" data-toast="Đã từ chối, giữ lịch cũ" data-go="hv-cal" data-reset>Từ chối</button><button class="btn" data-toast="Đã đồng ý. Lịch mới T7 08:00" data-go="hv-cal" data-reset>Đồng ý</button></div>
+  </div>
+</section>
+
+<!-- Đặt lịch (trung tâm) · FR13, FR16 -->
+<section class="scr" id="hv-book-hub" data-role="hv" data-tab="1" data-title="Đặt lịch" data-fr="FR13 FR16">
+  <div class="body">
+    <button class="card tap" data-go="hv-book" style="text-align:left;display:flex;gap:12px;align-items:center"><span class="type pt">PT</span><div class="grow"><div class="t1">Đặt PT với HLV Đồng</div><div class="t2">Gói PT còn 2 buổi · chọn ô trống trên lưới</div></div><svg class="ic s" data-ic="chev"></svg></button>
+    <button class="card tap" data-go="hv-c10" style="text-align:left;display:flex;gap:12px;align-items:center"><span class="type g10">L10</span><div class="grow"><div class="t1">Lớp 10 của HLV Lâm</div><div class="t2">Đăng ký, đổi hoặc hủy buổi</div></div><svg class="ic s" data-ic="chev"></svg></button>
+    <div class="card" style="display:flex;gap:12px;align-items:center"><span class="type g30">L30</span><div class="grow"><div class="t1">Lớp 30 · Muay cơ bản</div><div class="t2">Không cần đăng ký. Đến đúng buổi và check-in tại quầy</div></div></div>
+    <p class="help">Bạn chỉ thấy khung PT và buổi lớp 10 của HLV phụ trách gói (BR21).</p>
+  </div>
+</section>
+
+<!-- Đặt PT trên lưới · FR13, FR27, FR11 -->
+<section class="scr" id="hv-book" data-role="hv" data-title="Đặt PT với HLV Đồng" data-fr="FR13 FR27 FR11" data-back>
+  <div class="body">
+    <div class="days"><button>T2<b>16</b></button><button>T3<b>17</b></button><button>T4<b>18</b></button><button class="on">T5<b>19</b></button><button>T6<b>20</b></button><button>T7<b>21</b></button><button>CN<b>22</b></button></div>
+    <div class="t3">Ca sáng</div><div class="slots"><span class="slot free">07:00</span><span class="slot busy">08:00</span><span class="slot free">09:00</span><span class="slot free">10:00</span></div>
+    <div class="t3">Ca chiều</div><div class="slots"><span class="slot free">15:00</span><span class="slot busy">16:00</span><span class="slot sel">17:00</span><span class="slot busy">18:00</span><span class="slot free">19:00</span><span class="slot busy">20:00</span></div>
+    <div class="legend"><span><i style="background:var(--okb);border:1px solid #BFE3CD"></i>Trống</span><span><i style="background:#E9E6DF"></i>Kẹt</span><span><i style="background:var(--role)"></i>Đang chọn</span></div>
+    <p class="help">Giờ ngoài ca làm không hiện. Ô kẹt không cho biết ai đã đặt. Nếu ô vừa bị người khác đặt trước, app báo để bạn chọn lại.</p>
+    <button class="btn" data-toast="Đã gửi yêu cầu T5 17:00, chờ HLV xác nhận" data-go="hv-cal" data-reset>Gửi yêu cầu T5 17:00</button>
+  </div>
+</section>
+
+<!-- Lớp 10 của HLV phụ trách · FR16, FR12, FR21 -->
+<section class="scr" id="hv-c10" data-role="hv" data-title="Lớp 10 · HLV Lâm" data-fr="FR16 FR12 FR21" data-back>
+  <div class="body">
+    <div class="sec">Buổi của tôi</div>
+    <div class="card" style="display:flex;flex-direction:column;gap:8px"><div style="display:flex;justify-content:space-between"><div class="t1">T5 19/11 · 18:00 · Boxing</div><span class="badge ok">Đã đăng ký</span></div><div class="t2">9/10 chỗ · lịch cố định T3-5</div>
+      <div class="btns"><button class="mini e" data-toast="Đã hủy đăng ký (trước 3 giờ)">Hủy đăng ký</button><button class="mini p" data-go="hv-c10-swap">Đổi buổi</button></div></div>
+    <div class="sec">Buổi khác của HLV Lâm</div>
+    <div class="list">
+      <div class="row"><div class="grow"><div class="t1">T6 20/11 · 06:00</div><div class="t2">7/10 chỗ</div></div><button class="mini p" data-toast="Đã đăng ký buổi T6 06:00">Đăng ký</button></div>
+      <div class="row"><div class="grow"><div class="t1">T7 21/11 · 09:00</div><div class="t2">10/10 chỗ</div></div><span class="badge er">Hết chỗ</span></div>
+    </div>
+    <div class="note i"><svg class="ic s" data-ic="info"></svg><span>Chỉ học viên lớp 10 được tự đổi buổi, và chỉ sang buổi do HLV phụ trách mở, còn chỗ. Muốn tập giờ HLV không có lớp, hãy báo quầy để đổi HLV phụ trách.</span></div>
+  </div>
+</section>
+
+<!-- Đổi buổi lớp 10 · FR16, FR12 -->
+<section class="scr" id="hv-c10-swap" data-role="hv" data-title="Đổi buổi lớp 10" data-fr="FR16 FR12" data-back>
+  <div class="body">
+    <div class="card"><div class="t3">Buổi đang đăng ký</div><div class="t1">T5 19/11 · 18:00 · HLV Lâm</div></div>
+    <div class="seg"><button class="on">Chỉ buổi này</button><button>Đổi cả lịch cố định</button></div>
+    <div class="sec">Chọn buổi thay thế (còn chỗ)</div>
+    <div class="list">
+      <label class="row"><input type="radio" name="sw" checked style="width:18px;height:18px"><div class="grow"><div class="t1">T6 20/11 · 06:00</div><div class="t2">7/10 chỗ</div></div></label>
+      <label class="row"><input type="radio" name="sw" style="width:18px;height:18px"><div class="grow"><div class="t1">T3 24/11 · 18:00</div><div class="t2">8/10 chỗ</div></div></label>
+      <div class="row" style="opacity:.5"><input type="radio" disabled style="width:18px;height:18px"><div class="grow"><div class="t1">T7 21/11 · 09:00</div><div class="t2">Hết chỗ</div></div></div>
+    </div>
+    <button class="btn" data-toast="Đã đổi sang T6 20/11 06:00" data-go="hv-cal" data-reset>Xác nhận đổi</button>
+  </div>
+</section>
+
+<!-- Thẻ tập của tôi · FR31 -->
+<section class="scr" id="hv-cards" data-role="hv" data-tab="2" data-title="Thẻ tập của tôi" data-fr="FR31">
+  <div class="body">
+    <p class="help">Mỗi gói có một mã QR riêng. Chọn gói muốn tập hôm nay rồi đưa Sale quét: quét gói nào trừ gói đó.</p>
+    <div class="list">
+      <button class="row" data-go="hv-qr"><span class="type pt">PT</span><div class="grow"><div class="t1">PT 1-1 · HLV Đồng</div><div class="t2">Còn 2/10 · HSD 30/12/2026</div></div><svg class="ic s" data-ic="qr"></svg></button>
+      <button class="row" data-go="hv-qr"><span class="type g30">L30</span><div class="grow"><div class="t1">Lớp 30 · Muay cơ bản</div><div class="t2">Còn 14/24 · HSD 20/01/2027</div></div><svg class="ic s" data-ic="qr"></svg></button>
+      <button class="row" data-go="hv-qr"><span class="type g10">L10</span><div class="grow"><div class="t1">Lớp 10 · HLV Lâm</div><div class="t2">Còn 11/16 · HSD 15/01/2027</div></div><svg class="ic s" data-ic="qr"></svg></button>
+    </div>
+  </div>
+</section>
+
+<!-- Mã QR của gói · FR31, FR30 -->
+<section class="scr" id="hv-qr" data-role="hv" data-title="QR · Gói PT" data-fr="FR31 FR30" data-back>
+  <div class="body" style="align-items:stretch">
+    <div class="qrbox"><div data-qr="PKG-0012-01"></div><div class="t1" style="font-size:16px">Nguyễn Văn An</div><div class="t2">Mã HV: HV0012 · Mã gói PKG-0012-01</div></div>
+    <div class="card"><div class="kv"><span>Gói</span><b>PT 1-1 · HLV Đồng</b></div><div class="kv"><span>Còn lại</span><b>2/10 buổi</b></div><div class="kv"><span>Hạn dùng</span><b>30/12/2026</b></div></div>
+    <p class="help" style="text-align:center">Dùng khi quên thẻ. Tăng độ sáng màn hình để quét nhanh hơn.</p>
+  </div>
+</section>
+
+<!-- Hành trình · FR50, FR53, FR54 -->
+<section class="scr" id="hv-journey" data-role="hv" data-tab="3" data-title="Hành trình của tôi" data-fr="FR50 FR53 FR54">
+  <div class="body">
+    <div class="card"><div style="display:flex;justify-content:space-between"><div class="t1">Mục tiêu tháng 11</div><span class="badge in">Đang thực hiện</span></div>
+      <div class="t2" style="margin:4px 0 8px">Đá vòng cầu chuẩn form, 3 hiệp liên tục</div><div class="bar"><i style="width:60%"></i></div><div class="t3" style="margin-top:4px">60% · HLV Đồng</div></div>
+    <div class="stat"><div class="card"><div class="cnt">8</div><div class="t3">buổi PT</div></div><div class="card"><div class="cnt">3.8</div><div class="t3">điểm TB</div></div><div class="card"><div class="cnt">1</div><div class="t3">lần vắng</div></div></div>
+    <div class="sec">Đánh giá của HLV <a data-go="hv-history">Lịch sử điểm danh</a></div>
+    <div class="card tl">
+      <div class="it"><span class="dt"></span><div><div class="t1">18/11 · 4/5 · HLV Đồng</div><div class="t2">Đòn chân vòng cầu, phối hợp tay chân. Giữ trụ tốt hơn, cần xoay hông sâu.</div></div></div>
+      <div class="it"><span class="dt"></span><div><div class="t1">16/11 · 3/5</div><div class="t2">Phản xạ né đòn. Cần thả lỏng vai.</div></div></div>
+      <div class="it"><span class="dt"></span><div><div class="t1">11/11 · 4/5</div><div class="t2">Thể lực 3 hiệp, sức bền ổn.</div></div></div>
+    </div>
+    <p class="help">Học viên chỉ có gói lớp nhóm không có đánh giá và mục tiêu, màn này chỉ hiện lịch sử điểm danh.</p>
+  </div>
+</section>
+
+<!-- Lịch sử điểm danh (học viên) · FR41 -->
+<section class="scr" id="hv-history" data-role="hv" data-title="Lịch sử điểm danh" data-fr="FR41" data-back>
+  <div class="body">
+    <div class="chips"><span class="chip on">Tất cả gói</span><span class="chip">PT</span><span class="chip">Lớp 30</span></div>
+    <div class="list">
+      <div class="row"><span class="type pt">PT</span><div class="grow"><div class="t1">18/11 · 17:00 · HLV Đồng</div><div class="t2">Check-in 16:52 · trừ 1 buổi</div></div></div>
+      <div class="row"><span class="type g30">L30</span><div class="grow"><div class="t1">16/11 · Muay cơ bản</div><div class="t2">Check-in 17:48 · trừ 1 buổi</div></div></div>
+      <div class="row"><span class="type pt">PT</span><div class="grow"><div class="t1">14/11 · 17:00</div><div class="t2">Vắng · không trừ buổi</div></div><span class="badge er">Vắng</span></div>
+      <div class="row"><span class="type pt">PT</span><div class="grow"><div class="t1">11/11 · 17:00</div><div class="t2">Ghi nhận thủ công · trừ 1 buổi</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- Thông báo học viên · FR55, FR58, FR59 -->
+<section class="scr" id="hv-notif" data-role="hv" data-title="Thông báo" data-fr="FR55 FR58 FR59" data-back>
+  <div class="body">
+    <div class="list">
+      <button class="row" data-go="hv-change-in"><div class="av" style="background:var(--wab);color:var(--wa)"><svg class="ic s" data-ic="clock"></svg></div><div class="grow"><div class="t1">HLV Đồng đề xuất đổi giờ PT T6</div><div class="t2">Chờ bạn xác nhận · còn 21 giờ</div></div></button>
+      <div class="row"><div class="av" style="background:var(--okb);color:var(--ok)"><svg class="ic s" data-ic="check"></svg></div><div class="grow"><div class="t1">Lịch PT T4 17:00 đã được xác nhận</div><div class="t2">Hôm qua</div></div></div>
+      <div class="row"><div class="av" style="background:var(--inb);color:var(--in)"><svg class="ic s" data-ic="cal"></svg></div><div class="grow"><div class="t1">Lớp 30 Muay cơ bản tối nay 19:30</div><div class="t2">Nhắc lịch sắp diễn ra</div></div></div>
+      <div class="row"><div class="av" style="background:var(--erb);color:var(--er)"><svg class="ic s" data-ic="alert"></svg></div><div class="grow"><div class="t1">Gói PT còn 2 buổi</div><div class="t2">Liên hệ quầy để gia hạn</div></div></div>
+      <div class="row"><div class="av"><svg class="ic s" data-ic="send"></svg></div><div class="grow"><div class="t1">Trung tâm: Lịch nghỉ Tết Dương lịch</div><div class="t2">Thông báo chung · 12/11</div></div></div>
+    </div>
+  </div>
+</section>
+
+  </div><!-- /stage -->
+  <div class="tabbar" id="tabbar"></div>
+  <div class="toast" id="toast"></div>
+ </div><!-- /phone -->
+ <div class="hint" id="hint"></div>
+</main>
+<div id="gridwrap"></div>
+
+<script>
+/* ---------- Biểu tượng (SVG nét) ---------- */
+const IC={
+ scan:"M4 8V5a1 1 0 011-1h3M16 4h3a1 1 0 011 1v3M20 16v3a1 1 0 01-1 1h-3M8 20H5a1 1 0 01-1-1v-3M4 12h16",
+ cal:"M5 5h14a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2zM3 10h18M8 3v4M16 3v4",
+ users:"M9 11a4 4 0 100-8 4 4 0 000 8zM2 21v-1a6 6 0 0112 0v1M16 3.5a4 4 0 010 7M22 21v-1a6 6 0 00-4-5.6",
+ grid:"M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z",
+ bell:"M6 8a6 6 0 1112 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.9 1.9 0 003.4 0",
+ inbox:"M22 12h-6l-2 3h-4l-2-3H2M5.5 5h13L22 12v6a2 2 0 01-2 2H4a2 2 0 01-2-2v-6z",
+ qr:"M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 18h2v2h-2zM14 18h2M18 14h2",
+ trend:"M3 17l6-6 4 4 8-8M15 7h6v6",
+ plus:"M12 5v14M5 12h14", back:"M15 18l-6-6 6-6", chev:"M9 6l6 6-6 6",
+ user:"M12 12a4 4 0 100-8 4 4 0 000 8zM4 21a8 8 0 0116 0",
+ search:"M11 18a7 7 0 100-14 7 7 0 000 14zM21 21l-4.3-4.3",
+ book:"M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2zM3 10h18M8 2v4M16 2v4M9 16l2 2 4-4",
+ check:"M5 12l5 5L20 7", x:"M6 6l12 12M18 6L6 18",
+ clock:"M12 21a9 9 0 100-18 9 9 0 000 18zM12 7v5l3 2",
+ alert:"M12 9v4M12 17h.01M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z",
+ info:"M12 21a9 9 0 100-18 9 9 0 000 18zM12 11v6M12 7.5h.01",
+ send:"M22 2L11 13M22 2l-7 20-4-9-9-4z", edit:"M4 20h4L19 9l-4-4L4 16v4zM14 6l4 4"
+};
+function icon(name,cls){return '<svg class="ic'+(cls?' '+cls:'')+'" viewBox="0 0 24 24"><path d="'+(IC[name]||'')+'"/></svg>';}
+document.querySelectorAll('svg[data-ic]').forEach(s=>{s.setAttribute('viewBox','0 0 24 24');s.innerHTML='<path d="'+(IC[s.dataset.ic]||'')+'"/>';});
+
+/* ---------- Vai trò và thanh tab ---------- */
+const ROLES={
+ ad:{name:'ADMIN',who:['M','Chị Mẫn','ADMIN · Sale'],tabs:[['Quét','scan','ad-scan'],['Lịch','cal','ad-cal'],['Học viên','users','ad-students'],['Quản lý','grid','ad-more']]},
+ hl:{name:'HLV',who:['Đ','Anh Đồng','HLV · PT, Fitness'],tabs:[['Lịch dạy','cal','hl-cal'],['Yêu cầu','inbox','hl-req'],['Học viên PT','users','hl-students'],['Thông báo','bell','hl-notif']]},
+ hv:{name:'Học viên',who:['A','Nguyễn Văn An','Học viên · HV0012'],tabs:[['Lịch','cal','hv-cal'],['Đặt lịch','book','hv-book-hub'],['Thẻ QR','qr','hv-cards'],['Hành trình','trend','hv-journey']]}
+};
+/* Phân bậc chức năng (dùng để ghi nhãn bản) */
+const T3=[14,15,19,22,23,28,29,55,56,57,58,59], T1=[1,2,3,4,5,7,8,10,11,12,13,17,18,30,31,32,33,34,35,36,37,40,48,49,50], PICK=[41,39,45,46,6,21,9,16,24];
+function bans(fr){const n=(fr||'').match(/\d+/g)||[];const v=n.map(Number);const r=['Bản 1'];
+ if(v.some(x=>!T3.includes(x)))r.push('Bản 2');
+ if(v.some(x=>T1.includes(x)||x===20))r.push('Bản 3A');else if(v.some(x=>PICK.includes(x)))r.push('Bản 3A (nếu kịp)');
+ if(!v.length){r.push('Bản 2','Bản 3A');}return r;}
+
+let role='hv',cur=null,stack=[];
+const S=id=>document.getElementById(id);
+const scrs=[...document.querySelectorAll('.scr')];
+
+/* Dựng thanh trên cùng cho mỗi màn */
+scrs.forEach(s=>{
+ if(s.hasAttribute('data-noappbar'))return;
+ const h=document.createElement('header');h.className='appbar';
+ if(s.hasAttribute('data-back')) h.innerHTML='<button data-back-btn aria-label="Quay lại">'+icon('back')+'</button><div class="t">'+s.dataset.title+'</div>';
+ else{
+  const r=s.dataset.role;let right='';
+  if(r==='ad')right='<button data-go="ad-search" aria-label="Tìm kiếm">'+icon('search')+'</button>';
+  if(r==='hv')right='<button data-go="hv-notif" aria-label="Thông báo">'+icon('bell')+'<span class="dot"></span></button>';
+  right+='<button data-go="acc" aria-label="Tài khoản">'+icon('user')+'</button>';
+  h.innerHTML='<div class="t">'+s.dataset.title+'</div>'+right;
+ }
+ s.prepend(h);
+});
+
+function tabbarHTML(r,tab){return ROLES[r].tabs.map((t,i)=>'<button data-tabgo="'+t[2]+'" class="'+(i==tab?'on':'')+'">'+icon(t[1])+'<span>'+t[0]+'</span></button>').join('');}
+function setRole(r){role=r;document.body.className=document.body.className.replace(/\br-\w+/g,'').trim()+' r-'+r;
+ document.querySelectorAll('#rolesw button').forEach(b=>b.classList.toggle('on',b.dataset.r===r));buildCat();}
+
+function show(id,opt={}){
+ const s=S(id);if(!s)return;
+ const r=s.dataset.role; if(r!=='*'&&r!==role)setRole(r);
+ if(opt.as)setRole(opt.as);
+ if(opt.reset)stack=[]; else if(cur&&opt.push!==false&&cur!==id)stack.push(cur);
+ scrs.forEach(x=>x.classList.toggle('on',x===s)); cur=id;
+ s.querySelectorAll('.sheet.on').forEach(x=>x.classList.remove('on'));
+ const tb=S('tabbar'); const hide=s.hasAttribute('data-back')||s.hasAttribute('data-noappbar');
+ tb.style.display=hide?'none':'flex';
+ if(!hide){let tab=s.dataset.tab;tb.innerHTML=tabbarHTML(role,tab);}
+ const b=s.querySelector('.body');if(b)b.scrollTop=0;
+ if(id==='acc'){const w=ROLES[role].who;S('accav').textContent=w[0];S('accname').textContent=w[1];S('accrole').textContent=w[2];}
+ // gợi ý
+ const fr=s.dataset.fr||'';
+ S('hint').innerHTML='<div class="h"><span>'+s.dataset.title+'</span><span style="color:var(--mu);font-weight:500">'+id+'</span></div><div class="tags">'+
+   (fr?fr.split(' ').map(f=>'<span>'+f+'</span>').join(''):'<span>Màn điều hướng</span>')+bans(fr).map(x=>'<span class="b">'+x+'</span>').join('')+'</div>';
+ document.querySelectorAll('#cat button').forEach(x=>x.classList.toggle('on',x.dataset.id===id));
+ if(!document.body.classList.contains('shot'))history.replaceState(null,'','#'+id);
+}
+function back(){const p=stack.pop();if(p)show(p,{push:false});}
+function toast(t){const e=S('toast');e.textContent=t;e.classList.add('on');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('on'),2200);}
+
+/* Bấm chung cho mọi nút */
+document.addEventListener('click',e=>{
+ const tg=e.target.closest('[data-tabgo]');if(tg){show(tg.dataset.tabgo,{reset:true});return;}
+ if(e.target.closest('[data-back-btn]')){back();return;}
+ const segb=e.target.closest('.seg button');
+ if(segb){const seg=segb.parentElement;seg.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===segb));
+   const g=seg.dataset.tg;if(g&&segb.dataset.t){const sc=seg.closest('.scr');sc.querySelectorAll('.pane[data-tg="'+g+'"]').forEach(p=>p.classList.toggle('on',p.dataset.t===segb.dataset.t));}return;}
+ const ch=e.target.closest('.chip');if(ch&&!ch.closest('[data-go]')){const box=ch.parentElement;if(box.classList.contains('multi'))ch.classList.toggle('on');else box.querySelectorAll('.chip').forEach(x=>x.classList.toggle('on',x===ch));}
+ const dy=e.target.closest('.days button');if(dy){dy.parentElement.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===dy));}
+ const rt=e.target.closest('.rate button');if(rt){rt.parentElement.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===rt));}
+ const sl=e.target.closest('.slot');
+ if(sl&&!sl.dataset.open){if(sl.classList.contains('busy')||sl.classList.contains('closed')){toast('Ô này đã kẹt, chọn ô màu xanh');return;}
+   sl.closest('.body').querySelectorAll('.slot.sel').forEach(x=>{x.classList.remove('sel');x.classList.add('free');});sl.classList.remove('free');sl.classList.add('sel');}
+ const el=e.target.closest('[data-go],[data-toast],[data-open],[data-close],[data-backgo]');
+ if(!el){const sh=e.target.closest('.sheet');if(sh&&e.target===sh)sh.classList.remove('on');return;}
+ if(el.dataset.toast)toast(el.dataset.toast);
+ if(el.hasAttribute('data-close')){const sh=el.closest('.sheet');if(sh)sh.classList.remove('on');}
+ if(el.dataset.open){const sh=S(el.dataset.open);if(sh)sh.classList.add('on');}
+ if(el.dataset.go)show(el.dataset.go,{as:el.dataset.as,reset:el.hasAttribute('data-reset')||el.dataset.go==='login'});
+ else if(el.hasAttribute('data-backgo'))setTimeout(back,60);
+});
+
+/* ---------- Mã QR giả lập (đủ để minh họa) ---------- */
+function qrSVG(seed,n=25){let h=0;for(const c of seed)h=(h*31+c.charCodeAt(0))>>>0;
+ const rnd=()=>{h^=h<<13;h>>>=0;h^=h>>17;h^=h<<5;h>>>=0;return h/4294967296;};
+ let r='';const fin=(x,y)=>{r+='<rect x="'+x+'" y="'+y+'" width="7" height="7" fill="#111"/><rect x="'+(x+1)+'" y="'+(y+1)+'" width="5" height="5" fill="#fff"/><rect x="'+(x+2)+'" y="'+(y+2)+'" width="3" height="3" fill="#111"/>';};
+ for(let y=0;y<n;y++)for(let x=0;x<n;x++){const inF=(x<8&&y<8)||(x>n-9&&y<8)||(x<8&&y>n-9);if(!inF&&rnd()>.52)r+='<rect x="'+x+'" y="'+y+'" width="1" height="1" fill="#111"/>';}
+ fin(0,0);fin(n-7,0);fin(0,n-7);
+ return '<svg viewBox="-1 -1 '+(n+2)+' '+(n+2)+'" shape-rendering="crispEdges" style="width:200px;height:200px;background:#fff">'+r+'</svg>';}
+document.querySelectorAll('[data-qr]').forEach(d=>d.innerHTML=qrSVG(d.dataset.qr));
+
+/* ---------- Danh mục màn và luồng demo ---------- */
+function buildCat(){const c=S('cat');c.innerHTML='';
+ scrs.filter(s=>s.dataset.role===role||s.dataset.role==='*').forEach(s=>{const b=document.createElement('button');b.dataset.id=s.id;
+  b.innerHTML='<span>'+s.dataset.title+'</span><small>'+(s.dataset.fr||'menu').replace(/FR/g,'')+'</small>';b.onclick=()=>show(s.id,{reset:!s.hasAttribute('data-back')});c.appendChild(b);});}
+document.querySelectorAll('#rolesw button').forEach(b=>b.onclick=()=>{setRole(b.dataset.r);show(ROLES[b.dataset.r].tabs[0][2],{reset:true});});
+
+const DEMO=[
+ ['ADMIN thêm HLV mới và đặt mật khẩu tạm','ad-tr-form'],['HLV đăng nhập lần đầu, đổi mật khẩu','hl-pw-first'],
+ ['ADMIN tạo học viên mới','ad-st-form'],['ADMIN gán gói PT, hệ thống cấp QR','ad-pkg-form'],['Học viên đặt PT trên lưới ô trống','hv-book'],
+ ['HLV xác nhận yêu cầu đặt PT','hl-req'],['Sale quét QR và xác nhận check-in','ad-confirm'],['HLV ghi nội dung và đánh giá','hl-note'],['Học viên xem hành trình','hv-journey']];
+let di=-1;
+function demo(i){di=Math.max(0,Math.min(DEMO.length-1,i));show(DEMO[di][1],{reset:true});S('demobar').classList.add('on');S('demotxt').textContent='Bước '+(di+1)+'/'+DEMO.length+': '+DEMO[di][0];
+ document.querySelectorAll('#demolist button').forEach((b,k)=>b.classList.toggle('on',k===di));}
+S('demolist').innerHTML=DEMO.map((d,i)=>'<button data-di="'+i+'"><b>'+(i+1)+'</b><span>'+d[0]+'</span></button>').join('');
+S('demolist').addEventListener('click',e=>{const b=e.target.closest('[data-di]');if(b)demo(+b.dataset.di);});
+S('dnext').onclick=()=>demo(di+1);S('dprev').onclick=()=>demo(di-1);S('dstop').onclick=()=>{S('demobar').classList.remove('on');di=-1;document.querySelectorAll('#demolist button').forEach(b=>b.classList.remove('on'));};
+
+/* ---------- Khởi động, chế độ chụp ảnh ---------- */
+function roleOf(id){const s=S(id);const r=s&&s.dataset.role;return (r&&r!=='*')?r:'ad';}
+const H=decodeURIComponent(location.hash.slice(1));
+if(H.startsWith('grid:')){
+ document.body.classList.add('grid');const ids=H.slice(5).split(',');const w=S('gridwrap');
+ ids.forEach(id=>{const s=S(id);if(!s)return;const r=roleOf(id);
+  const cell=document.createElement('div');cell.className='gcell r-'+r;
+  const ph=document.createElement('div');ph.className='phone';
+  ph.innerHTML='<div class="status"><span>9:41</span><span>4G &nbsp;<i></i></span></div><div class="stage"></div>'+((s.hasAttribute('data-back')||s.hasAttribute('data-noappbar'))?'':'<div class="tabbar">'+tabbarHTML(r,s.dataset.tab)+'</div>');
+  const cl=s.cloneNode(true);cl.removeAttribute('id');cl.classList.add('on');cl.style.animation='none';ph.querySelector('.stage').appendChild(cl);
+  if(id==='acc'){const wv=ROLES[r].who;}
+  cell.appendChild(ph);const cap=document.createElement('div');cap.className='cap';cap.innerHTML=s.dataset.title+'<small>'+(s.dataset.fr||'Màn điều hướng')+'</small>';cell.appendChild(cap);w.appendChild(cell);});
+}else if(H.startsWith('shot:')){
+ document.body.classList.add('shot');const id=H.slice(5);setRole(roleOf(id));show(id,{reset:true});
+}else{
+ const id=(H&&S(H))?H:'login';setRole(roleOf(id));show(id,{reset:true});
+}
+</script>
+</body>
+</html>

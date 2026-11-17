@@ -1,0 +1,23 @@
+<resources>
+    <color name="background">#F6F7F5</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="text_primary">#17211E</color>
+    <color name="text_secondary">#4E6059</color>
+    <color name="admin">#243348</color>
+    <color name="trainer">#1C6557</color>
+    <color name="border">#E3E7E2</color>
+    <color name="learner">#AD2A3E</color>
+    <color name="error">#9B2632</color>
+
+    <style name="Theme.MuayThai" parent="Theme.Material3.Light.NoActionBar">
+        <item name="colorPrimary">@color/admin</item>
+        <item name="colorOnPrimary">@color/surface</item>
+        <item name="colorSurface">@color/surface</item>
+        <item name="colorOnSurface">@color/text_primary</item>
+        <item name="colorError">@color/error</item>
+        <item name="android:windowBackground">@color/background</item>
+        <item name="android:fontFamily">sans</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+    </style>
+</resources>

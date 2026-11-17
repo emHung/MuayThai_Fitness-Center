@@ -1,0 +1,9 @@
+**/target/
+**/build/
+**/.gradle/
+**/.env
+**/.env.*
+**/local.properties
+docs/
+graft/
+.git/

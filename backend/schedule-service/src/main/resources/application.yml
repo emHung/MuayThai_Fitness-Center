@@ -1,0 +1,18 @@
+app:
+  internal-key: ${APP_INTERNAL_KEY}
+  auth-uri: ${APP_AUTH_URI:http://auth:8080}
+  schedule-uri: ${APP_SCHEDULE_URI:http://schedule:8080}
+  checkin-uri: ${APP_CHECKIN_URI:http://checkin:8080}
+spring:
+  task:
+    scheduling:
+      pool:
+        size: 2
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health

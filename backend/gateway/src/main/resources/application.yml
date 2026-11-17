@@ -1,0 +1,17 @@
+app:
+  jwt:
+    issuer: muaythai-auth
+  auth-uri: ${APP_AUTH_URI}
+spring:
+  cloud:
+    gateway:
+      server:
+        webflux:
+          httpclient:
+            connect-timeout: 3000
+            response-timeout: 10s
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health

@@ -1,0 +1,23 @@
+**/.env
+**/.env.*
+!**/.env.example
+**/target/
+**/build/
+**/.gradle/
+**/local.properties
+**/.idea/
+*.iml
+*.jks
+*.keystore
+*.p12
+*.pfx
+*.pem
+*.apk
+*.aab
+*.dump
+*.sql.gz
+*.log
+/backups/
+
+# graft's local graph cache — regenerable, not committed (run `graft build`).
+/graft/

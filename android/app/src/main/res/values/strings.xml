@@ -1,0 +1,23 @@
+<resources>
+    <string name="app_name">MuayThai &amp; Fitness Center</string>
+    <string name="brand_mark">MT</string>
+    <string name="login_hint">Đăng nhập để xem lịch, điểm danh và hành trình tập luyện.</string>
+    <string name="email">Email đăng nhập</string>
+    <string name="password">Mật khẩu</string>
+    <string name="temporary_password">Mật khẩu tạm</string>
+    <string name="new_password">Mật khẩu mới</string>
+    <string name="repeat_password">Nhập lại mật khẩu mới</string>
+    <string name="sign_in">Đăng nhập</string>
+    <string name="sign_out">Đăng xuất</string>
+    <string name="change_password">Đổi mật khẩu</string>
+    <string name="change_title">Đặt mật khẩu mới</string>
+    <string name="change_hint">Đổi mật khẩu tạm để vào ứng dụng.</string>
+    <string name="welcome">Xin chào, %1$s</string>
+    <string name="logged_in">Đăng nhập thành công</string>
+    <string name="role_admin">Quản lý / Sale</string>
+    <string name="role_trainer">Huấn luyện viên</string>
+    <string name="role_learner">Học viên</string>
+    <string name="back">Quay lại</string>
+    <string name="account">Tài khoản</string>
+    <string name="notifications">Thông báo</string>
+</resources>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="slot_open_surface">#E5F3EC</color>
+    <color name="slot_open_text">#176443</color>
+    <color name="slot_closed_surface">#F1F2F3</color>
+    <color name="slot_closed_text">#606771</color>
+</resources>

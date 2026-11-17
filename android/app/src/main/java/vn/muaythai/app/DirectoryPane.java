@@ -1,0 +1,183 @@
+package vn.muaythai.app;
+
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.net.Uri;
+import android.text.InputType;
+import android.widget.EditText;
+import android.widget.LinearLayout;
+import com.google.gson.JsonObject;
+import java.util.List;
+import java.util.function.Consumer;
+
+final class DirectoryPane {
+  private final WorkspaceActivity work;
+
+  DirectoryPane(WorkspaceActivity work) {
+    this.work = work;
+  }
+
+  void list(LinearLayout body, boolean trainers) {
+    String label = trainers ? "HLV" : "học viên";
+    EditText query = work.ui.field(body, "Tìm " + label, "");
+    if (work.role().equals("ADMIN")) {
+      work.ui.action(body, "Thêm " + label, () -> work.open("Thêm " + label, container -> form(container, trainers, null)));
+    }
+    LinearLayout results = new LinearLayout(work);
+    results.setOrientation(LinearLayout.VERTICAL);
+    work.ui.action(body, "Tìm kiếm", () -> load(results, trainers, WorkspaceUi.read(query)));
+    work.ui.add(body, results, 5);
+    load(results, trainers, "");
+  }
+
+  private void load(LinearLayout body, boolean trainers, String term) {
+    pick(trainers, term, rows -> {
+      body.removeAllViews();
+      if (rows.isEmpty()) {
+        work.ui.label(body, "Không tìm thấy hồ sơ.", 14, false);
+      }
+      rows.forEach(profile -> work.ui.row(body, Jsons.text(profile, "displayName"),
+          info(profile), () -> detail(trainers, profile)));
+    });
+  }
+
+  void pick(boolean trainers, String q, Consumer<List<JsonObject>> results) {
+    work.request(work.api.service.get(directory(trainers) + "?size=100&q=" + Uri.encode(q)),
+        answer -> results.accept(Jsons.rows(answer)));
+  }
+
+  private void detail(boolean trainers, JsonObject profile) {
+    long id = Jsons.id(profile);
+    String name = Jsons.text(profile, "displayName");
+    work.open(name, body -> work.request(work.api.service.get(directory(trainers) + "/" + id),
+        result -> renderProfile(body, trainers, Jsons.object(result))));
+  }
+
+  private void renderProfile(LinearLayout body, boolean trainers, JsonObject profile) {
+    long id = Jsons.id(profile);
+    work.ui.row(body, Jsons.text(profile, "displayName"), info(profile), null);
+    showField(body, "Điện thoại", Jsons.text(profile, "phone"));
+    if (trainers) {
+      showField(body, "Chuyên môn", Jsons.text(profile, "specialty"));
+      if (work.role().equals("ADMIN")) {
+        work.ui.row(body, "Ca làm việc", "Lịch theo tuần và khung giờ đóng",
+            () -> work.open("Ca làm việc", panel -> work.planning.shifts(panel, id)));
+      }
+    }
+    if (work.role().equals("ADMIN")) {
+      work.ui.action(body, "Sửa hồ sơ", () -> work.open("Sửa hồ sơ", content -> form(content, trainers, profile)));
+      if (trainers) {
+        work.ui.action(body, "Xóa hồ sơ HLV", () -> work.confirm("Xóa hồ sơ HLV",
+            "Chỉ xóa được HLV chưa phát sinh dữ liệu nghiệp vụ.", "Xóa hồ sơ",
+            () -> work.request(work.api.service.delete("api/trainers/" + id), done -> {
+              work.message("Đã xóa hồ sơ HLV.");
+              work.back();
+            })));
+      }
+      boolean locked = Jsons.text(profile, "status").equals("LOCKED");
+      String action = locked ? "Mở khóa tài khoản" : "Khóa tài khoản";
+      work.ui.action(body, action, () -> work.open(action, panel -> {
+        EditText reason = work.ui.field(panel, "Lý do", "");
+        work.ui.action(panel, action, () -> work.request(work.api.service.patch("api/users/" + id + "/status",
+            Jsons.body("status", locked ? "ACTIVE" : "LOCKED", "reason", WorkspaceUi.read(reason))), done -> work.back()));
+      }));
+    }
+    if (!trainers) {
+      work.ui.row(body, "Gói tập", "Hạn và số lượt còn lại", () -> work.open("Gói tập", list -> work.packages.forLearner(list, id)));
+      work.ui.row(body, "Lịch sử điểm danh", "", () -> work.open("Lịch sử điểm danh", list -> work.attendance.history(list, id, null)));
+      work.ui.row(body, "Xếp lịch PT", work.role().equals("TRAINER") ? "Buổi đã thỏa thuận ngoài ca" : "Tạo lịch đã xác nhận",
+          () -> work.open("Xếp lịch PT", panel -> work.planning.direct(panel, id)));
+      work.ui.row(body, "Hành trình tập", "", () -> work.open("Hành trình tập", list -> work.progress.journey(list, id)));
+    }
+  }
+
+  private void form(LinearLayout body, boolean trainers, JsonObject profile) {
+    boolean editing = profile != null;
+    JsonObject initial = editing ? profile : new JsonObject();
+    EditText name = work.ui.field(body, "Họ và tên", Jsons.text(initial, "displayName"));
+    EditText email = editing ? null : work.ui.field(body, "Email đăng nhập", "", InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
+    EditText phone = work.ui.field(body, "Điện thoại", Jsons.text(initial, "phone"), InputType.TYPE_CLASS_PHONE);
+    EditText specialty = trainers ? work.ui.field(body, "Chuyên môn", Jsons.text(initial, "specialty")) : null;
+    EditText temporary = trainers && !editing ? work.ui.field(body, "Mật khẩu tạm (bỏ trống để tự sinh)", "",
+        InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD) : null;
+    work.ui.action(body, editing ? "Lưu thay đổi" : "Tạo tài khoản", () -> {
+      JsonObject values = Jsons.body("displayName", WorkspaceUi.read(name), "phone", WorkspaceUi.read(phone),
+          "specialty", specialty == null ? null : WorkspaceUi.read(specialty));
+      if (editing) {
+        work.request(work.api.service.put(directory(trainers) + "/" + Jsons.id(initial), values), saved -> work.back());
+      } else {
+        values.addProperty("username", WorkspaceUi.read(email));
+        if (temporary != null && temporary.length() > 0) {
+          values.addProperty("temporaryPassword", temporary.getText().toString());
+        }
+        work.request(work.api.service.post(directory(trainers), null, values), created -> {
+          JsonObject result = Jsons.object(created);
+          JsonObject newProfile = Jsons.object(result.get("profile"));
+          String user = Jsons.text(newProfile, "username");
+          String password = Jsons.text(result, "initialPassword");
+          work.back();
+          work.confirm("Tài khoản đã tạo", "Email " + user + "\nMật khẩu ban đầu " + password,
+              "Sao chép", () -> {
+                ClipboardManager clipboard = work.getSystemService(ClipboardManager.class);
+                if (clipboard != null) {
+                  clipboard.setPrimaryClip(ClipData.newPlainText("Tài khoản mới", user + "\n" + password));
+                  work.message("Đã sao chép tài khoản.");
+                }
+              });
+        });
+      }
+    });
+  }
+
+  void account() {
+    work.open("Tài khoản của tôi", body -> work.request(work.api.service.get("api/users/me/profile"), value -> {
+      JsonObject profile = Jsons.object(value);
+      work.ui.row(body, Jsons.text(profile, "displayName"), info(profile), null);
+      EditText name = work.ui.field(body, "Họ và tên", Jsons.text(profile, "displayName"));
+      EditText phone = work.ui.field(body, "Điện thoại", Jsons.text(profile, "phone"), InputType.TYPE_CLASS_PHONE);
+      EditText specialty = work.role().equals("TRAINER")
+          ? work.ui.field(body, "Chuyên môn", Jsons.text(profile, "specialty")) : null;
+      work.ui.action(body, "Lưu thông tin", () -> work.request(work.api.service.put("api/users/me",
+          Jsons.body("displayName", WorkspaceUi.read(name), "phone", WorkspaceUi.read(phone),
+              "specialty", specialty == null ? null : WorkspaceUi.read(specialty))),
+          done -> { work.message("Đã lưu thông tin."); work.refresh(); }));
+      work.ui.action(body, "Đổi mật khẩu", () -> work.open("Đổi mật khẩu", this::password));
+      work.ui.action(body, "Đăng xuất", work::logout);
+    }));
+  }
+
+  private void password(LinearLayout body) {
+    int fieldType = InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD;
+    EditText old = work.ui.field(body, "Mật khẩu hiện tại", "", fieldType);
+    EditText next = work.ui.field(body, "Mật khẩu mới", "", fieldType);
+    EditText again = work.ui.field(body, "Nhập lại mật khẩu mới", "", fieldType);
+    work.ui.action(body, "Lưu mật khẩu", () -> {
+      String password = WorkspaceUi.read(next);
+      if (!password.equals(WorkspaceUi.read(again)) || password.length() < 8) {
+        work.error("Mật khẩu mới phải từ 8 ký tự và trùng với ô xác nhận.");
+        return;
+      }
+      work.request(work.api.service.post("api/auth/change-password", null,
+          Jsons.body("currentPassword", WorkspaceUi.read(old), "newPassword", password)), response -> {
+        work.message("Đã đổi mật khẩu. Đăng nhập lại bằng mật khẩu mới.");
+        work.restartLogin();
+      });
+    });
+  }
+
+  private void showField(LinearLayout body, String label, String value) {
+    if (!value.trim().isEmpty()) {
+      work.ui.label(body, label + " · " + value, 13, false);
+    }
+  }
+
+  private static String info(JsonObject profile) {
+    String code = Jsons.text(profile, "memberCode");
+    return (code.isEmpty() ? "" : code + " · ") + Jsons.text(profile, "username") + " · "
+        + (Jsons.text(profile, "status").equals("LOCKED") ? "Đã khóa" : "Hoạt động");
+  }
+
+  private static String directory(boolean trainers) {
+    return trainers ? "api/trainers" : "api/learners";
+  }
+}
