@@ -91,3 +91,7 @@ Lỗi có `code`, `message`, `requestId` và `details` khi cần. App quyết đ
 API nội bộ cung cấp kiểm tra phiên từ Auth, xác minh gói đặt lịch từ Check-in và kiểm tra buổi hợp lệ từ Schedule. Dữ liệu trả về đủ cho quyết định nghiệp vụ, gồm trạng thái, chủ sở hữu, HLV/lớp và ID gói của buổi PT. Đường dẫn nội bộ nằm dưới `/internal/` và có xác thực giữa các service.
 
 [Mô hình dữ liệu](DATA_MODEL.md) · [Phạm vi](SCOPE.md)
+
+## API ảnh
+
+Hợp đồng bổ sung xem [API ảnh](IMAGE_API.md).

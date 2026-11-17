@@ -20,5 +20,12 @@ Thanh tiến độ đếm các mốc bàn giao đã kiểm chứng. Phạm vi v�
 | 2026-11-17 | Ghi nhận bản demo đầu tiên trên GitHub và đặt lịch cập nhật lúc 18:00. Backend đã kiểm qua các luồng chính, APK debug đã build và bảng nghiệm thu có đủ 59 mục cần đối chiếu. |
 | 2026-11-17 | Kiểm thử trên emulator với ba vai trò, từ HLV duyệt PT đến quản trị viên điểm danh bằng mã và trừ lượt gói. Android lint có 0 lỗi. SonarQube đã quét backend và đạt Quality Gate sau khi nhập báo cáo JaCoCo của bộ kiểm thử Docker. |
 | 2026-11-17 | Chuẩn bị pilot doanh nghiệp. Đã tách quyền lễ tân, kiểm thử cấp lại mật khẩu và thu hồi phiên, dựng stack production thử nghiệm với quyền PostgreSQL riêng, xác minh APK ký bằng khóa QA và khôi phục thử bản sao demo. SonarQube đạt Quality Gate với 81,0% độ phủ mã mới, có đo ca lưu trữ hồ sơ trên stack production thử nghiệm. [Hướng dẫn production](docs/PRODUCTION.md). |
+| 2026-11-18 | Chạy lại bộ API trên database QA riêng, bật cả ca sinh lịch định kỳ và phục hồi Check-in. Các ca nghiệp vụ chạy đạt. Bộ production xác nhận bootstrap, migration, quyền PostgreSQL và chính sách lưu trữ. Android build thành công, lint ghi nhận 0 lỗi và 11 cảnh báo. Emulator xác nhận đăng nhập ADMIN, LEARNER và luồng TRAINER đổi mật khẩu tạm rồi vào đúng workspace. [Báo cáo kiểm thử](docs/QA_2026-11-18.md). |
+| 2026-11-18 | Chẩn đoán lỗi đăng nhập APK GitHub. Backend cục bộ hoạt động nhưng Tailscale Windows ở `NoState`, DNS HTTPS của APK không phân giải được. Mở lại Tailscale, bật Unattended và kiểm tra đăng nhập cả ba tài khoản demo qua HTTPS thành công. Cần xác nhận lại đường truy cập từ điện thoại. [Hướng dẫn Tailscale](docs/PRODUCTION.md). |
+| 2026-11-18 | Bật Tailscale Funnel chạy nền trên cổng HTTPS 443 tới gateway 8080, giữ URL của APK v0.1.1. Hai relay Internet công khai trả health `UP`, API chặn yêu cầu thiếu xác thực và cả ba tài khoản demo đăng nhập, kiểm tra phiên, đăng xuất thành công. [Hướng dẫn Funnel](docs/PRODUCTION.md). |
 
 Khi sửa hoặc xác nhận một chức năng, thêm mục theo ngày và gắn ca kiểm thử hoặc tệp liên quan. Cập nhật thanh tiến độ khi một mốc có đủ bằng chứng.
+
+## Tính năng ảnh — 18/11/2026
+
+Đã triển khai avatar bốn vai trò, ảnh bốn loại gói và ảnh từng lớp. Bộ API ảnh, hồi quy, production smoke và sao lưu/khôi phục ảnh đều đạt. Android 0.1.2 build đạt với lint 0 lỗi, 11 cảnh báo. Có [30 ảnh giao diện theo vai trò](docs/UI_GALLERY.md) và [báo cáo kiểm thử](docs/QA_IMAGES_2026-11-18.md). Giữ nguyên các mốc nghiệm thu điện thoại thật còn mở.

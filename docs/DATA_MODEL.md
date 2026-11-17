@@ -39,3 +39,7 @@ Seed một ADMIN có quyền điều chỉnh, một ADMIN thường, hai HLV, ha
 Trước khi vận hành với dữ liệu thật, thử sao lưu và khôi phục cả bốn database cùng một đợt. Đối chiếu ID liên service, lịch PT, lịch sử và lượt còn lại sau khôi phục.
 
 [API ghi nhận và điều chỉnh](API.md) · [Kiến trúc](ARCHITECTURE.md)
+
+## Bảng ảnh bổ sung
+
+Auth sở hữu profile_images, Schedule sở hữu class_images, Check-in sở hữu package_kind_images. Mỗi bảng lưu resource_key, content dạng bytea và version. Bảng hồ sơ/lớp có khóa ngoại xóa liên đới. Xem [API ảnh](IMAGE_API.md).

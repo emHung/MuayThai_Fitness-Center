@@ -3,14 +3,22 @@
 > Hệ thống quản lý phòng tập Muay Thai & Fitness toàn diện: Ứng dụng Android Java Native cho Quản trị viên, Huấn luyện viên, Học viên kết hợp Backend Microservices Spring Boot chạy trên nền Docker Compose & PostgreSQL.
 
 [![GitHub Release](https://img.shields.io/github/v/release/emHung/MuayThai_Fitness-Center?style=for-the-badge&logo=github&color=blue)](https://github.com/emHung/MuayThai_Fitness-Center/releases/latest)
-[![Download APK](https://img.shields.io/badge/Download-Android_APK_(v0.1.1)-success?style=for-the-badge&logo=android)](https://github.com/emHung/MuayThai_Fitness-Center/releases/tag/v0.1.1)
+[![Download APK](https://img.shields.io/badge/Download-Android_APK_(v0.1.2)-success?style=for-the-badge&logo=android)](https://github.com/emHung/MuayThai_Fitness-Center/releases/tag/v0.1.2)
 
 > 📱 **Tải về bộ cài đặt APK theo phiên bản mới nhất:**
-> - 📥 [Tải APK Tiêu chuẩn (app-debug.apk v0.1.1)](https://github.com/emHung/MuayThai_Fitness-Center/releases/download/v0.1.1/app-debug.apk)
-> - 📥 [Tải APK Tailscale VPN (app-debug-tailscale.apk v0.1.1)](https://github.com/emHung/MuayThai_Fitness-Center/releases/download/v0.1.1/app-debug-tailscale.apk)
+> - 📥 [Tải APK Tiêu chuẩn (app-debug.apk v0.1.2)](https://github.com/emHung/MuayThai_Fitness-Center/releases/download/v0.1.2/app-debug.apk)
+> - 📥 [Tải APK HTTPS cho điện thoại (app-debug-tailscale.apk v0.1.2)](https://github.com/emHung/MuayThai_Fitness-Center/releases/download/v0.1.2/app-debug-tailscale.apk)
 > - 📦 Xem toàn bộ lịch sử các bản phát hành tại [GitHub Releases](https://github.com/emHung/MuayThai_Fitness-Center/releases).
 
 ---
+
+## Tính năng ảnh và giao diện theo vai trò
+
+Bản 0.1.2 hỗ trợ ảnh đại diện, ảnh bốn loại gói và ảnh từng lớp. APK HTTPS sử dụng Funnel đang chạy trên máy chủ, điện thoại chỉ cần Internet. Tệp `app-debug.apk` dành cho emulator cục bộ.
+
+- [Bộ 30 ảnh giao diện chia theo bốn vai trò](docs/UI_GALLERY.md)
+- [API ảnh và quyền truy cập](docs/IMAGE_API.md)
+- [Kết quả kiểm thử và giới hạn nghiệm thu](docs/QA_IMAGES_2026-11-18.md)
 
 ## Báo cáo hệ thống & Tiến độ bàn giao
 

@@ -15,6 +15,20 @@ Invoke-RestMethod http://127.0.0.1:8080/actuator/health
 
 Mỗi service có một vai trò PostgreSQL chạy nghiệp vụ và một vai trò Flyway quản lý schema. Vai trò nghiệp vụ kết nối vào đúng database của mình, có quyền đọc ghi các bảng cần thiết và quyền dùng sequence. Auth chỉ có quyền thêm và đọc các bản ghi lý do cấp lại mật khẩu và khóa tài khoản. Vai trò bootstrap PostgreSQL chỉ dùng cho chuẩn bị database và sao lưu. Triển khai này chạy Flyway khi khởi động, nên container ứng dụng vẫn nhận thông tin xác thực của vai trò migration tương ứng. Các service đang dùng chung khóa xác thực nội bộ.
 
+## Kết nối APK qua Tailscale
+
+APK `app-debug-tailscale.apk` của bản v0.1.1 dùng `https://desktop-il5rjhe.tailfd8509.ts.net/`. Ngày 18/11/2026, máy chủ đã bật Funnel để điện thoại truy cập qua Internet bằng Wi-Fi hoặc mạng di động. Người dùng đăng nhập bằng tài khoản ứng dụng. [Tailscale Funnel](https://tailscale.com/docs/features/tailscale-funnel).
+
+Ngày 18/11/2026, Docker vẫn trả `UP` tại cổng 8080 nhưng Tailscale Windows ở trạng thái `NoState`; tên miền trong APK không phân giải được. Mở lại ứng dụng Tailscale theo tài khoản Windows đã đưa trạng thái về `Running`, khôi phục cấu hình Serve và đăng nhập HTTPS thành công cho cả ba tài khoản demo.
+
+Máy chủ đã bật `tailscale set --unattended=true` để Tailscale tiếp tục hoạt động khi người dùng Windows đăng xuất. [Chế độ Unattended](https://tailscale.com/docs/how-to/run-unattended).
+
+Lệnh bật Funnel chạy nền là `tailscale funnel --bg --yes --https=443 http://127.0.0.1:8080`. Lần đầu, chủ tài khoản cần bật quyền Funnel qua liên kết do CLI cung cấp. Kiểm tra bằng `tailscale funnel status`. Máy tính, Docker và Tailscale cần hoạt động trong thời gian sử dụng ứng dụng. Để tắt truy cập công khai, chạy `tailscale funnel --https=443 off`.
+
+Đã kiểm tra HTTPS qua cả hai IP relay do DNS công khai trả về. Health trả `UP`. API hồ sơ trả HTTP 401 khi thiếu xác thực. Đăng nhập, kiểm tra phiên và đăng xuất ADMIN, TRAINER, LEARNER đều chạy đạt qua relay Internet.
+
+Khi app báo mất kết nối, chạy `tailscale status`, `tailscale funnel status` và kiểm tra `/actuator/health` từ điện thoại. Nếu vừa bật Funnel, DNS công khai có thể cần thời gian cập nhật. Kiểm tra Docker và cổng 8080 trước khi thử lại.
+
 ## Tạo và bàn giao APK
 
 Thiết lập `ANDROID_RELEASE_KEYSTORE`, `ANDROID_RELEASE_STORE_PASSWORD`, `ANDROID_RELEASE_KEY_ALIAS` và `ANDROID_RELEASE_KEY_PASSWORD` trong môi trường build được kiểm soát. Doanh nghiệp giữ keystore và đường khôi phục khóa.

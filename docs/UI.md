@@ -47,3 +47,7 @@ Các màn dùng chung gồm đăng nhập `login`, tài khoản `acc`, đổi m�
 - **Danh sách và biểu mẫu** · Phủ các trạng thái đang tải, dữ liệu rỗng, lỗi, mất phiên và gửi thành công. Duy trì nhãn cho ô nhập, mô tả cho nút icon và thứ tự focus hợp lý.
 
 Kiểm tra tối thiểu ở màn hẹp tương đương 320 dp và 390 dp, có bàn phím, tăng cỡ chữ và khi Android tắt hiệu ứng. [Hợp đồng dữ liệu hiển thị](API.md) · [Ca nghiệm thu](IMPLEMENTATION.md)
+
+## Giao diện đã chụp
+
+[Bộ giao diện bốn vai trò và cách thay ảnh](UI_GALLERY.md).
