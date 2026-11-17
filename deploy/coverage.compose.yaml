@@ -1,0 +1,24 @@
+x-coverage-volume: &coverage-volume
+  - "${MUAYTHAI_COVERAGE_PATH:?Chay tests/coverage.ps1 de tao thu muc bao cao}:/qa"
+
+services:
+  auth:
+    environment:
+      JAVA_TOOL_OPTIONS: -javaagent:/qa/jacocoagent.jar=includes=vn.muaythai.*,destfile=/qa/auth.exec,append=true
+    volumes: *coverage-volume
+  gateway:
+    environment:
+      JAVA_TOOL_OPTIONS: -javaagent:/qa/jacocoagent.jar=includes=vn.muaythai.*,destfile=/qa/gateway.exec,append=true
+    volumes: *coverage-volume
+  schedule:
+    environment:
+      JAVA_TOOL_OPTIONS: -javaagent:/qa/jacocoagent.jar=includes=vn.muaythai.*,destfile=/qa/schedule.exec,append=true
+    volumes: *coverage-volume
+  checkin:
+    environment:
+      JAVA_TOOL_OPTIONS: -javaagent:/qa/jacocoagent.jar=includes=vn.muaythai.*,destfile=/qa/checkin.exec,append=true
+    volumes: *coverage-volume
+  progress:
+    environment:
+      JAVA_TOOL_OPTIONS: -javaagent:/qa/jacocoagent.jar=includes=vn.muaythai.*,destfile=/qa/progress.exec,append=true
+    volumes: *coverage-volume

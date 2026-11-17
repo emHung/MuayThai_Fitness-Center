@@ -39,19 +39,21 @@ class ProfileService {
     checkin = internal.client(checkinUri);
   }
 
-  ProfileApi.Page list(AuthApi.User actor, UserAccount.Role role, String q, int page, int size) {
-    List<Long> allowed = new ArrayList<>(allowedLearners(actor, role));
-    allowed.add(-1L);
-    String filter = """
+  private static final String DIRECTORY_FILTER = """
         FROM users WHERE role = :role AND deleted_at IS NULL AND (:admin OR id IN (:allowed))
           AND (strpos(lower(display_name), :q) > 0
           OR strpos(username, :q) > 0 OR strpos(lower(coalesce(member_code, '')), :q) > 0
           OR strpos(coalesce(phone, ''), :q) > 0)
-        """;
+      """;
+
+  ProfileApi.Page list(AuthApi.User actor, UserAccount.Role role, String q, int page, int size) {
+    List<Long> allowed = new ArrayList<>(allowedLearners(actor, role));
+    allowed.add(-1L);
     String query = q.strip().toLowerCase(Locale.ROOT);
-    long total = db.sql("SELECT count(*) " + filter).param("role", role.name()).param("q", query).param("admin", actor.role() == UserAccount.Role.ADMIN).param("allowed", allowed)
+    long total = db.sql("SELECT count(*) " + DIRECTORY_FILTER)
+        .param("role", role.name()).param("q", query).param("admin", actor.role() == UserAccount.Role.ADMIN).param("allowed", allowed)
         .query(Long.class).single();
-    List<ProfileApi.Profile> items = db.sql("SELECT * " + filter + " ORDER BY display_name, id LIMIT :size OFFSET :offset")
+    List<ProfileApi.Profile> items = db.sql("SELECT * " + DIRECTORY_FILTER + " ORDER BY display_name, id LIMIT :size OFFSET :offset")
         .param("role", role.name()).param("q", query).param("admin", actor.role() == UserAccount.Role.ADMIN).param("allowed", allowed).param("size", size).param("offset", (long) page * size)
         .query(PROFILE).list();
     return new ProfileApi.Page(items, page, size, total);

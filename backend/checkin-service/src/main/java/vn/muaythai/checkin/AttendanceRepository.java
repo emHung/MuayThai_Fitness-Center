@@ -15,7 +15,7 @@ class AttendanceRepository {
       SELECT c.*, CASE WHEN a.id IS NULL THEN 'RECORDED' ELSE 'ADJUSTED' END AS event_status
       FROM checkins c LEFT JOIN checkin_adjustments a ON c.id=a.checkin_id
       """;
-  static final RowMapper<AttendanceApi.Entry> ENTRY = (rs, row) -> new AttendanceApi.Entry(
+  static final RowMapper<AttendanceApi.Entry> ENTRY_ROW = (rs, row) -> new AttendanceApi.Entry(
       rs.getLong("id"), rs.getObject("session_id", Long.class), rs.getLong("package_id"), rs.getLong("learner_id"),
       rs.getObject("trainer_id", Long.class), rs.getString("learner_name"), rs.getString("session_title"),
       rs.getObject("checked_in_at", OffsetDateTime.class).toString(), rs.getLong("actor_id"), rs.getString("method"),
@@ -39,7 +39,7 @@ class AttendanceRepository {
 
   Optional<AttendanceApi.Entry> keyedEntry(long actor, UUID key) {
     return db.sql(ENTRIES + " WHERE c.actor_id=:actor AND c.request_key=:key")
-        .param("actor", actor).param("key", key).query(ENTRY).optional();
+        .param("actor", actor).param("key", key).query(ENTRY_ROW).optional();
   }
 
   Optional<AttendanceApi.Adjustment> keyedAdjustment(long actor, UUID key) {
@@ -48,7 +48,7 @@ class AttendanceRepository {
   }
 
   AttendanceApi.Entry entry(long id) {
-    return db.sql(ENTRIES + " WHERE c.id=:id").param("id", id).query(ENTRY).optional()
+    return db.sql(ENTRIES + " WHERE c.id=:id").param("id", id).query(ENTRY_ROW).optional()
         .orElseThrow(() -> Problem.missing("Không tìm thấy lượt điểm danh."));
   }
 

@@ -1,6 +1,7 @@
 **/target/
 **/build/
 **/.gradle/
+backend/.sonar/
 **/.env
 **/.env.*
 **/local.properties

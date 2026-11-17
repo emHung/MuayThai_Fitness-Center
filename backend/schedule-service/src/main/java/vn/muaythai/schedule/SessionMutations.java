@@ -145,7 +145,7 @@ class SessionMutations {
     Session replacement = repo.jdbc().sql("""
         UPDATE sessions SET trainer_id=:trainer,
           assigned_trainer_id=coalesce(assigned_trainer_id,trainer_id) WHERE id=:id RETURNING *
-        """).param("id", id).param("trainer", trainer).query(ScheduleRepository.SESSION).single();
+        """).param("id", id).param("trainer", trainer).query(ScheduleRepository.SESSION_ROW).single();
     repo.jdbc().sql("""
         INSERT INTO session_trainer_changes(session_id,previous_trainer_id,new_trainer_id,changed_by,reason)
         VALUES(:id,:previous,:trainer,:actor,:reason)

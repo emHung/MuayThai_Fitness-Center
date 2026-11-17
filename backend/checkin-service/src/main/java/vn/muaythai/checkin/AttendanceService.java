@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.muaythai.checkin.AttendanceApi.Adjustment;
@@ -185,15 +184,13 @@ class AttendanceService {
   }
 
   private java.util.Optional<Entry> duplicate(long learner, Long session, LocalDate date) {
-    String filter = session == null ? " c.session_id IS NULL AND c.service_date=:day" : " c.session_id=:session";
-    JdbcClient.StatementSpec query = repository.jdbc().sql(AttendanceRepository.ENTRIES
-        + " WHERE c.learner_id=:learner AND" + filter).param("learner", learner);
-    if (session == null) {
-      query.param("day", date);
-    } else {
-      query.param("session", session);
-    }
-    return query.query(AttendanceRepository.ENTRY).optional();
+    var jdbc = repository.jdbc();
+    var query = session == null
+        ? jdbc.sql(AttendanceRepository.ENTRIES + " WHERE c.learner_id=:learner AND c.session_id IS NULL AND c.service_date=:day")
+            .param("day", date)
+        : jdbc.sql(AttendanceRepository.ENTRIES + " WHERE c.learner_id=:learner AND c.session_id=:session")
+            .param("session", session);
+    return query.param("learner", learner).query(AttendanceRepository.ENTRY_ROW).optional();
   }
 
   private int counted(long session) {
@@ -210,26 +207,15 @@ class AttendanceService {
   }
 
   List<Entry> list(Actor actor, Long learner, Long session, LocalDate date) {
-    var parameters = new java.util.LinkedHashMap<String, Object>();
-    String filter = " WHERE true";
-    if (!actor.is("ADMIN")) {
-      filter += actor.is("LEARNER") ? " AND c.learner_id=:viewer" : " AND c.trainer_id=:viewer";
-      parameters.put("viewer", actor.id());
-    }
-    if (learner != null) {
-      filter += " AND c.learner_id=:learner";
-      parameters.put("learner", learner);
-    }
-    if (session != null) {
-      filter += " AND c.session_id=:session";
-      parameters.put("session", session);
-    }
-    if (date != null) {
-      filter += " AND c.service_date=:day";
-      parameters.put("day", date);
-    }
-    return repository.jdbc().sql(AttendanceRepository.ENTRIES + filter + " ORDER BY c.checked_in_at DESC LIMIT 250")
-        .params(parameters).query(AttendanceRepository.ENTRY).list();
+    return repository.jdbc().sql(AttendanceRepository.ENTRIES + """
+        WHERE (:role='ADMIN' OR (:role='LEARNER' AND c.learner_id=:viewer)
+          OR (:role='TRAINER' AND c.trainer_id=:viewer))
+          AND (CAST(:learner AS bigint) IS NULL OR c.learner_id=:learner)
+          AND (CAST(:session AS bigint) IS NULL OR c.session_id=:session)
+          AND (CAST(:day AS date) IS NULL OR c.service_date=:day)
+        ORDER BY c.checked_in_at DESC LIMIT 250
+        """).param("role", actor.role()).param("viewer", actor.id()).param("learner", learner)
+        .param("session", session).param("day", date).query(AttendanceRepository.ENTRY_ROW).list();
   }
 
   Entry detail(Actor actor, long id) {

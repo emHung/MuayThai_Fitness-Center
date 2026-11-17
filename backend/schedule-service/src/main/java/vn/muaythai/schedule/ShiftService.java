@@ -10,6 +10,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import vn.muaythai.schedule.ScheduleRepository.SessionSelection;
 import vn.muaythai.shared.Problem;
 import vn.muaythai.shared.ServiceHttp;
 import vn.muaythai.shared.ServiceHttp.Session;
@@ -82,9 +83,8 @@ class ShiftService {
       throw Problem.invalid("Khoảng thời gian đóng không hợp lệ.");
     }
     lock(trainer);
-    List<Session> conflicts = repository.sessions("""
-        trainer_id=:id AND start_at<:end AND end_at>:start AND status IN ('PENDING_TRAINER','CONFIRMED')
-        """, Map.of("id", trainer, "start", input.startAt(), "end", input.endAt()));
+    List<Session> conflicts = repository.sessions(SessionSelection.TRAINER_BLOCK_CONFLICTS,
+        Map.of("id", trainer, "start", input.startAt(), "end", input.endAt()));
     if (!conflicts.isEmpty()) {
       throw Problem.conflict("BLOCK_HAS_BOOKINGS", "Cần xử lý các buổi đã đặt trước khi đóng khung.",
           Map.of("sessions", conflicts));
@@ -124,7 +124,7 @@ class ShiftService {
   }
 
   private List<Session> future(long trainer) {
-    return repository.sessions("trainer_id=:id AND end_at>now() AND status IN ('PENDING_TRAINER','CONFIRMED')",
+    return repository.sessions(SessionSelection.TRAINER_FUTURE,
         Map.of("id", trainer));
   }
 

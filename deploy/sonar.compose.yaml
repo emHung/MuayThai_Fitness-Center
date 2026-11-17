@@ -33,6 +33,7 @@ services:
       - org.sonarsource.scanner.maven:sonar-maven-plugin:5.5.0.6356:sonar
       - -Dsonar.projectKey=muaythai-fitness-backend
       - -Dsonar.projectName=MuayThai Fitness Backend
+      - -Dsonar.coverage.jacoco.xmlReportPaths=/workspace/backend/target/coverage/acceptance.xml
 
 volumes:
   sonar_data:

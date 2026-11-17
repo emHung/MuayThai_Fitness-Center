@@ -17,9 +17,9 @@ import reactor.core.publisher.Mono;
 
 @Component
 final class SessionFilter implements GatewayFilter {
-  private static final byte[] UNAVAILABLE = """
+  private static final String UNAVAILABLE = """
       {"code":"DEPENDENCY_UNAVAILABLE","message":"Dịch vụ xác thực đang bận. Vui lòng thử lại."}
-      """.getBytes(StandardCharsets.UTF_8);
+      """;
 
   private final WebClient auth;
   private final String key;
@@ -30,7 +30,7 @@ final class SessionFilter implements GatewayFilter {
     this.key = key;
   }
 
-  private record State(HttpStatusCode status, JsonNode actor, byte[] error) {}
+  private record State(HttpStatusCode status, JsonNode actor, String error) {}
 
   @Override
   public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
@@ -38,7 +38,7 @@ final class SessionFilter implements GatewayFilter {
     return auth.get().uri("/api/users/me").header(HttpHeaders.AUTHORIZATION, authorization)
         .exchangeToMono(response -> response.statusCode().is2xxSuccessful()
             ? response.bodyToMono(JsonNode.class).map(user -> new State(response.statusCode(), user, null))
-            : response.bodyToMono(byte[].class).defaultIfEmpty(new byte[0])
+            : response.bodyToMono(String.class).defaultIfEmpty("")
                 .map(error -> new State(response.statusCode(), null, error)))
         .timeout(Duration.ofSeconds(3))
         .onErrorReturn(new State(HttpStatus.SERVICE_UNAVAILABLE, null, UNAVAILABLE))
@@ -49,7 +49,8 @@ final class SessionFilter implements GatewayFilter {
     if (state.actor() == null) {
       exchange.getResponse().setStatusCode(state.status());
       exchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_JSON);
-      return exchange.getResponse().writeWith(Mono.just(exchange.getResponse().bufferFactory().wrap(state.error())));
+      var body = exchange.getResponse().bufferFactory().wrap(state.error().getBytes(StandardCharsets.UTF_8));
+      return exchange.getResponse().writeWith(Mono.just(body));
     }
     var actor = state.actor();
     var request = exchange.getRequest().mutate().headers(headers -> {

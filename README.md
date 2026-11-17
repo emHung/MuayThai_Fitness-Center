@@ -157,12 +157,12 @@ $env:ANDROID_HOME = Join-Path $env:LOCALAPPDATA 'Android\Sdk'
 Set-Location android
 .\gradlew.bat :app:assembleDebug
 $adb = Join-Path $env:ANDROID_HOME 'platform-tools\adb.exe'
-& $adb reverse tcp:8080 tcp:8080
 & $adb install -r .\app\build\outputs\apk\debug\app-debug.apk
 ```
 
-* Nếu chạy trên **Android Emulator**, app tự động kết nối qua `http://10.0.2.2:8080/` (hoặc qua `127.0.0.1:8080` khi đã chạy lệnh `adb reverse`).
-* Khi triển khai môi trường Production có HTTPS, truyền thêm `-PauthBaseUrl=https://<tên-miền>/` lúc build.
+- Trên **Android Emulator**, APK debug mặc định dùng `http://10.0.2.2:8080/`.
+- Trên **điện thoại kết nối USB**, bật gỡ lỗi USB và build với `'-PauthBaseUrl=http://127.0.0.1:8080/'`. Chạy `adb reverse tcp:8080 tcp:8080` trước khi mở app. Chỉ định `adb -s <serial>` nếu có nhiều thiết bị.
+- Khi dùng máy chủ HTTPS, truyền `-PauthBaseUrl=https://<tên-miền>/` lúc build.
 
 ---
 
@@ -186,10 +186,13 @@ Remove-Item Env:GATEWAY_PORT, Env:CLASS_CALENDAR_CRON, Env:MUAYTHAI_TEST_URL, En
 
 ## Phân tích backend bằng SonarQube
 
-SonarQube Community chạy trong Compose riêng và mở dashboard tại [localhost:9000](http://127.0.0.1:9000):
+SonarQube Community chạy trong Compose riêng và dùng cơ sở dữ liệu nhúng để phân tích cục bộ. Khởi động dịch vụ rồi mở [localhost:9000](http://127.0.0.1:9000). Lần đầu, đổi mật khẩu quản trị, tạo project riêng với key `muaythai-fitness-backend` và lấy token Project Analysis.
 
 ```powershell
 docker compose -f deploy/sonar.compose.yaml up -d sonarqube
+```
+
+```powershell
 $sonarToken = Read-Host 'Project Analysis Token' -AsSecureString
 $env:SONAR_TOKEN = [System.Net.NetworkCredential]::new('', $sonarToken).Password
 try {
@@ -199,7 +202,9 @@ try {
 }
 ```
 
-Scanner chạy Maven `verify` và gửi báo cáo phân tích lên [dashboard backend](http://127.0.0.1:9000/dashboard?id=muaythai-fitness-backend).
+Scanner chạy Maven `verify` rồi gửi báo cáo lên [dashboard backend](http://127.0.0.1:9000/dashboard?id=muaythai-fitness-backend). Xem Quality Gate sau khi máy chủ xử lý xong. Phạm vi lần quét là backend Java. APK được build và kiểm thử riêng bằng Gradle và ADB.
+
+Để đo độ phủ từ bộ kiểm thử tích hợp, chạy `.\tests\coverage.ps1` trước khi chạy scanner. Script cần Node.js, Docker và `JAVA_HOME` trỏ tới JDK. Nó dùng stack thử nghiệm `khang-coverage`, mặc định ở cổng 8180, rồi ghi báo cáo vào `backend/target/coverage/acceptance.xml`. Có thể dùng `-Port` nếu cổng đã được dùng hoặc `-WhatIf` để xem trước thao tác.
 
 ---
 

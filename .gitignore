@@ -4,6 +4,7 @@
 **/target/
 **/build/
 **/.gradle/
+/backend/.sonar/
 **/local.properties
 **/.idea/
 *.iml

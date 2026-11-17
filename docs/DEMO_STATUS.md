@@ -22,6 +22,8 @@
 - Kiểm thử gửi đồng thời yêu cầu hủy và xác nhận điểm danh đối chiếu trạng thái buổi, lịch sử và lượt gói. Khi Check-in tạm ngừng, yêu cầu hủy được xử lý tiếp sau khi dịch vụ hoạt động lại.
 - Kiểm thử đổi HLV đối chiếu lịch đã đặt, mã QR, lượt gói và quyền truy cập. Luồng SSE qua gateway đã nhận sự kiện ở cả ba vai trò.
 - APK debug đã cài và đăng nhập với tài khoản quản trị viên trên máy ảo Android. Điều hướng từ màn quét QR tới Quản lý và danh sách HLV đã được chạy thử.
+- Kiểm thử ba vai trò trên emulator đã xác nhận HLV duyệt PT, học viên mở QR gói, quản trị viên nhập mã gói để điểm danh. PostgreSQL ghi lượt gói giảm từ 5 xuống 4.
+- Khi đăng nhập với buổi PT đã kết thúc đang chờ đánh giá, HLV thấy lời nhắc ngay ở màn Lịch dạy và mở được thông báo. Quản trị viên đã mở được màn camera QR trên emulator.
 - Khi nghiệm thu Android trên điện thoại, mở hai thiết bị hoặc hai phiên ADB, dùng học viên hiện QR trên màn hình thứ nhất và dùng quản trị viên quét trên màn hình thứ hai. Đối chiếu học viên, buổi và lượt còn lại trước và sau xác nhận.
 
 ## Vị trí các phần mã
@@ -29,6 +31,12 @@
 - `android/app/src/main/java/vn/muaythai/app` chứa các màn Java. Màn theo nghiệp vụ dùng chung điều hướng, bảng màu và thành phần nhập liệu của workspace.
 - `backend` chứa các module Maven. API xử lý hợp đồng và phân quyền, service áp dụng quy tắc nghiệp vụ, repository truy vấn dữ liệu, migration đặt ràng buộc ở PostgreSQL.
 - `deploy` chứa cấu hình Docker, khởi tạo database và sao lưu. Giao diện tham chiếu là [Hướng dẫn UI](UI.md).
+
+## Chất lượng mã
+
+- Android chạy `:app:lintDebug` thành công với 0 lỗi và 17 cảnh báo. Các cảnh báo còn lại gồm phiên bản dependency, tương thích xoay màn hình và tài nguyên UI. `:app:assembleDebug` tạo APK cài được trên emulator.
+- SonarQube báo Quality Gate đạt sau khi nhập báo cáo JaCoCo. Còn một phát hiện `java:S4502` về ngoại lệ CSRF cho API dùng Bearer token và API nội bộ dùng khóa dịch vụ. Xem số liệu đo tại [dashboard cục bộ](http://127.0.0.1:9000/dashboard?id=muaythai-fitness-backend).
+- [Script coverage](../tests/coverage.ps1) chạy nghiệm thu trên database thử nghiệm và tạo XML để scanner nhập.
 
 ## Phạm vi còn phải chốt
 

@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import vn.muaythai.schedule.ScheduleRepository.SessionSelection;
 import vn.muaythai.shared.Actor;
 import vn.muaythai.shared.Problem;
 import vn.muaythai.shared.ServiceHttp;
@@ -24,6 +25,17 @@ class ScheduleService {
   static final ZoneId ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
   private static final Duration PT_DURATION = Duration.ofHours(1);
   private static final int CLASS_HORIZON_DAYS = 28;
+  private static final String INSERT_CLASS_SESSION = """
+      INSERT INTO sessions(type,title,trainer_id,class_id,start_at,end_at,capacity,status)
+      VALUES(:type,:title,:trainer,:class,:start,:end,:capacity,'CONFIRMED')
+      """;
+  private static final String EXTEND_CLASS_CALENDAR = INSERT_CLASS_SESSION + "ON CONFLICT DO NOTHING";
+  private static final String REGENERATE_CLASS_CALENDAR = INSERT_CLASS_SESSION + """
+      ON CONFLICT (class_id,start_at) DO UPDATE SET
+        trainer_id=EXCLUDED.trainer_id,assigned_trainer_id=NULL,title=EXCLUDED.title,end_at=EXCLUDED.end_at,
+        status='CONFIRMED',reason=NULL
+      WHERE sessions.status='CANCELLED' AND sessions.reason='Thay đổi lịch lớp'
+      """;
 
   private final ScheduleRepository repository;
   private final ShiftService shifts;
@@ -190,16 +202,8 @@ class ScheduleService {
       } else {
         shifts.requireOpen(info.trainerId(), start, end, false);
       }
-      String conflictRule = extending ? " ON CONFLICT DO NOTHING" : """
-          ON CONFLICT (class_id,start_at) DO UPDATE SET
-            trainer_id=EXCLUDED.trainer_id,assigned_trainer_id=NULL,title=EXCLUDED.title,end_at=EXCLUDED.end_at,
-            status='CONFIRMED',reason=NULL
-          WHERE sessions.status='CANCELLED' AND sessions.reason='Thay đổi lịch lớp'
-          """;
-      repository.jdbc().sql("""
-          INSERT INTO sessions(type,title,trainer_id,class_id,start_at,end_at,capacity,status)
-          VALUES(:type,:title,:trainer,:class,:start,:end,:capacity,'CONFIRMED')
-          """ + conflictRule).param("type", info.type()).param("title", info.title()).param("trainer", info.trainerId())
+      repository.jdbc().sql(extending ? EXTEND_CLASS_CALENDAR : REGENERATE_CLASS_CALENDAR)
+          .param("type", info.type()).param("title", info.title()).param("trainer", info.trainerId())
           .param("class", info.id()).param("start", start).param("end", end)
           .param("capacity", info.type().equals("GROUP10") ? 10 : 30).update();
     }
@@ -221,20 +225,17 @@ class ScheduleService {
     if (!end.isAfter(start) || Duration.between(start, end).toDays() > 93) {
       throw Problem.invalid("Khoảng thời gian xem lịch không hợp lệ.");
     }
-    String window = "s.start_at>=:start AND s.start_at<:end AND (:query='' OR strpos(lower(s.title),lower(:query))>0)";
     if (actor.is("ADMIN")) {
-      return repository.sessions(window, Map.of("start", start, "end", end, "query", query));
+      return repository.sessions(SessionSelection.CENTER_CALENDAR, Map.of("start", start, "end", end, "query", query));
     }
     if (actor.is("TRAINER")) {
-      return repository.sessions(window + " AND s.trainer_id=:id",
+      return repository.sessions(SessionSelection.TRAINER_CALENDAR,
           Map.of("id", actor.id(), "start", start, "end", end, "query", query));
     }
     List<Long> classes = new ArrayList<>(learnerClassIds(actor.id()));
     classes.add(-1L);
-    return repository.sessions(window + """
-          AND (s.learner_id=:id OR (s.class_id IN (:classes) AND s.status = 'CONFIRMED')
-            OR EXISTS (SELECT 1 FROM class_signups r WHERE r.session_id=s.id AND r.learner_id=:id AND NOT r.cancelled))
-        """, Map.of("id", actor.id(), "start", start, "end", end, "classes", classes, "query", query));
+    return repository.sessions(SessionSelection.LEARNER_CALENDAR,
+        Map.of("id", actor.id(), "start", start, "end", end, "classes", classes, "query", query));
   }
 
   Session findSession(long id) {
@@ -340,7 +341,7 @@ class ScheduleService {
           INSERT INTO sessions(type,title,trainer_id,learner_id,package_id,start_at,end_at,capacity,status)
             VALUES('PT','Buổi PT',:trainer,:learner,:package,:start,:end,1,:status) RETURNING *
           """).param("trainer", trainer).param("learner", learner).param("package", packageId)
-          .param("start", start).param("end", end).param("status", status).query(ScheduleRepository.SESSION).single();
+          .param("start", start).param("end", end).param("status", status).query(ScheduleRepository.SESSION_ROW).single();
     } catch (DataIntegrityViolationException conflict) {
       throw Problem.conflict("SCHEDULE_CONFLICT", "Khung giờ vừa được đặt. Hãy chọn giờ khác.");
     }
@@ -358,7 +359,7 @@ class ScheduleService {
 
   List<Session> requests(Actor actor) {
     actor.require("TRAINER");
-    return repository.sessions("s.trainer_id=:id AND s.status='PENDING_TRAINER' AND s.start_at >= :now",
+    return repository.sessions(SessionSelection.PT_REQUESTS,
         Map.of("id", actor.id(), "now", now()));
   }
 
@@ -416,8 +417,7 @@ class ScheduleService {
     repository.lockLearner(learnerId);
     List<Session> enrolled = new ArrayList<>();
     boolean hasEligibleSession = false;
-    for (Session session : repository.sessions(
-        "s.class_id=:class AND coalesce(s.assigned_trainer_id,s.trainer_id)=:trainer AND s.status='CONFIRMED' AND s.start_at>now()",
+    for (Session session : repository.sessions(SessionSelection.FIXED_CLASS,
         Map.of("class", classId, "trainer", group.trainerId()))) {
       if (!active(pack, OffsetDateTime.parse(session.startAt()).atZoneSameInstant(ZONE).toLocalDate())) {
         continue;
@@ -540,18 +540,13 @@ class ScheduleService {
     OffsetDateTime now = now();
     Map<String, Object> params = Map.of("now", now, "open", now.plusMinutes(30), "learner", learner);
     if (type.equals("PT")) {
-      return repository.sessions("""
-          s.type='PT' AND s.learner_id=:learner AND s.status='CONFIRMED' AND s.start_at <= :open AND s.end_at >= :now
-          """, params);
+      return repository.sessions(SessionSelection.ELIGIBLE_PT, params);
     }
     if (classId == null && trainerId == null || !List.of("GROUP30", "GROUP10").contains(type)) {
       return List.of();
     }
-    List<Session> booked = repository.sessions("""
-        s.type=:type AND s.status='CONFIRMED' AND s.start_at <= :open AND s.end_at >= :now
-          AND ((s.type='GROUP30' AND s.class_id=:class) OR EXISTS (SELECT 1 FROM class_signups r WHERE r.session_id=s.id
-            AND r.learner_id=:learner AND r.package_id=:package AND NOT r.cancelled))
-        """, Map.of("type", type, "class", classId == null ? -1L : classId, "open", now.plusMinutes(30), "now", now,
+    List<Session> booked = repository.sessions(SessionSelection.ELIGIBLE_GROUP,
+        Map.of("type", type, "class", classId == null ? -1L : classId, "open", now.plusMinutes(30), "now", now,
             "learner", learner, "package", packageId));
     if (!booked.isEmpty() || !type.equals("GROUP10")) {
       return booked;
@@ -560,17 +555,7 @@ class ScheduleService {
         "trainer", trainerId == null ? -1L : trainerId, "learner", learner,
         "earliest", now.minusMinutes(20), "latest", now.plusMinutes(30), "lastHour", now.minusHours(1),
         "nextHour", now.plusHours(1), "now", now);
-    return repository.sessions("""
-        s.type='GROUP10' AND s.status='CONFIRMED' AND (s.class_id=:class OR coalesce(s.assigned_trainer_id,s.trainer_id)=:trainer)
-          AND s.start_at>=:earliest AND s.start_at<=:latest AND s.end_at>=:now
-          AND (SELECT count(*) FROM class_signups r WHERE r.session_id=s.id AND NOT r.cancelled)<10
-          AND NOT EXISTS (SELECT FROM sessions booked JOIN class_signups r ON r.session_id=booked.id
-            WHERE booked.type='GROUP10' AND r.learner_id=:learner AND NOT r.cancelled
-              AND booked.status='CONFIRMED'
-              AND (booked.class_id=:class OR coalesce(booked.assigned_trainer_id,booked.trainer_id)=:trainer)
-              AND booked.start_at>:lastHour AND booked.start_at<:nextHour
-              AND (booked.start_at>:latest OR booked.end_at<:now))
-        """, alternatives);
+    return repository.sessions(SessionSelection.GROUP10_WALK_IN, alternatives);
   }
 
   List<Long> learnerClassIds(long learner) {

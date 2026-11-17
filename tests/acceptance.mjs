@@ -110,6 +110,9 @@ async function main() {
   const { token: coach } = await request('POST', '/api/auth/change-password', {
     token: temporary.token, body: { currentPassword: trainer.initialPassword, newPassword: randomUUID() },
   });
+  const learners = '/api/learners?q=' + encodeURIComponent(learner.profile.displayName);
+  assert.equal((await request('GET', learners, { token: admin })).items[0]?.id, learner.profile.id);
+  assert.equal((await request('GET', learners, { token: coach })).total, 0);
 
   await request('PUT', '/api/shifts/' + trainer.profile.id, { token: admin,
     body: { shifts: [1,2,3,4,5,6,7].map(weekday => ({weekday, startsAt: '00:00', endsAt: '23:59'})) } });
@@ -133,6 +136,11 @@ async function main() {
     status: 409, code: 'SCHEDULE_CONFLICT',
   });
   await request('POST', '/api/pt/' + appointment.id + '/confirm', { token: coach, body: {} });
+  assert.equal((await request('GET', learners, { token: coach })).items[0]?.id, learner.profile.id);
+  await request('POST', '/api/shifts/' + trainer.profile.id + '/blocks', {
+    token: admin, status: 409, code: 'BLOCK_HAS_BOOKINGS',
+    body: { startAt: appointment.startAt, endAt: appointment.endAt, reason: 'QA kiểm đối chiếu ca' },
+  });
   await request('POST', '/api/checkins/preview', {
     token: admin, body: { code: secondPack.code, codeKind: 'QR' }, status: 409, code: 'WRONG_PACKAGE',
   });
@@ -161,6 +169,11 @@ async function main() {
   assert.equal(adjustments[0].id, adjustments[1].id);
   assert.equal(adjustments[0].remainingAfter, 5);
   const ledger = await request('GET', '/api/checkins?learnerId=' + learner.profile.id, { token: student });
+  const trainerLedger = await request('GET', '/api/checkins?sessionId=' + appointment.id
+    + '&date=' + date(new Date(entry.checkedInAt)), { token: coach });
+  assert.equal(trainerLedger[0]?.id, entry.id);
+  assert.equal((await request('GET', '/api/checkins?sessionId=' + appointment.id
+    + '&date=' + date(later(-1440)), { token: coach })).length, 0);
   assert.equal(ledger[0].status, 'ADJUSTED');
   const packages = await request('GET', '/api/packages/mine', { token: student });
   assert.equal(packages.find(item => item.id === pack.id).remainingSessions, 5);
@@ -449,7 +462,8 @@ async function main() {
   if (process.env.MUAYTHAI_TEST_RECOVERY === '1') {
     assert.equal(base, 'http://127.0.0.1:8180', 'Chỉ chạy kiểm thử gián đoạn trên cổng QA.');
     const compose = (...args) => execFileSync('docker',
-      ['compose', '-p', 'khang-acceptance', '-f', 'deploy/compose.yaml', ...args], { stdio: 'pipe' });
+      ['compose', '-p', process.env.MUAYTHAI_TEST_COMPOSE_PROJECT || 'khang-acceptance',
+        '-f', 'deploy/compose.yaml', ...args], { stdio: 'pipe' });
     const path = '/api/sessions/' + newBooking.id;
     compose('pause', 'checkin');
     try {

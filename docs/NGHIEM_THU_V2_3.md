@@ -9,14 +9,14 @@
 | FR03 | Hồ sơ học viên, khóa/mở khóa, mã hội viên | API kiểm tạo và sinh mã. Thử sửa và khóa/mở khóa trên APK. |
 | FR04 | Hồ sơ HLV, mật khẩu tạm, ca làm, khóa/mở khóa, xóa | API kiểm xóa khi chưa có dữ liệu, thu hồi phiên và tranh chấp với gán ca. |
 | FR05 | Cấp gói, chọn HLV/lớp, hạn, lượt và gia hạn qua gói mới | API kiểm cấp nhiều loại gói và bảo toàn mã QR khi đổi HLV. Thử cấp gói thay thế trên APK. |
-| FR06 | Tìm theo từ khóa trong danh bạ, lớp và lịch ngày/tuần | API kiểm kết quả tìm lớp và lịch theo phạm vi HLV, học viên và gói đã gán. |
+| FR06 | Tìm theo từ khóa trong danh bạ, lớp và lịch ngày/tuần | API kiểm phạm vi tìm danh bạ, lớp và lịch. Đã mở ô tìm buổi trong APK trên emulator. |
 | FR07 | Sửa thông tin cá nhân và đổi mật khẩu | API kiểm đổi mật khẩu HLV. Thử lưu hồ sơ cá nhân trên APK. |
 | FR08 | Lớp 30 lặp hàng tuần và sinh lịch | API kiểm tạo lớp và thấy buổi đã sinh. Chạy thêm ca chỉnh/dừng lớp. |
 | FR09 | HLV đề xuất lớp 10 theo thứ/giờ | API kiểm trạng thái chờ duyệt và sinh buổi khi mở lớp. |
 | FR10 | Khung PT theo ca, xếp trực tiếp, đề xuất đổi lịch | API kiểm xếp trực tiếp và đồng ý đổi giờ. Thử luồng HLV đề xuất trên APK. |
 | FR11 | Chặn trùng HLV và học viên theo khoảng giờ | API kiểm đặt PT trùng. Cần kiểm thêm tranh chấp lúc đổi HLV hoặc đổi giờ. |
 | FR12 | Lớp 10 giới hạn theo đăng ký. Lớp 30 giới hạn theo lượt ghi | Thử hai yêu cầu tranh chỗ cuối ở mỗi loại lớp. |
-| FR13 | Học viên chọn khung PT. HLV duyệt/từ chối | API kiểm gửi và duyệt. Thử ô trống/ô kẹt và từ chối trên APK. |
+| FR13 | Học viên chọn khung PT. HLV duyệt/từ chối | API kiểm gửi và duyệt. HLV đã duyệt trên APK và trạng thái được lưu. Còn thử học viên chọn khung và HLV từ chối trên APK. |
 | FR14 | HLV gửi đề xuất đổi giờ PT | Thử từ màn HLV tới hộp yêu cầu của học viên. |
 | FR15 | Đồng ý mới cập nhật lịch cũ | API kiểm lịch cũ giữ nguyên đến lúc duyệt. Chạy thêm ca từ chối và hết hạn. |
 | FR16 | Chuyển đăng ký lớp 10 sang buổi khác | API kiểm chuyển đăng ký và đối chiếu hai danh sách buổi. |
@@ -31,11 +31,11 @@
 | FR25 | ADMIN xếp trực tiếp, chọn HLV và khung giờ | API kiểm lịch đã xác nhận và thông báo tức thời cho học viên, HLV khi buổi còn cách hơn một ngày. |
 | FR26 | Ca làm theo tuần, quyền xem và xử lý lịch vướng ca | API kiểm lưu ca. Thử sửa/xóa và quyền xem ca HLV trên APK. |
 | FR27 | Lưới giờ PT trống, bận và ngoài ca | Thử cách tô ô theo ca, lịch trùng và nơi truy cập theo vai trò. |
-| FR28 | Đóng khung giờ của HLV | Thử đóng, mở lại và xem ô bị khóa ở lưới PT. |
+| FR28 | Đóng khung giờ của HLV | API kiểm từ chối khi khung giờ đã có lịch đặt. Thử đóng, mở lại và xem ô bị khóa ở lưới PT. |
 | FR29 | Gán lịch cố định lớp 10 và xếp PT trước | API kiểm giữ đăng ký khi buổi mới sinh và tôn trọng suất đã hủy. |
 | FR30 | Mỗi gói có mã QR riêng | API kiểm hai gói cùng loại có hai mã riêng. |
-| FR31 | Học viên mở QR từ thẻ gói | Kiểm QR hiển thị rõ trên điện thoại và chọn đúng gói. |
-| FR32 | Quản trị viên dùng camera quét QR | Cần điện thoại Android để kiểm quyền camera và đọc mã thật. |
+| FR31 | Học viên mở QR từ thẻ gói | Đã mở thẻ PT trên emulator và đối chiếu mã với gói. Cần thử độ rõ khi quét bằng camera điện thoại. |
+| FR32 | Quản trị viên dùng camera quét QR | APK đã mở màn camera trên emulator. Cần quét mã thật bằng camera điện thoại Android. |
 | FR33 | Tự chọn buổi theo gói và thời điểm đến | API kiểm PT đúng gói và hai tình huống lớp 10. Cần thêm các mốc biên BR12, nhất là lớp 30. |
 | FR34 | Kiểm quyền, cửa sổ, gói và lượt trùng khi xác nhận | API kiểm gói sai, gửi lặp và xác nhận đồng thời. Bổ sung ca tài khoản khóa và gói hết hạn. |
 | FR35 | Lịch sử lưu học viên, buổi, gói, thời gian, nhân viên và hình thức | API kiểm sự kiện và gói bị trừ. Kiểm hiển thị đầy đủ trên APK. |
@@ -43,8 +43,8 @@
 | FR37 | Danh sách đã đến kèm dữ liệu học viên và lượt gói | Thử danh sách của ADMIN, HLV phụ trách và HLV ngoài phạm vi. |
 | FR38 | Danh sách đăng ký chưa check-in | API kiểm trạng thái chờ và thay đổi sau khi chuyển buổi. |
 | FR39 | Điểm danh thủ công với lý do | Thử cả ADMIN và HLV, gồm buổi thuộc và ngoài phạm vi HLV. |
-| FR40 | Cập nhật lượt gói trong cùng lần ghi điểm danh | API kiểm giảm đúng một lượt, gửi lặp và hoàn lượt đúng một lần. |
-| FR41 | Lịch sử theo học viên và buổi | API kiểm lọc hai kiểu. Kiểm các màn thực trên APK. |
+| FR40 | Cập nhật lượt gói trong cùng lần ghi điểm danh | API kiểm giảm đúng một lượt, gửi lặp và hoàn lượt đúng một lần. Xác nhận qua APK bằng mã gói giảm từ 5 xuống 4 lượt. |
+| FR41 | Lịch sử theo học viên và buổi | API kiểm lọc theo học viên, buổi và ngày dưới quyền HLV. Kiểm thêm màn lịch sử trên APK. |
 | FR42 | Lớp 10 walk-in | API kiểm chọn buổi và trừ một lượt. Cần thêm ca hết chỗ và tới ngoài giờ cho phép. |
 | FR43 | Check-in tập tự do | API kiểm không trừ lượt và từ chối lần thứ hai cùng ngày. |
 | FR44 | Đánh dấu vắng | API kiểm chặn ghi vắng trước lúc kết thúc. Chạy ca sau buổi để xác nhận giữ nguyên lượt. |
@@ -60,6 +60,6 @@
 | FR54 | Xem tiến độ mục tiêu | API kiểm học viên đọc %. Kiểm thêm quyền ADMIN, HLV và trạng thái hoàn thành. |
 | FR55 | Hộp thư nhận yêu cầu HLV đề xuất đổi PT | Thử thông báo học viên, mở yêu cầu và phản hồi. |
 | FR56 | Hộp thư HLV có trạng thái lịch và thông báo thay HLV | Thử đủ đặt, duyệt, từ chối, đổi và hủy. |
-| FR57 | Nhắc đánh giá PT còn chờ ở màn Lịch dạy và hộp thư | APK cần kiểm hiển thị số mục đang chờ khi HLV có buổi PT đã kết thúc. |
+| FR57 | Nhắc đánh giá PT còn chờ ở màn Lịch dạy và hộp thư | Trên emulator, HLV thấy số buổi cần đánh giá ngay sau đăng nhập và mở được thông báo của buổi đã kết thúc. |
 | FR58 | Nhắc lịch PT, lớp 10, lớp 30 và gói sắp hết | API kiểm nhắc lớp 10 theo đăng ký và lớp 30 theo gói được gán trong 24 giờ tới. |
 | FR59 | ADMIN gửi thông báo chung | API kiểm học viên nhận và đánh dấu đã đọc. |
