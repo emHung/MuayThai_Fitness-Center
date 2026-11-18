@@ -175,7 +175,7 @@ final class WorkspaceUi {
     EditText input = field(parent, title, initial);
     input.setFocusable(false);
     input.setOnClickListener(view -> {
-      LocalTime time = LocalTime.parse(read(input));
+      LocalTime time = LocalTime.parse(read(input).isEmpty() ? initial : read(input));
       new TimePickerDialog(context,
           (picker, hour, minute) -> input.setText(String.format(Locale.ROOT, "%02d:%02d", hour, minute)),
           time.getHour(), time.getMinute(), true).show();

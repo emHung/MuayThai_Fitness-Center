@@ -6,11 +6,12 @@
 
 ## Tải và sử dụng
 
-- **Điện thoại:** [app-debug-tailscale.apk 0.1.8](https://github.com/emHung/MuayThai_Fitness-Center/releases/download/v0.1.8/app-debug-tailscale.apk), dùng HTTPS qua máy chủ đã cấu hình. Điện thoại chỉ cần Internet khi máy chủ dùng Funnel.
-- **Emulator cùng máy Docker:** [app-debug.apk 0.1.8](https://github.com/emHung/MuayThai_Fitness-Center/releases/download/v0.1.8/app-debug.apk), mặc định `http://10.0.2.2:8080/`.
+- **Điện thoại:** [app-debug-tailscale.apk mới nhất](https://github.com/emHung/MuayThai_Fitness-Center/releases/latest/download/app-debug-tailscale.apk), dùng HTTPS qua máy chủ đã cấu hình. Điện thoại chỉ cần Internet khi máy chủ dùng Funnel.
+- **Emulator cùng máy Docker:** [app-debug.apk mới nhất](https://github.com/emHung/MuayThai_Fitness-Center/releases/latest/download/app-debug.apk), mặc định `http://10.0.2.2:8080/`.
 - Máy chủ cần đang chạy. Hai tệp là APK **debug**, chưa phải bản ký production. Cài đè yêu cầu cùng chữ ký.
 - Từ 0.1.6: **Tài khoản → Cập nhật ứng dụng**, tải trong app, có phần trăm và bước xác nhận cài Android. 0.1.7 tăng khoảng cách hai nút đổi/xóa ảnh lên 16dp. [Chi tiết cập nhật](docs/IN_APP_UPDATE.md).
 - 0.1.8 sửa hủy sau điểm danh, mật khẩu/sao chép/xóa tài khoản, gán lớp 10, bàn phím và ẩn mục đã kết thúc. [Chi tiết 0.1.8](docs/UI_UPDATE_0.1.8.md). Cài đè cùng chữ ký, không cần gỡ app.
+- 0.1.9 tự tải giờ trống khi chọn ngày khác ở màn đặt PT và xếp lịch PT, xóa giờ đã chọn cũ để tránh đặt nhầm. [Chi tiết 0.1.9](docs/UI_UPDATE_0.1.9.md).
 
 ## Bắt đầu theo nhu cầu
 
@@ -54,7 +55,7 @@ Danh sách trên mô tả mã hiện có, không đồng nghĩa đã nghiệm th
 
 **5/6 mốc đã kiểm chứng**, nghiệm thu nghiệp vụ ở lớp hệ thống đã đạt; còn chốt thiết bị và bộ cài bàn giao. Không dùng tỷ lệ “50/59 = 85%” cũ vì bảng FR chưa có tiêu chí đánh dấu hoàn tất nhất quán cho từng hàng.
 
-Bản 0.1.8 đã build và kiểm chữ ký; CI Android, API và production smoke đạt. Lint ghi nhận 0 lỗi, 11 cảnh báo hiện hữu. SonarQube có báo cáo đo trước đó, không chạy tự động trong workflow hiện tại và không đại diện cho mọi commit mới.
+Bản 0.1.9 đã build/lint, kiểm chữ ký và thử đổi ngày/đặt PT cho ADMIN và học viên trên emulator. Lint ghi nhận 0 lỗi, 11 cảnh báo hiện hữu. Backend không đổi so với 0.1.8, đã có API và production smoke đạt. SonarQube là báo cáo đo trước đó, không phải check tự chạy mỗi commit.
 
 Người sử dụng đã xác nhận quét QR và xác nhận điểm danh thành công trên điện thoại. Đã đối chiếu lượt gói và thử cài đè 0.1.7 lên 0.1.8, đăng nhập/đăng xuất HTTPS trên emulator; còn xác nhận đồng bộ ở thiết bị sử dụng. Đã bổ sung kiểm thử các mốc biên nghiệp vụ; không coi đây là đã kiểm mọi tình huống gián đoạn trên mọi thiết bị. Xem [hướng dẫn chốt bàn giao](docs/HANDOVER.md). Các ảnh hiện tại nằm ở [bố cục 0.1.5](docs/UI_REDESIGN_0.1.5.md); ảnh này là bằng chứng phiên bản đó, không phải ảnh chụp lại 0.1.8.
 

@@ -274,15 +274,14 @@ final class SchedulePane {
     work.ui.row(body, PackagesPane.title(pack), PackagesPane.summary(pack), null);
     EditText date = work.ui.date(body, "Ngày tập", LocalDate.now(WorkspaceUi.ZONE).plusDays(1).toString());
     PtSlotGrid grid = new PtSlotGrid(work, body);
-    Runnable showHours = () -> grid.load("packageId=" + packageId + "&date=" + WorkspaceUi.read(date),
+    Runnable showHours = grid.bindDate(date, () -> "packageId=" + packageId + "&date=" + WorkspaceUi.read(date),
         start -> work.confirm("Gửi yêu cầu đặt PT", displayTime(start), "Gửi yêu cầu",
             () -> work.request(work.api.service.post("api/pt/bookings", null,
                 Jsons.body("packageId", packageId, "startAt", start)), saved -> {
               work.message("Đã gửi yêu cầu. Chờ HLV xác nhận.");
               detail(Jsons.id(Jsons.object(saved)));
-            })));
+            })), () -> {});
     work.ui.action(body, "Cập nhật giờ trống", showHours);
-    showHours.run();
   }
 
   static String localStart(EditText date, EditText time) {

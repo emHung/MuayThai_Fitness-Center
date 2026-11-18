@@ -1,7 +1,10 @@
 package vn.muaythai.app;
 
 import android.graphics.drawable.GradientDrawable;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.Gravity;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import com.google.gson.JsonObject;
@@ -10,6 +13,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 final class PtSlotGrid {
   private static final int COLUMNS = 3;
@@ -26,13 +30,34 @@ final class PtSlotGrid {
     work.ui.add(parent, panel, 8);
   }
 
+  Runnable bindDate(EditText date, Supplier<String> query, Consumer<String> select, Runnable resetSelection) {
+    Runnable refresh = () -> {
+      resetSelection.run();
+      load(query.get(), select);
+    };
+    date.addTextChangedListener(new TextWatcher() {
+      private String previous = WorkspaceUi.read(date);
+      @Override public void beforeTextChanged(CharSequence text, int start, int count, int after) {}
+      @Override public void onTextChanged(CharSequence text, int start, int before, int count) {}
+      @Override public void afterTextChanged(Editable text) {
+        String current = WorkspaceUi.read(date);
+        if (!current.equals(previous)) {
+          previous = current;
+          refresh.run();
+        }
+      }
+    });
+    refresh.run();
+    return refresh;
+  }
+
   void load(String query, Consumer<String> select) {
     int requested = ++loadSequence;
     panel.removeAllViews();
     selected = null;
     work.request(work.api.service.get("api/pt/slots?" + query), result -> {
       if (requested == loadSequence) show(Jsons.rows(result), select);
-    });
+    }, error -> { if (requested == loadSequence) work.error(error); });
   }
 
   private void show(List<JsonObject> slots, Consumer<String> select) {

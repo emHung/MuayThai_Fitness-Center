@@ -27,7 +27,7 @@ Set-Location android
 Set-Location ..
 ```
 
-Xem `android/app/build/reports/lint-results-debug.html`. Bản 0.1.8: 0 lỗi, 11 cảnh báo hiện hữu; không coi lint sạch lỗi là đã nghiệm thu UX hay bảo mật toàn hệ thống. Các kiểm tra bổ sung về tài khoản, lớp 10, bàn phím và cài đè nằm trong [báo cáo 0.1.8](UI_UPDATE_0.1.8.md).
+Xem `android/app/build/reports/lint-results-debug.html`. Bản 0.1.9: 0 lỗi, 11 cảnh báo hiện hữu; không coi lint sạch lỗi là đã nghiệm thu UX hay bảo mật toàn hệ thống. Kiểm tra tài khoản, lớp 10, bàn phím/cài đè ở [0.1.8](UI_UPDATE_0.1.8.md); ca đổi ngày tự tải giờ và đặt PT ở [0.1.9](UI_UPDATE_0.1.9.md).
 
 Để chụp UI, dựng stack QA 8180 riêng theo hướng dẫn, build APK `'-PauthBaseUrl=http://10.0.2.2:8180/'`. Đặt `MUAYTHAI_TEST_COMPOSE_PROJECT` đúng project QA vừa dựng (ví dụ `muaythai-qa`), `MUAYTHAI_TEST_URL=http://127.0.0.1:8180` và `MUAYTHAI_UI_FIXTURE_OUT=android/app/build/ui-qa/accounts.json`, tạo thư mục output rồi chạy `node tests/ui-fixtures.mjs`; chép `tests/fixtures/course.jpg` cạnh accounts.json. Truyền FixturePath, ApkPath và OutputDirectory vào script. Fixture có credential, không in/chia sẻ/commit.
 

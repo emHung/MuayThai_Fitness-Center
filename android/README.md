@@ -60,7 +60,7 @@ Tất cả đường dẫn ở bảng tính từ `app/src/main/java/vn/muaythai/
 | [SchedulePane.java](app/src/main/java/vn/muaythai/app/SchedulePane.java) | Lịch ngày/tuần, chi tiết buổi, đặt PT và đầu vào lớp nhóm. |
 | [ClassPane.java](app/src/main/java/vn/muaythai/app/ClassPane.java) | Biểu mẫu, chi tiết và thao tác quản lý lớp 10/30. |
 | [PlanningPane.java](app/src/main/java/vn/muaythai/app/PlanningPane.java) | Ca làm, khung đóng và đề xuất/thay đổi lịch. |
-| [PtSlotGrid.java](app/src/main/java/vn/muaythai/app/PtSlotGrid.java) | Lưới giờ PT và trạng thái khả dụng theo dữ liệu server. |
+| [PtSlotGrid.java](app/src/main/java/vn/muaythai/app/PtSlotGrid.java) | Theo dõi ngày đã chọn, tự tải giờ PT, bỏ phản hồi cũ và hiển thị trạng thái khả dụng/đang chọn. |
 | [WeekSelector.java](app/src/main/java/vn/muaythai/app/WeekSelector.java) | Dải chọn ngày trong tuần; chuyển ngày cho SchedulePane lọc dữ liệu thật. |
 | [CalendarUpdates.java](app/src/main/java/vn/muaythai/app/CalendarUpdates.java) | Kết nối sự kiện SSE và vòng đời tải lại lịch. |
 | [PackagesPane.java](app/src/main/java/vn/muaythai/app/PackagesPane.java) | Cấp/xem gói, lượt/hạn và QR từng gói. |

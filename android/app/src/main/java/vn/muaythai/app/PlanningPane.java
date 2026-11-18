@@ -187,10 +187,10 @@ final class PlanningPane {
     long[] trainer = {Jsons.number(pack, "trainerId")};
     if (admin) {
       PtSlotGrid grid = new PtSlotGrid(work, body);
-      Runnable showHours = () -> grid.load("trainerId=" + trainer[0] + "&date=" + WorkspaceUi.read(date),
-          start -> time.setText(OffsetDateTime.parse(start).toLocalTime().toString()));
+      Runnable showHours = grid.bindDate(date, () -> "trainerId=" + trainer[0] + "&date=" + WorkspaceUi.read(date),
+          start -> time.setText(OffsetDateTime.parse(start).atZoneSameInstant(WorkspaceUi.ZONE).toLocalTime().toString()),
+          () -> time.setText(""));
       work.ui.action(body, "Cập nhật giờ trống", showHours);
-      showHours.run();
       var name = work.ui.label(body, "HLV phụ trách gói", 14, false);
       work.ui.action(body, "Chọn HLV thay thế", () -> work.directory.pick(true, "",
           rows -> work.choose("Chọn HLV", rows, "displayName", selected -> {
@@ -200,6 +200,10 @@ final class PlanningPane {
           })));
     }
     work.ui.action(body, "Xác nhận lịch", () -> {
+      if (WorkspaceUi.read(time).isEmpty()) {
+        work.error("Chọn giờ tập cho ngày đang xem trước khi xác nhận.");
+        return;
+      }
       Long count = weeks == null ? 1L : ProgressPane.positiveNumber(WorkspaceUi.read(weeks));
       if (count == null || count < 1 || count > 12) {
         work.error("Nhập số tuần từ 1 đến 12.");
