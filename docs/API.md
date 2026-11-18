@@ -43,9 +43,9 @@ Khi tạo HLV, học viên hoặc lễ tân, `temporaryPassword` là tùy chọn
 | `PUT /api/sessions/{id}/trainer` | ADMIN | Nhận `trainerId`, `reason`. Kiểm ca làm, giờ trùng và lượt điểm danh trước khi đổi HLV cho một buổi tương lai. |
 | `GET /api/sessions/{id}/trainer` | Người có quyền xem buổi | Trả ID và tên hiển thị của HLV đang dạy buổi đó. |
 
-## Điểm danh và hoàn lượt
-
 Gán gói lớp 10 mới gửi `type: GROUP10` và `classId`; máy chủ kiểm lớp đang mở, lấy HLV phụ trách và trả cả hai ID. Nếu gửi thêm `trainerId`, ID phải khớp HLV của lớp. Gói chỉ gắn HLV từ client cũ vẫn tương thích. App tiếp tục gọi API gán lịch cố định; nếu bước này thất bại, giữ gói và chỉ thử lại gán lịch.
+
+## Điểm danh và hoàn lượt
 
 | Phương thức và đường dẫn | Quyền | Dữ liệu chính |
 | --- | --- | --- |

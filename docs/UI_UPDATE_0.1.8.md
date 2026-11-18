@@ -23,7 +23,8 @@ Lựa chọn ẩn thuộc từng tài khoản trên thiết bị hiện tại, k
 - Kiểm thêm mật khẩu tự nhập cho ba vai trò, quyền/xóa mềm tài khoản, giữ lịch sử, lớp 10 đúng HLV, gói tương lai và hủy sau hoàn lượt.
 - Production smoke đạt với migration và quyền PostgreSQL.
 - Android build/lint đạt: 0 lỗi, 11 cảnh báo hiện hữu. Hai APK có version 0.1.8/code 9 và cùng chữ ký debug hiện hành.
-- Kiểm tra UI cuối trên emulator đang được hoàn tất; xác nhận lại trên điện thoại sử dụng vẫn cần khi cập nhật.
+- Emulator đã kiểm tra: che mật khẩu/lỗi inline, Sao chép/Đóng, cấp lại/xóa tài khoản, chi tiết đề xuất, gán lớp 10, viền giờ PT và ẩn/hoàn tác/hiện lại. Bàn phím đạt ở màn 720×1280, 720×1640 và cỡ chữ 130%.
+- APK HTTPS đã cài đè 0.1.7 lên 0.1.8, giữ dữ liệu app và đăng nhập/đăng xuất thành công. [CI](https://github.com/emHung/MuayThai_Fitness-Center/actions/runs/44400005402) đạt. Xác nhận lại trên điện thoại sử dụng vẫn cần khi cập nhật.
 
 ## Cài bản cập nhật
 

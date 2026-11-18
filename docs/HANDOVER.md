@@ -11,7 +11,7 @@
 | Loại | Mục đích | Cài đè |
 | --- | --- | --- |
 | APK debug hiện hành trên Releases | Chuỗi dùng thử đang được sử dụng, có kiểm tra cập nhật GitHub | Chỉ cài đè bằng APK cùng chữ ký debug hiện có. |
-| APK release ký riêng, ứng viên 0.1.8 | Chuẩn bị chuỗi phát hành riêng, không bật chế độ debug | Cần thiết bị cài mới hoặc kế hoạch chuyển đổi; không cài đè APK debug khác chữ ký. |
+| APK release ký riêng | Chuỗi phát hành production, cần đóng gói và nghiệm thu theo khóa được bàn giao | Cần thiết bị cài mới hoặc kế hoạch chuyển đổi; không cài đè APK debug khác chữ ký. |
 
 Không tự gỡ app trên điện thoại đang dùng để xử lý lỗi chữ ký. Dữ liệu nghiệp vụ ở máy chủ cần được sao lưu; việc gỡ app có thể làm mất phiên và thiết lập cục bộ. Xem [quy tắc ký ứng dụng của Android](https://developer.android.com/studio/publish/app-signing).
 
@@ -26,6 +26,6 @@ Không tự gỡ app trên điện thoại đang dùng để xử lý lỗi ch�
 
 ## Hiện trạng
 
-Người sử dụng đã xác nhận quét QR và xác nhận điểm danh thành công trên điện thoại thật. Các ca nghiệp vụ tự động và cấu hình triển khai đã đạt. Đã đối chiếu dữ liệu lượt gói với lịch sử trên máy chủ hiện tại, không phát hiện sai lệch. Ứng viên release đã cài mới, đăng nhập HTTPS và đăng xuất thành công trên emulator. Còn xác nhận cập nhật ở thiết bị khác từ người sử dụng; vì vậy mốc chốt bàn giao còn mở trong [PROGRESS.md](../PROGRESS.md).
+Người sử dụng đã xác nhận quét QR và xác nhận điểm danh thành công trên điện thoại thật. Các ca nghiệp vụ tự động và cấu hình triển khai đã đạt. Bản công khai 0.1.8/code 9 đã cài đè 0.1.7, giữ dữ liệu app và đăng nhập/đăng xuất HTTPS trên emulator. Backend đã được sao lưu, cập nhật và kiểm tra lại. Còn xác nhận đồng bộ ở thiết bị sử dụng; vì vậy mốc chốt bàn giao còn mở trong [PROGRESS.md](../PROGRESS.md).
 
-Ứng viên release được chuẩn bị riêng để kiểm tra trước khi công bố; chưa dùng thay thế bản APK hiện hành trên GitHub. Khóa ký không được đính kèm vào tài liệu hoặc kho mã nguồn.
+APK hiện hành trên GitHub vẫn dùng chuỗi debug đã có. Nếu chọn chuỗi production ký riêng, cần đóng gói và nghiệm thu riêng trước khi thay thế. Khóa ký không được đính kèm vào tài liệu hoặc kho mã nguồn.
