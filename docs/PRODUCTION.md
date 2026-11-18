@@ -2,6 +2,8 @@
 
 Cấu hình production dùng volume PostgreSQL mới. Giữ stack demo và database hiện tại cho phát triển. Thử khôi phục hoặc nhập dữ liệu đã đối soát vào staging trước buổi chuyển đổi thật.
 
+Cài môi trường trên máy mới theo [SETUP_NEW_MACHINE.md](SETUP_NEW_MACHINE.md). APK đang phát hành là debug; không suy ra từ production smoke rằng đã vận hành doanh nghiệp thực tế.
+
 ## Chuẩn bị máy chủ
 
 1. Tạo `deploy/.env.production` theo [mẫu](../deploy/production.env.example). Lấy từng bí mật riêng từ nơi quản lý khóa của doanh nghiệp. Dùng tên `PRODUCTION_DB_VOLUME` riêng cho từng môi trường. Đặt `ATTENDANCE_RETENTION` theo chính sách đã duyệt, dùng kỳ ISO 8601 như `P1Y` nếu doanh nghiệp chọn một năm.
@@ -17,7 +19,7 @@ Mỗi service có một vai trò PostgreSQL chạy nghiệp vụ và một vai t
 
 ## Kết nối APK qua Tailscale
 
-APK `app-debug-tailscale.apk` của bản v0.1.1 dùng `https://desktop-il5rjhe.tailfd8509.ts.net/`. Ngày 18/11/2026, máy chủ đã bật Funnel để điện thoại truy cập qua Internet bằng Wi-Fi hoặc mạng di động. Người dùng đăng nhập bằng tài khoản ứng dụng. [Tailscale Funnel](https://tailscale.com/docs/features/tailscale-funnel).
+Chuỗi APK HTTPS hiện hành tới bản 0.1.7 dùng `https://desktop-il5rjhe.tailfd8509.ts.net/`. Ngày 18/11/2026, máy chủ đã bật Funnel để điện thoại truy cập qua Internet bằng Wi-Fi hoặc mạng di động. Người dùng đăng nhập bằng tài khoản ứng dụng. [Tailscale Funnel](https://tailscale.com/docs/features/tailscale-funnel).
 
 Ngày 18/11/2026, Docker vẫn trả `UP` tại cổng 8080 nhưng Tailscale Windows ở trạng thái `NoState`; tên miền trong APK không phân giải được. Mở lại ứng dụng Tailscale theo tài khoản Windows đã đưa trạng thái về `Running`, khôi phục cấu hình Serve và đăng nhập HTTPS thành công cho cả ba tài khoản demo.
 

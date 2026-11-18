@@ -1,5 +1,7 @@
 # Đối chiếu 59 yêu cầu v2.3
 
+> Đối chiếu sau bản 0.1.7: bảng ghi mức triển khai/ca còn lại, chưa có cột đạt toàn bộ cho từng FR; không suy ra 50/59 yêu cầu đã nghiệm thu. Mốc tổng ở [PROGRESS.md](../PROGRESS.md).
+
 Đối chiếu với [đặc tả v2.3](SCOPE.md). Cột **Kiểm thử** ghi ca cụ thể có trong [bộ kiểm thử API](../tests/acceptance.mjs) hoặc việc cần chạy trên APK. Mỗi ca API chỉ bao phủ hành vi được mô tả tại hàng đó.
 
 | Mã | Phần triển khai | Kiểm thử và phần còn lại |
@@ -10,7 +12,7 @@
 | FR04 | Hồ sơ HLV, mật khẩu tạm, ca làm, khóa/mở khóa, xóa | API kiểm xóa khi chưa có dữ liệu, thu hồi phiên và tranh chấp với gán ca. |
 | FR05 | Cấp gói, chọn HLV/lớp, hạn, lượt và gia hạn qua gói mới | API kiểm cấp nhiều loại gói và bảo toàn mã QR khi đổi HLV. Thử cấp gói thay thế trên APK. |
 | FR06 | Tìm theo từ khóa trong danh bạ, lớp và lịch ngày/tuần | API kiểm phạm vi tìm danh bạ, lớp và lịch. Đã mở ô tìm buổi trong APK trên emulator. |
-| FR07 | Sửa thông tin cá nhân và đổi mật khẩu | API kiểm đổi mật khẩu HLV. Thử lưu hồ sơ cá nhân trên APK. |
+| FR07 | Sửa thông tin cá nhân và đổi mật khẩu | API kiểm đổi mật khẩu HLV. Emulator 0.1.5 đã lưu hồ sơ cá nhân qua form mới; còn thử điện thoại thật. |
 | FR08 | Lớp 30 lặp hàng tuần và sinh lịch | API kiểm tạo lớp và thấy buổi đã sinh. Chạy thêm ca chỉnh/dừng lớp. |
 | FR09 | HLV đề xuất lớp 10 theo thứ/giờ | API kiểm trạng thái chờ duyệt và sinh buổi khi mở lớp. |
 | FR10 | Khung PT theo ca, xếp trực tiếp, đề xuất đổi lịch | API kiểm xếp trực tiếp và đồng ý đổi giờ. Thử luồng HLV đề xuất trên APK. |
@@ -23,7 +25,7 @@
 | FR17 | Lịch lớp 30 của học viên theo lớp được gán | Thử hai học viên khác lớp và quét QR của từng gói ở quầy. |
 | FR18 | ADMIN quản lý lịch lớp 30 và phân công HLV | API kiểm tạo lớp. Thử sửa, hủy và chuyển HLV cho một buổi lớp 30. |
 | FR19 | Màn lịch lắng nghe cập nhật SSE và tải dữ liệu theo quyền | API kiểm nhận cập nhật qua gateway với ba vai trò. Cần thử nhiều thiết bị cùng mở lịch trên APK. |
-| FR20 | Lịch ngày và tuần | Kiểm chuyển ngày/tuần, cuộn danh sách và trạng thái trống trên APK. |
+| FR20 | Lịch ngày và tuần | Emulator 0.1.5 đã kiểm chọn ngày ở dải tuần, chuyển chế độ tuần và chụp danh sách/trạng thái rỗng. Còn nghiệm thu điện thoại thật. |
 | FR21 | Hủy PT/lớp 10 theo hạn và hủy buổi có lý do | API kiểm hủy đăng ký và hủy buổi đồng thời với điểm danh. Chạy thêm ca sát mốc 3 giờ, 12 giờ. |
 | FR22 | Học viên đề xuất và HLV xác nhận đổi PT | API kiểm đủ hai bước và đối chiếu ngày giờ mới. |
 | FR23 | Yêu cầu đổi tự hết hạn | Thử mốc hết hạn trước khi xác nhận và xác minh lịch cũ. |

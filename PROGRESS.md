@@ -13,6 +13,16 @@ Thanh tiến độ đếm các mốc bàn giao đã kiểm chứng. Phạm vi v�
 | Nghiệm thu v2.3 | Đang làm | [Bảng 59 yêu cầu](docs/NGHIEM_THU_V2_3.md) ghi các chức năng và ca kiểm thử còn mở. |
 | Nghiệm thu điện thoại và đóng gói bản nộp | Đang làm | Cần thử camera QR, đồng bộ nhiều máy và kiểm tra bản dùng để nộp. |
 
+## Hiện trạng đối chiếu 18/11/2026
+
+- Phát hành gần nhất: 0.1.7/code 8, APK debug cùng chuỗi chữ ký cũ; chưa ký production.
+- CI bản 0.1.7: Android build/lint, API/ảnh và production smoke đạt. Lint: 0 lỗi, 11 cảnh báo hiện hữu.
+- UI bốn vai trò, avatar, mất mạng/nối lại, cập nhật có tiến độ và khoảng cách nút ảnh đã có. Không hiển thị ảnh lớp/gói.
+- Chưa nghiệm thu đủ: camera điện thoại thật, đồng bộ nhiều thiết bị, tất cả mốc biên nghiệp vụ và lỗi cập nhật khi mất mạng/thiếu bộ nhớ.
+- Bảng 59 FR có phần triển khai và ca còn mở, chưa là bảng chấm hoàn tất từng yêu cầu; bỏ tỷ lệ 50/59 trong README. Giữ 4/6 mốc có bằng chứng, không quy đổi thành phần trăm chức năng.
+- SonarQube là kết quả lần đo trước, không phải check tự chạy mỗi commit.
+- Cài máy mới theo [SETUP_NEW_MACHINE.md](docs/SETUP_NEW_MACHINE.md); cấu trúc [Android](android/README.md) và [backend](backend/README.md).
+
 ## Nhật ký cập nhật
 
 | Ngày | Cập nhật |
@@ -45,3 +55,7 @@ Khi sửa hoặc xác nhận một chức năng, thêm mục theo ngày và gắ
 ## Khoảng cách nút ảnh — 0.1.7
 
 Tăng khoảng cách giữa nút đổi ảnh và xóa ảnh lên 16dp, giữ vùng bấm 48dp và xác nhận trước khi xóa. Đóng gói bản 0.1.7/code 8, giữ chữ ký debug hiện có để cài đè.
+
+## Rà soát repository và tài liệu
+
+Gỡ 41 ảnh lịch sử khỏi nhánh hiện tại, giữ đường xem ảnh tại tag v0.1.7. Giữ migration, giấy phép, fixture và wrapper. Viết hướng dẫn máy mới, danh mục mã frontend/backend và kiểm thử; đối chiếu sửa thông tin cũ về vai trò, kiến trúc và công cụ chưa tích hợp. [Báo cáo rà soát](docs/REPOSITORY_REVIEW.md). Thay đổi tài liệu không tăng mốc bàn giao.

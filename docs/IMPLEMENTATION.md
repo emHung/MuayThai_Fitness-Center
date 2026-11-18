@@ -1,6 +1,8 @@
 # Triển khai và nghiệm thu
 
-Một chức năng hoàn thành khi app Android gọi API thật, service áp dụng đúng quyền và nghiệp vụ, dữ liệu vẫn đúng sau khi tải lại, và luồng có ca kiểm thử thành công cùng lỗi chính. Ba vai trò dùng một APK. Bản demo dùng tài khoản và dữ liệu tạo sẵn có thể dựng lại.
+Một chức năng hoàn thành khi app Android gọi API thật, service áp dụng đúng quyền và nghiệp vụ, dữ liệu vẫn đúng sau khi tải lại, và luồng có ca kiểm thử thành công cùng lỗi chính. Bốn vai trò dùng một APK. Bản demo dùng tài khoản và dữ liệu tạo sẵn có thể dựng lại.
+
+Tài liệu này giữ kế hoạch gốc để đối chiếu; hiện trạng hiện hành ở [PROGRESS.md](../PROGRESS.md). Cài máy mới theo [hướng dẫn](SETUP_NEW_MACHINE.md), kiểm thử theo [TESTING.md](TESTING.md).
 
 ## Kế hoạch năm tuần
 

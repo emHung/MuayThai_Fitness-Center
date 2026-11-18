@@ -1,5 +1,9 @@
 # Trạng thái bàn giao bản demo
 
+## Mốc đối chiếu hiện tại
+
+Bản phát hành 0.1.7/code 8, bốn vai trò ADMIN/RECEPTION/TRAINER/LEARNER. UI dùng bố cục chung, chỉ giữ avatar; mất mạng/nối lại và tải/cài cập nhật trong app đã có. CI bản 0.1.7 đạt Android build/lint, API/ảnh và production smoke. Chi tiết ở [tiến độ](../PROGRESS.md) và [cài máy mới](SETUP_NEW_MACHINE.md). Mốc bàn giao vẫn là 4/6; các kết quả bên dưới không thay cho nghiệm thu điện thoại thật.
+
 ## Phần đã có trong mã
 
 | Phần | Màn hình và thao tác |
@@ -34,8 +38,8 @@
 
 ## Chất lượng mã
 
-- Android chạy `:app:lintDebug` thành công với 0 lỗi và 17 cảnh báo. Các cảnh báo còn lại gồm phiên bản dependency, tương thích xoay màn hình và tài nguyên UI. `:app:assembleDebug` tạo APK cài được trên emulator.
-- SonarQube báo Quality Gate đạt sau khi nhập báo cáo JaCoCo. Còn một phát hiện `java:S4502` về ngoại lệ CSRF cho API dùng Bearer token và API nội bộ dùng khóa dịch vụ. Xem số liệu đo tại [dashboard cục bộ](http://127.0.0.1:9000/dashboard?id=muaythai-fitness-backend).
+- Android chạy `:app:lintDebug` thành công với 0 lỗi và 11 cảnh báo hiện hữu ở bản 0.1.7. Các cảnh báo còn lại gồm phiên bản dependency, tương thích xoay màn hình và tài nguyên UI. `:app:assembleDebug` tạo APK cài được trên emulator.
+- Ở lần đo đã ghi nhận trước đó, SonarQube báo Quality Gate đạt sau khi nhập báo cáo JaCoCo. Còn một phát hiện `java:S4502` về ngoại lệ CSRF cho API dùng Bearer token và API nội bộ dùng khóa dịch vụ. Xem số liệu đo tại [dashboard cục bộ](http://127.0.0.1:9000/dashboard?id=muaythai-fitness-backend).
 - [Script coverage](../tests/coverage.ps1) chạy nghiệm thu trên database thử nghiệm và tạo XML để scanner nhập.
 
 ## Phạm vi còn phải chốt
