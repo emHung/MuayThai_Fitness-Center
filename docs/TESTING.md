@@ -6,6 +6,7 @@
 | --- | --- |
 | [verify.yaml](../.github/workflows/verify.yaml) | CI push main/PR: Android assemble/lint; Docker API + ảnh với QA riêng; production smoke. |
 | [acceptance.mjs](../tests/acceptance.mjs) | Auth, quyền, gói, PT/lớp, tranh chấp/điểm danh, mục tiêu, SSE; tạo dữ liệu thử, chỉ chạy QA. |
+| [handoff.mjs](../tests/handoff.mjs) | Bổ sung nghiệm thu quyền, sức chứa, mốc hủy/đổi lịch, thủ công/vắng/đánh giá và tranh chấp. Chỉ nhận gateway 8180 và project QA khang-handoff hoặc khang-acceptance. Có SQL fixture thời gian, tuyệt đối không dùng dữ liệu thật. |
 | [images.mjs](../tests/images.mjs) | Quyền API ảnh, upload/sửa/xóa và tính tương thích; không có nghĩa ảnh lớp/gói còn hiện trên UI. |
 | [production-smoke.ps1](../tests/production-smoke.ps1) | Stack riêng mặc định cổng 8186, bootstrap/migration và quyền PostgreSQL, chính sách lưu trữ. Tự quản lý môi trường thử. |
 | [capture-android.ps1](../tests/capture-android.ps1) | Đăng nhập/chụp bốn vai trò, chọn/xem trước/lưu avatar; yêu cầu emulator và APK cổng QA 8180. |
@@ -47,7 +48,7 @@ Scanner nhập `backend/target/coverage/acceptance.xml`. Đợi SonarQube sẵn 
 
 ## Ưu tiên nghiệm thu còn mở
 
-1. Điện thoại vật lý: quét QR qua camera, upload avatar, cài đè và cấp quyền trên máy thực.
+1. Điện thoại vật lý: người sử dụng đã xác nhận quét/xác nhận QR thành công; còn kiểm lượt gói, thiết bị khác và cài ứng viên release ký riêng.
 2. Nhiều thiết bị: lịch/SSE, quyền mỗi vai trò và kết nối gián đoạn.
 3. Biên nghiệp vụ: cửa sổ check-in/hủy lịch, gói hết hạn, sức chứa và tranh chấp theo bảng FR.
 4. Cập nhật: mất mạng khi tải, thiếu bộ nhớ, hủy quyền/cài, đóng tiến trình; chưa coi tất cả đã thử từ lượt tải thành công.

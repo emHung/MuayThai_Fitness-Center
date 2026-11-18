@@ -2,7 +2,9 @@
 
 ## Mốc đối chiếu hiện tại
 
-Bản phát hành 0.1.7/code 8, bốn vai trò ADMIN/RECEPTION/TRAINER/LEARNER. UI dùng bố cục chung, chỉ giữ avatar; mất mạng/nối lại và tải/cài cập nhật trong app đã có. CI bản 0.1.7 đạt Android build/lint, API/ảnh và production smoke. Chi tiết ở [tiến độ](../PROGRESS.md) và [cài máy mới](SETUP_NEW_MACHINE.md). Mốc bàn giao vẫn là 4/6; các kết quả bên dưới không thay cho nghiệm thu điện thoại thật.
+Bản phát hành 0.1.7/code 8, bốn vai trò ADMIN/RECEPTION/TRAINER/LEARNER. UI dùng bố cục chung, chỉ giữ avatar; mất mạng/nối lại và tải/cài cập nhật trong app đã có. CI bản 0.1.7 đạt Android build/lint, API/ảnh và production smoke. Chi tiết ở [tiến độ](../PROGRESS.md) và [cài máy mới](SETUP_NEW_MACHINE.md). Mốc bàn giao là 5/6 sau nghiệm thu nghiệp vụ hệ thống bổ sung; các kết quả bên dưới không thay cho nghiệm thu điện thoại thật.
+
+Mốc hiện hành và điều kiện chốt thiết bị/bộ cài xem [PROGRESS.md](../PROGRESS.md), [HANDOVER.md](HANDOVER.md). Người sử dụng đã xác nhận quét QR và xác nhận điểm danh trên điện thoại thành công.
 
 ## Phần đã có trong mã
 

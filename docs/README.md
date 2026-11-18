@@ -1,6 +1,6 @@
 # Mục lục tài liệu
 
-Hiện trạng: APK **0.1.7/code 8**, bốn vai trò, 4/6 mốc bàn giao có bằng chứng. Tài liệu lịch sử mô tả thời điểm đo/chụp, không thay cho trạng thái hiện tại.
+Hiện trạng: APK **0.1.7/code 8**, bốn vai trò, 5/6 mốc bàn giao có bằng chứng. Tài liệu lịch sử mô tả thời điểm đo/chụp, không thay cho trạng thái hiện tại.
 
 ## Cài đặt và đọc mã
 
@@ -26,6 +26,8 @@ Hiện trạng: APK **0.1.7/code 8**, bốn vai trò, 4/6 mốc bàn giao có b�
 | Kế hoạch gốc và tiêu chí nghiệm thu | [IMPLEMENTATION.md](IMPLEMENTATION.md) |
 | 59 yêu cầu và ca kiểm thử còn thiếu | [NGHIEM_THU_V2_3.md](NGHIEM_THU_V2_3.md) |
 | Tải và cài cập nhật APK trong app | [IN_APP_UPDATE.md](IN_APP_UPDATE.md) |
+
+[Chốt bộ cài bàn giao và chuyển chuỗi ký](HANDOVER.md).
 
 ## Bằng chứng và lịch sử
 
