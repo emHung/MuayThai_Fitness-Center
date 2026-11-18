@@ -41,3 +41,7 @@ Khi sửa hoặc xác nhận một chức năng, thêm mục theo ngày và gắ
 ## Cập nhật trong app — 0.1.6
 
 Đã thêm màn tiến độ DownloadManager, thử lại/hủy, kiểm tra package/phiên bản/chữ ký/SHA-256 (nếu release cung cấp), xin quyền và chuyển trình cài Android. Emulator tải và cài đè release thật sau khi Play Protect báo an toàn. [Báo cáo](docs/IN_APP_UPDATE.md).
+
+## Khoảng cách nút ảnh — 0.1.7
+
+Tăng khoảng cách giữa nút đổi ảnh và xóa ảnh lên 16dp, giữ vùng bấm 48dp và xác nhận trước khi xóa. Đóng gói bản 0.1.7/code 8, giữ chữ ký debug hiện có để cài đè.

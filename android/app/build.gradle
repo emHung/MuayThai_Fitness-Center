@@ -22,8 +22,8 @@ android {
         applicationId 'vn.muaythai.app'
         minSdk 24
         targetSdk 36
-        versionCode providers.gradleProperty('appVersionCode').orElse('7').get().toInteger()
-        versionName providers.gradleProperty('appVersionName').orElse('0.1.6').get()
+        versionCode providers.gradleProperty('appVersionCode').orElse('8').get().toInteger()
+        versionName providers.gradleProperty('appVersionName').orElse('0.1.7').get()
     }
     signingConfigs {
         release {

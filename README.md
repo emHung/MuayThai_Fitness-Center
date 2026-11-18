@@ -3,18 +3,18 @@
 > Hệ thống quản lý phòng tập Muay Thai & Fitness toàn diện: Ứng dụng Android Java Native cho Quản trị viên, Huấn luyện viên, Học viên kết hợp Backend Microservices Spring Boot chạy trên nền Docker Compose & PostgreSQL.
 
 [![GitHub Release](https://img.shields.io/github/v/release/emHung/MuayThai_Fitness-Center?style=for-the-badge&logo=github&color=blue)](https://github.com/emHung/MuayThai_Fitness-Center/releases/latest)
-[![Download APK](https://img.shields.io/badge/Download-Android_APK_(v0.1.6)-success?style=for-the-badge&logo=android)](https://github.com/emHung/MuayThai_Fitness-Center/releases/tag/v0.1.6)
+[![Download APK](https://img.shields.io/badge/Download-Android_APK_(v0.1.7)-success?style=for-the-badge&logo=android)](https://github.com/emHung/MuayThai_Fitness-Center/releases/tag/v0.1.7)
 
 > 📱 **Tải về bộ cài đặt APK theo phiên bản mới nhất:**
-> - 📥 [Tải APK Tiêu chuẩn (app-debug.apk v0.1.6)](https://github.com/emHung/MuayThai_Fitness-Center/releases/download/v0.1.6/app-debug.apk)
-> - 📥 [Tải APK HTTPS cho điện thoại (app-debug-tailscale.apk v0.1.6)](https://github.com/emHung/MuayThai_Fitness-Center/releases/download/v0.1.6/app-debug-tailscale.apk)
+> - 📥 [Tải APK Tiêu chuẩn (app-debug.apk v0.1.7)](https://github.com/emHung/MuayThai_Fitness-Center/releases/download/v0.1.7/app-debug.apk)
+> - 📥 [Tải APK HTTPS cho điện thoại (app-debug-tailscale.apk v0.1.7)](https://github.com/emHung/MuayThai_Fitness-Center/releases/download/v0.1.7/app-debug-tailscale.apk)
 > - 📦 Xem toàn bộ lịch sử các bản phát hành tại [GitHub Releases](https://github.com/emHung/MuayThai_Fitness-Center/releases).
 
 ---
 
 ## Giao diện gọn và trạng thái kết nối
 
-Bản 0.1.6 thêm tải cập nhật ngay trong app, hiện tiến độ và mở bước xác nhận cài đặt của Android. [Hướng dẫn và kiểm thử](docs/IN_APP_UPDATE.md). Bản 0.1.5 áp dụng bố cục tham chiếu cho cả bốn vai trò: header, hero, thẻ thao tác, danh sách và hồ sơ. Giữ bảng màu theo vai trò, ảnh đại diện và icon Remix Icon; không dùng ảnh lớp/gói. App báo mất Internet và kết nối trở lại. APK HTTPS sử dụng Funnel đang chạy trên máy chủ, điện thoại chỉ cần Internet. Tệp `app-debug.apk` dành cho emulator cục bộ.
+Bản 0.1.7 tăng khoảng cách giữa nút đổi ảnh và xóa ảnh lên 16dp. Bản 0.1.6 thêm tải cập nhật ngay trong app, hiện tiến độ và mở bước xác nhận cài đặt của Android. [Hướng dẫn và kiểm thử](docs/IN_APP_UPDATE.md). Bản 0.1.5 áp dụng bố cục tham chiếu cho cả bốn vai trò: header, hero, thẻ thao tác, danh sách và hồ sơ. Giữ bảng màu theo vai trò, ảnh đại diện và icon Remix Icon; không dùng ảnh lớp/gói. App báo mất Internet và kết nối trở lại. APK HTTPS sử dụng Funnel đang chạy trên máy chủ, điện thoại chỉ cần Internet. Tệp `app-debug.apk` dành cho emulator cục bộ.
 
 - [Bố cục và ảnh giao diện bản 0.1.5](docs/UI_REDESIGN_0.1.5.md)
 - [Giao diện và thông báo kết nối bản 0.1.4](docs/UI_UPDATE_0.1.4.md)
@@ -191,7 +191,7 @@ $adb = Join-Path $env:ANDROID_HOME 'platform-tools\adb.exe'
 Khi mở hoặc quay lại ứng dụng, Android kiểm tra bản stable mới nhất trên GitHub Releases nếu đã qua một giờ kể từ lần kiểm tra trước. **Cập nhật ngay** bắt đầu tải APK và Android gửi thông báo để người dùng mở trình cài đặt. **Để sau** hoãn nhắc phiên bản đó trong 24 giờ.
 
 1. Đặt tag theo dạng `vX.Y.Z`. Dùng cùng giá trị `X.Y.Z` làm `appVersionName`. Tăng `appVersionCode` cho mỗi bản phát hành và ký APK bằng cùng khóa với bản đang cài.
-2. Build bằng `.\gradlew.bat :app:assembleRelease -PappVersionName=0.1.6 -PappVersionCode=7 -PauthBaseUrl=https://<tên-miền>/`. Đính kèm APK đã ký với tên `muaythai-release.apk`, sau đó xuất bản release ổn định.
+2. Build bằng `.\gradlew.bat :app:assembleRelease -PappVersionName=0.1.7 -PappVersionCode=8 -PauthBaseUrl=https://<tên-miền>/`. Đính kèm APK đã ký với tên `muaythai-release.apk`, sau đó xuất bản release ổn định.
 3. Với bản debug cho emulator, tải lên `app-debug.apk`. Bản debug dùng địa chỉ `*.ts.net` tìm tệp `app-debug-tailscale.apk`. Nếu cần tên khác, dùng `-PappUpdateApkName=<tên-tệp>` khi build.
 
 Người đang dùng APK ra trước tính năng này cần cài thủ công một lần. GitHub Release phải có thể truy cập công khai để ứng dụng kiểm tra phiên bản và tải tệp.
