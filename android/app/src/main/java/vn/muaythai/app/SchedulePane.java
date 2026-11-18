@@ -80,7 +80,7 @@ final class SchedulePane {
       work.ui.cards.pill(tools, "Ca làm", R.drawable.ic_calendar,
           () -> work.open("Ca làm việc", panel -> work.planning.shifts(panel, work.userId())));
       work.ui.cards.pill(tools, "Lớp 10", R.drawable.ic_add,
-          () -> work.open("Đề xuất lớp 10", panel -> classes.form(panel, "GROUP10", null)));
+          () -> work.open("Lớp 10 của tôi", classes::show));
     }
     work.ui.add(body, list, 12);
     load.run();
@@ -149,12 +149,19 @@ final class SchedulePane {
   }
 
   private void showSessions(LinearLayout body, List<JsonObject> sessions) {
+    work.hidden.restoreAction(body, "sessions");
+    sessions = sessions.stream().filter(session -> !work.hidden.hidden("sessions", Jsons.id(session)))
+        .collect(Collectors.toList());
     if (sessions.isEmpty()) {
       work.ui.cards.empty(body, "Chưa có buổi tập trong khoảng thời gian này.",
           "Thử chọn ngày khác hoặc điều chỉnh bộ lọc để xem lịch.", R.drawable.ic_calendar);
     }
-    sessions.forEach(session -> work.ui.row(body, Jsons.text(session, "title"),
-        times(session) + " · " + status(session), () -> detail(Jsons.id(session))));
+    sessions.forEach(session -> {
+      var row = work.ui.row(body, Jsons.text(session, "title"),
+          times(session) + " · " + status(session), () -> detail(Jsons.id(session)));
+      work.hidden.attach(row, "sessions", Jsons.id(session),
+          List.of("CANCELLED", "REJECTED").contains(Jsons.text(session, "status")));
+    });
   }
 
   void detail(long id) {
@@ -172,6 +179,8 @@ final class SchedulePane {
     boolean pending = state.equals("PENDING_TRAINER");
     boolean confirmed = state.equals("CONFIRMED");
     work.ui.row(body, Jsons.text(session, "title"), times(session) + " · " + status(session), null);
+    String reason = Jsons.text(session, "reason");
+    if (!reason.isEmpty()) work.ui.label(body, "Lý do: " + reason, 14, false);
     work.planning.showTrainerName(body, "api/sessions/" + id + "/trainer");
     if (admin && (pending || confirmed)
         && OffsetDateTime.parse(Jsons.text(session, "startAt")).isAfter(OffsetDateTime.now(WorkspaceUi.ZONE))) {

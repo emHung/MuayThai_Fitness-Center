@@ -79,7 +79,7 @@ final class WorkspaceUi {
     parent.addView(button, new LinearLayout.LayoutParams(dp(48), dp(48)));
   }
 
-  void row(LinearLayout parent, String title, String subtitle, Runnable action) {
+  LinearLayout row(LinearLayout parent, String title, String subtitle, Runnable action) {
     LinearLayout column = card(parent);
     if (action == null) {
       label(column, title, 15, true);
@@ -104,6 +104,7 @@ final class WorkspaceUi {
       context.getTheme().resolveAttribute(android.R.attr.selectableItemBackground, ripple, true);
       column.setForeground(ContextCompat.getDrawable(context, ripple.resourceId));
     }
+    return column;
   }
 
   LinearLayout card(LinearLayout parent) {
@@ -130,7 +131,11 @@ final class WorkspaceUi {
     layout.setBoxCornerRadii(radius, radius, radius, radius);
     layout.setBoxBackgroundColor(ContextCompat.getColor(context, R.color.surface));
     TextInputEditText edit = new TextInputEditText(layout.getContext());
+    edit.setSingleLine(true);
+    // setSingleLine changes the transformation method; apply password input type afterwards.
     edit.setInputType(type);
+    edit.setImeOptions(android.view.inputmethod.EditorInfo.IME_ACTION_DONE
+        | android.view.inputmethod.EditorInfo.IME_FLAG_NO_EXTRACT_UI);
     edit.setText(content);
     edit.setMinHeight(dp(48));
     layout.addView(edit, new LinearLayout.LayoutParams(-1, -2));
@@ -140,6 +145,18 @@ final class WorkspaceUi {
 
   EditText field(LinearLayout parent, String title, String content) {
     return field(parent, title, content, InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
+  }
+
+  void fieldError(EditText input, String message) {
+    android.view.ViewParent parent = input.getParent();
+    while (parent != null) {
+      if (parent instanceof TextInputLayout field) {
+        field.setError(message);
+        return;
+      }
+      parent = parent.getParent();
+    }
+    input.setError(message);
   }
 
   EditText date(LinearLayout parent, String title, String initial) {

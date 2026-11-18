@@ -19,6 +19,10 @@ Các bảng phiên và điều chỉnh là phần mở rộng phục vụ yêu c
 
 ## Giữ lịch
 
+Gói lớp 10 mới lưu `class_id` cùng `trainer_id` lấy từ lớp đang mở; client không tự chỉ định HLV khác. Các gói cũ chỉ gắn HLV hoặc lớp vẫn được đọc. Gói được gán lịch cố định ngay từ biểu mẫu; chỉ đăng ký buổi nằm trong hạn gói. Nếu bước gán lịch thất bại, app giữ gói đã tạo và cho thử lại bước gán lịch.
+
+Xóa học viên/lễ tân đặt `users.deleted_at`, khóa tài khoản, thu hồi phiên và ghi `account_status_events`. Không xóa ID, gói, lịch, điểm danh hay nhận xét. Hủy buổi bị chặn nếu có bất kỳ check-in lịch sử nào, kể cả lượt đã hoàn.
+
 - Schedule kiểm khoảng giờ thực theo quy ước `[startAt, endAt)`. Hai giờ liền nhau có thể dùng chung mốc cuối/đầu.
 - Với lịch HLV, dùng ràng buộc chống giao khoảng giờ cho các trạng thái đang giữ chỗ trên cùng HLV. Với lịch PT học viên, dùng ràng buộc tương ứng trên ID học viên. Một kiểm tra trước khi ghi giúp hiện lỗi sớm. Kết quả ghi là căn cứ cuối cùng khi có thao tác đồng thời.
 - Giai đoạn 2 thêm đăng ký lớp 10. Khi đó, dùng dữ liệu giữ chỗ chung ở Schedule để so trùng giữa PT và lớp nhóm. Suất lớp 10 giới hạn 10 và được cấp lại theo chính sách giữ chỗ của trung tâm.

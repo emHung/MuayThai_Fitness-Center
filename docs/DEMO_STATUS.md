@@ -10,8 +10,8 @@ Mốc hiện hành và điều kiện chốt thiết bị/bộ cài xem [PROGRES
 
 | Phần | Màn hình và thao tác |
 | --- | --- |
-| Tài khoản | Đăng nhập, đổi mật khẩu, hồ sơ cá nhân, danh bạ có tìm kiếm, thêm/sửa và khóa/mở khóa tài khoản, cấp mật khẩu tạm, xóa HLV chưa có dữ liệu nghiệp vụ |
-| Gói và QR | Gán gói, xem hạn và lượt, mở mã QR từng gói, gia hạn bằng gói mới, đổi HLV phụ trách PT/lớp 10 |
+| Tài khoản | Đăng nhập, đổi mật khẩu, hồ sơ cá nhân, danh bạ, thêm/sửa và khóa/mở khóa; nhập hoặc tự sinh mật khẩu khi tạo, sao chép khi cấp lại; xóa mềm học viên/lễ tân và xóa HLV chưa có dữ liệu nghiệp vụ |
+| Gói và QR | Gán gói, hạn/lượt và QR; gán lớp 10 bằng lớp đang mở và HLV cố định; gia hạn bằng gói mới, đổi HLV PT và gói lớp 10 cũ chỉ gắn HLV |
 | Lịch | Lịch ngày/tuần có cập nhật SSE, lưới giờ PT, ca làm và giờ bị đóng, đổi HLV cho từng buổi, đặt/duyệt/đổi/hủy PT, quản lý lớp 30, duyệt và đăng ký/đổi lớp 10, giữ chỗ cố định cho buổi lớp 10 mới sinh |
 | Điểm danh | Quét và xem trước trên Android, điểm danh thủ công, ghi vắng, hiển thị danh sách theo buổi, hoàn lượt có lý do, lịch sử, tập tự do |
 | Hành trình | Nội dung từng buổi, nhận xét và đánh giá PT, mục tiêu theo tháng |

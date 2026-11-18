@@ -17,6 +17,7 @@ final class PtSlotGrid {
   private final WorkspaceActivity work;
   private final LinearLayout panel;
   private int loadSequence;
+  private TextView selected;
 
   PtSlotGrid(WorkspaceActivity work, LinearLayout parent) {
     this.work = work;
@@ -28,6 +29,7 @@ final class PtSlotGrid {
   void load(String query, Consumer<String> select) {
     int requested = ++loadSequence;
     panel.removeAllViews();
+    selected = null;
     work.request(work.api.service.get("api/pt/slots?" + query), result -> {
       if (requested == loadSequence) show(Jsons.rows(result), select);
     });
@@ -59,7 +61,19 @@ final class PtSlotGrid {
         surface.setColor(work.getColor(open ? R.color.slot_open_surface : R.color.slot_closed_surface));
         cell.setBackground(surface);
         if (open) {
-          cell.setOnClickListener(view -> select.accept(start));
+          cell.setOnClickListener(view -> {
+            if (selected != null) {
+              selected.setSelected(false);
+              selected.setTextColor(work.getColor(R.color.slot_open_text));
+              ((GradientDrawable) selected.getBackground()).setStroke(0, 0);
+            }
+            selected = cell;
+            cell.setSelected(true);
+            cell.setTextColor(work.ui.cards.accent());
+            surface.setStroke(work.ui.dp(3), work.ui.cards.accent());
+            cell.announceForAccessibility("Đã chọn " + time);
+            select.accept(start);
+          });
           cell.setFocusable(true);
         }
         LinearLayout.LayoutParams size = new LinearLayout.LayoutParams(0, work.ui.dp(48), 1);

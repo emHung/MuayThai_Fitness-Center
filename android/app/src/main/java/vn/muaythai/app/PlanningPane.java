@@ -93,11 +93,17 @@ final class PlanningPane {
   }
 
   void changes(LinearLayout body) {
+    work.hidden.restoreAction(body, "changes");
     work.request(work.api.service.get("api/pt/changes"), response -> {
-      var rows = Jsons.rows(response);
+      var rows = Jsons.rows(response).stream().filter(row -> !work.hidden.hidden("changes", Jsons.id(row)))
+          .collect(Collectors.toList());
       if (rows.isEmpty()) work.ui.cards.empty(body, "Chưa có yêu cầu đổi lịch", "Các đề xuất đổi lịch sẽ hiển thị tại đây.", R.drawable.ic_refresh);
-      rows.forEach(change -> work.ui.row(body, "Lịch mới " + SchedulePane.displayTime(Jsons.text(change, "proposedStart")),
-          changeStatus(change), () -> work.open("Yêu cầu đổi lịch", panel -> renderChange(panel, change))));
+      rows.forEach(change -> {
+        var row = work.ui.row(body, "Lịch mới " + SchedulePane.displayTime(Jsons.text(change, "proposedStart")),
+            changeStatus(change), () -> work.open("Yêu cầu đổi lịch", panel -> renderChange(panel, change)));
+        work.hidden.attach(row, "changes", Jsons.id(change),
+            List.of("REJECTED", "EXPIRED").contains(Jsons.text(change, "status")));
+      });
     });
   }
 

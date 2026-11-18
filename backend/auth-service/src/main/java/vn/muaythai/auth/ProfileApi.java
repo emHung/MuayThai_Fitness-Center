@@ -21,7 +21,7 @@ class ProfileApi {
       @NotBlank @Size(max = 120) String displayName,
       @Size(max = 32) String phone,
       @Size(max = 200) String specialty,
-      @Size(min = 8, max = 72) String temporaryPassword) {}
+      @Size(min = 8, max = 72, message = "Mật khẩu tạm phải từ 8 đến 72 ký tự.") String temporaryPassword) {}
 
   record Edit(
       @NotBlank @Size(max = 120) String displayName,
@@ -74,6 +74,12 @@ class ProfileApi {
   @ResponseStatus(HttpStatus.NO_CONTENT)
   void deleteTrainer(@AuthenticationPrincipal Jwt jwt, @PathVariable long id) {
     trainers.remove(auth.me(jwt), id);
+  }
+
+  @DeleteMapping("/api/{directory:learners|receptionists}/{id}")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  void deleteAccount(@AuthenticationPrincipal Jwt jwt, @PathVariable String directory, @PathVariable long id) {
+    profiles.removeAccount(auth.me(jwt), role(directory), id);
   }
 
   @PutMapping("/internal/users/{id}/trainer-use")

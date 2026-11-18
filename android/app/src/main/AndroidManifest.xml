@@ -14,8 +14,8 @@
         </provider>
         <activity android:name=".UpdateActivity" android:exported="false" />
         <activity android:name=".PortraitScanner" android:exported="false" android:screenOrientation="portrait" />
-        <activity android:name=".WorkspaceActivity" android:exported="false" />
-        <activity android:name=".LoginActivity" android:exported="true">
+        <activity android:name=".WorkspaceActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
+        <activity android:name=".LoginActivity" android:exported="true" android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

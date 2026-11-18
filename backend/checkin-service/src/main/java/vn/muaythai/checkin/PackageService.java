@@ -54,44 +54,59 @@ class PackageService {
     if (!"LEARNER".equals(learner.role()) || !"ACTIVE".equals(learner.status())) {
       throw Problem.invalid("Chọn học viên đang hoạt động.");
     }
-    validate(form);
-    if (form.trainerId() != null) {
-      http.referenceTrainer(auth, form.trainerId());
+    Long trainer = validate(form);
+    if (trainer != null) {
+      http.referenceTrainer(auth, trainer);
     }
     return db.sql("""
         INSERT INTO packages(code,learner_id,learner_name,member_code,type,trainer_id,class_id,
           start_date,end_date,total_sessions)
         VALUES(:code,:learner,:name,:member,:type,:trainer,:class,:start,:end,:total) RETURNING *
         """).param("code", UUID.randomUUID()).param("learner", learner.id()).param("name", learner.displayName())
-        .param("member", learner.memberCode()).param("type", form.type().name()).param("trainer", form.trainerId())
+        .param("member", learner.memberCode()).param("type", form.type().name()).param("trainer", trainer)
         .param("class", form.classId()).param("start", form.startDate()).param("end", form.endDate())
         .param("total", form.totalSessions()).query(ROW).single();
   }
 
-  private void validate(PackagesApi.Form form) {
+  private Long validate(PackagesApi.Form form) {
     if (form.endDate().isBefore(form.startDate())
         || (form.type() == PackagesApi.Type.MEMBERSHIP) != (form.totalSessions() == null)) {
       throw Problem.invalid("Kiểm tra hạn hiệu lực và số buổi của gói.");
     }
+    Long trainerId = form.trainerId();
     switch (form.type()) {
-      case PT, GROUP10 -> {
+      case PT -> {
         if (form.trainerId() == null || form.classId() != null) {
-          throw Problem.invalid("Gói PT và lớp 10 phải gắn với một huấn luyện viên.");
+          throw Problem.invalid("Gói PT phải gắn với một huấn luyện viên.");
         }
         ServiceHttp.Profile trainer = http.user(auth, form.trainerId());
         if (!"TRAINER".equals(trainer.role()) || !"ACTIVE".equals(trainer.status())) {
           throw Problem.invalid("Huấn luyện viên đã chọn không khả dụng.");
         }
       }
+      case GROUP10 -> {
+        if (form.classId() != null) {
+          Map<?, ?> info = openClass(form);
+          if (!(info.get("trainerId") instanceof Number owner)) {
+            throw new Problem(org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE,
+                "DEPENDENCY_UNAVAILABLE", "Chưa xác định được HLV của lớp.", Map.of());
+          }
+          trainerId = owner.longValue();
+          if (form.trainerId() != null && !form.trainerId().equals(trainerId)) {
+            throw Problem.invalid("HLV phải là người phụ trách lớp đã chọn.");
+          }
+        }
+        if (trainerId == null) throw Problem.invalid("Chọn lớp 10 đang mở.");
+        var trainer = http.user(auth, trainerId);
+        if (!"TRAINER".equals(trainer.role()) || !"ACTIVE".equals(trainer.status())) {
+          throw Problem.invalid("HLV của lớp không khả dụng.");
+        }
+      }
       case GROUP30 -> {
         if (form.classId() == null || form.trainerId() != null) {
           throw Problem.invalid("Chọn lớp ứng với gói.");
         }
-        Map<?, ?> info = http.to(schedule, client -> client.get().uri("/internal/classes/{id}", form.classId())
-            .retrieve().body(Map.class));
-        if (info == null || !form.type().name().equals(info.get("type")) || !"OPEN".equals(info.get("status"))) {
-          throw Problem.invalid("Lớp đã chọn chưa mở hoặc khác loại gói.");
-        }
+        openClass(form);
       }
       case MEMBERSHIP -> {
         if (form.classId() != null || form.trainerId() != null) {
@@ -99,6 +114,16 @@ class PackageService {
         }
       }
     }
+    return trainerId;
+  }
+
+  private Map<?, ?> openClass(PackagesApi.Form form) {
+    Map<?, ?> info = http.to(schedule, client -> client.get().uri("/internal/classes/{id}", form.classId())
+        .retrieve().body(Map.class));
+    if (info == null || !form.type().name().equals(info.get("type")) || !"OPEN".equals(info.get("status"))) {
+      throw Problem.invalid("Lớp đã chọn chưa mở hoặc khác loại gói.");
+    }
+    return info;
   }
 
   boolean hasTrainerHistory(long id) {
@@ -112,6 +137,9 @@ class PackageService {
   @Transactional
   public PackagesApi.Pack changeTrainer(long actor, long id, PackagesApi.TrainerChange form) {
     var current = find(id, true);
+    if (current.type().equals("GROUP10") && current.classId() != null) {
+      throw Problem.invalid("Gói lớp 10 giữ HLV của lớp đã chọn. Liên hệ quản trị để xử lý lịch lớp.");
+    }
     if (!List.of("PT", "GROUP10").contains(current.type())) {
       throw Problem.invalid("Chỉ gói PT và lớp 10 có HLV phụ trách.");
     }

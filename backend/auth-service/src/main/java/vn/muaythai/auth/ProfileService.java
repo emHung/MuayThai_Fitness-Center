@@ -28,14 +28,18 @@ class ProfileService {
   private final JdbcClient db;
   private final PasswordEncoder passwords;
   private final InternalServices internal;
+  private final UserSessions sessions;
+  private final java.time.Clock clock;
   private final RestClient checkin;
   private final SecureRandom random = new SecureRandom();
 
-  ProfileService(JdbcClient db, PasswordEncoder passwords, InternalServices internal,
+  ProfileService(JdbcClient db, PasswordEncoder passwords, InternalServices internal, UserSessions sessions, java.time.Clock clock,
       @Value("${app.checkin-uri:http://checkin:8080}") String checkinUri) {
     this.db = db;
     this.passwords = passwords;
     this.internal = internal;
+    this.sessions = sessions;
+    this.clock = clock;
     checkin = internal.client(checkinUri);
   }
 
@@ -74,9 +78,9 @@ class ProfileService {
       byte[] bytes = new byte[18];
       random.nextBytes(bytes);
       password = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
-    } else if (role != UserAccount.Role.TRAINER || password.isBlank()
+    } else if (password.length() < 8 || password.isBlank()
         || password.getBytes(StandardCharsets.UTF_8).length > 72) {
-      throw new ApiError(HttpStatus.BAD_REQUEST, "INVALID_PASSWORD", "Mật khẩu tạm của HLV phải hợp lệ và tối đa 72 byte.");
+      throw new ApiError(HttpStatus.BAD_REQUEST, "INVALID_PASSWORD", "Mật khẩu tạm phải có ít nhất 8 ký tự và tối đa 72 byte UTF-8.");
     }
     try {
       ProfileApi.Profile profile = db.sql("""
@@ -118,9 +122,29 @@ class ProfileService {
 
   ProfileApi.Profile internalMember(String key, String code) {
     requireInternal(key);
-    return db.sql("SELECT * FROM users WHERE member_code = :code")
+    return db.sql("SELECT * FROM users WHERE member_code = :code AND deleted_at IS NULL")
         .param("code", code.strip().toUpperCase(Locale.ROOT))
         .query(PROFILE).optional().orElseThrow(ProfileService::notFound);
+  }
+
+  @Transactional
+  public void removeAccount(AuthApi.User actor, UserAccount.Role role, long id) {
+    requireAdmin(actor);
+    if (role != UserAccount.Role.LEARNER && role != UserAccount.Role.RECEPTION) {
+      throw new ApiError(HttpStatus.FORBIDDEN, "FORBIDDEN", "Không thể xóa vai trò này tại đây.");
+    }
+    // Archive the identity rather than deleting references owned by other services.
+    boolean removed = db.sql("SELECT deleted_at IS NOT NULL FROM users WHERE id=:id AND role=:role FOR UPDATE")
+        .param("id", id).param("role", role.name()).query(Boolean.class).optional()
+        .orElseThrow(ProfileService::notFound);
+    if (!removed) {
+      db.sql("UPDATE users SET deleted_at=now(),locked=true WHERE id=:id").param("id", id).update();
+      sessions.revokeForUser(id, clock.instant());
+      db.sql("""
+          INSERT INTO account_status_events(user_id,actor_id,locked,reason,recorded_at)
+          VALUES(:id,:actor,true,'Xóa khỏi danh sách, giữ lịch sử',:at)
+          """).param("id", id).param("actor", actor.id()).param("at", java.sql.Timestamp.from(clock.instant())).update();
+    }
   }
 
   private ProfileApi.Profile save(long id, UserAccount.Role role, ProfileApi.Edit form) {

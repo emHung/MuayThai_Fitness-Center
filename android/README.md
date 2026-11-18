@@ -39,6 +39,8 @@ flowchart LR
 
 ## Từng tệp Java dùng để làm gì
 
+`HiddenItems.java` lưu lựa chọn ẩn buổi/yêu cầu đã kết thúc theo ID tài khoản trên thiết bị. Không xóa dữ liệu server; có hoàn tác và hiện lại danh sách. Đổi thiết bị hoặc xóa dữ liệu app không giữ lựa chọn ẩn này.
+
 Tất cả đường dẫn ở bảng tính từ `app/src/main/java/vn/muaythai/app/`.
 
 | Tệp | Trách nhiệm |
@@ -54,6 +56,7 @@ Tất cả đường dẫn ở bảng tính từ `app/src/main/java/vn/muaythai/
 | [ScreenCards.java](app/src/main/java/vn/muaythai/app/ScreenCards.java) | Hero, section, lưới thao tác, menu, empty state; không giữ nghiệp vụ. |
 | [ScreenHeader.java](app/src/main/java/vn/muaythai/app/ScreenHeader.java) | Metadata tiêu đề, mô tả và icon cho các màn. |
 | [DirectoryPane.java](app/src/main/java/vn/muaythai/app/DirectoryPane.java) | Danh bạ/hồ sơ, quản lý tài khoản, thông tin cá nhân và đổi mật khẩu. |
+| [HiddenItems.java](app/src/main/java/vn/muaythai/app/HiddenItems.java) | Ẩn mục đã kết thúc theo tài khoản trên thiết bị, hoàn tác và hiện lại; giữ nguyên dữ liệu server. |
 | [SchedulePane.java](app/src/main/java/vn/muaythai/app/SchedulePane.java) | Lịch ngày/tuần, chi tiết buổi, đặt PT và đầu vào lớp nhóm. |
 | [ClassPane.java](app/src/main/java/vn/muaythai/app/ClassPane.java) | Biểu mẫu, chi tiết và thao tác quản lý lớp 10/30. |
 | [PlanningPane.java](app/src/main/java/vn/muaythai/app/PlanningPane.java) | Ca làm, khung đóng và đề xuất/thay đổi lịch. |

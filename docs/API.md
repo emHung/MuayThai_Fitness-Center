@@ -12,6 +12,7 @@ Client dùng JSON qua gateway cho các thao tác và `text/event-stream` để n
 | `GET /api/users/me`, `PUT /api/users/me` | Tài khoản đang hoạt động | Xem/sửa thông tin được phép. Role và trạng thái lấy từ hệ thống. |
 | `GET /api/learners`, `GET /api/learners/{id}` | ADMIN, lễ tân, hoặc HLV trong phạm vi được phân công | Tìm theo `q` và tra hồ sơ. |
 | `POST /api/learners`, `PUT /api/learners/{id}` | ADMIN | Tạo/sửa hồ sơ. |
+| `DELETE /api/learners/{id}`, `DELETE /api/receptionists/{id}` | ADMIN | Xóa mềm: khóa, thu hồi phiên và ẩn danh bạ; giữ gói, lịch và lịch sử. Gửi lại cùng ID không tạo thêm sự kiện. Không tự hủy buổi tập. |
 | `GET /api/trainers`, `GET /api/trainers/{id}`, `POST /api/trainers`, `PUT /api/trainers/{id}` | ADMIN | Xem, tạo, sửa hồ sơ HLV và cấp mật khẩu tạm khi tạo. |
 | `GET /api/receptionists`, `GET /api/receptionists/{id}`, `POST /api/receptionists` | ADMIN | Xem hoặc tạo tài khoản lễ tân. Tài khoản mới phải đổi mật khẩu khi đăng nhập lần đầu. |
 | `PATCH /api/users/{id}/status` | ADMIN | Nhận `status` và `reason`. Áp dụng quyền trên đối tượng và thu hồi phiên khi khóa. |
@@ -19,27 +20,32 @@ Client dùng JSON qua gateway cho các thao tác và `text/event-stream` để n
 
 Phiên cần đổi mật khẩu lần đầu có thể gọi đổi mật khẩu hoặc đăng xuất. Sau khi đổi thành công, app dùng phiên mới để điều hướng theo vai trò.
 
+Khi tạo HLV, học viên hoặc lễ tân, `temporaryPassword` là tùy chọn. Bỏ thuộc tính để máy chủ tự sinh; nếu nhập phải có ít nhất 8 ký tự và tối đa 72 byte UTF-8. Kết quả tạo trả `profile` và `initialPassword`; cấp lại trả `password`. Chỉ hiển thị cho ADMIN thực hiện và không ghi vào log.
+
 ## Gói, lịch lớp và lịch PT
 
 | Phương thức và đường dẫn | Quyền | Dữ liệu chính |
 | --- | --- | --- |
 | `POST /api/packages`, `GET /api/packages?learnerId=...` | ADMIN | Gán/xem gói của học viên. Gói có loại, ngày hiệu lực, HLV với PT, lớp với gói lớp 30 và số lượt khi gói tính theo buổi. |
-| `GET /api/packages/{id}`, `PUT /api/packages/{id}/trainer` | ADMIN | Xem gói hoặc đổi HLV phụ trách gói PT/lớp 10 bằng `trainerId`, `reason`. Gói giữ mã QR và số lượt. Lịch đã đặt vẫn dùng được. |
+| `GET /api/packages/{id}`, `PUT /api/packages/{id}/trainer` | ADMIN | Xem gói hoặc đổi HLV bằng `trainerId`, `reason`. Gói lớp 10 gắn lớp giữ HLV của lớp; đổi HLV chỉ áp dụng PT và gói lớp 10 cũ chỉ gắn HLV. |
 | `GET /api/packages/mine`, `GET /api/packages/mine/{id}` | Học viên | Thẻ gói, mã QR của chính mình, hạn và lượt còn lại. |
 | `GET /api/classes10`, `GET /api/classes30` | Theo phạm vi | Hồ sơ lớp và quy tắc lịch lặp. Tham số `q` tùy chọn tìm theo tên lớp. |
 | `GET /api/classes10/{id}`, `GET /api/classes30/{id}` | Theo phạm vi | Chi tiết hồ sơ lớp. |
 | `POST /api/classes30`, `PUT /api/classes30/{id}`, `POST /api/classes30/{id}/stop` | ADMIN | Quản lý lớp, HLV phụ trách, các thứ và giờ mở lớp. |
+| `PUT /api/classes10/{id}/fixed/{learnerId}` | ADMIN | Nhận `packageId`, gán buổi trong hạn gói và duy trì lịch lặp. Có thể gán trước ngày bắt đầu; gửi lại không tạo trùng đăng ký. |
 | `GET /api/sessions`, `GET /api/sessions/{id}` | Theo phạm vi | Buổi tập gồm loại, giờ, HLV, lớp hoặc học viên, trạng thái. Danh sách hỗ trợ `from`, `to` và `q` để lọc khoảng ngày và tên buổi. |
 | `GET /api/sessions/events` | ADMIN, lễ tân, HLV, học viên | Luồng SSE gửi `ready` lúc kết nối và `calendar` khi lịch có thay đổi. App tải lại `GET /api/sessions` với ngày đang xem để áp dụng đúng phạm vi của tài khoản. |
 | `GET /api/pt/availability` | Học viên | Nhận `packageId`, `startAt`. Trả khả dụng tại thời điểm đọc. |
 | `POST /api/pt/bookings` | Học viên | Nhận `packageId`, `startAt`. Trả lịch `PENDING_TRAINER`. |
 | `POST /api/pt/direct` | ADMIN | Xếp buổi PT đã xác nhận và gửi ngay thông báo cho học viên, HLV. |
 | `GET /api/pt/requests`, `POST /api/pt/{id}/confirm`, `POST /api/pt/{id}/reject` | HLV phụ trách | Duyệt trạng thái đang chờ, lưu lý do khi từ chối. |
-| `POST /api/sessions/{id}/cancel` | Theo vai trò, buổi và mốc giờ | Nhận `reason` và trả trạng thái sau hủy. Buổi đang cập nhật trả `409 SESSION_UPDATE_PENDING`. |
+| `POST /api/sessions/{id}/cancel` | Theo vai trò, buổi và mốc giờ | Nhận `reason`, trả trạng thái và lý do. Đã từng điểm danh trả `409 CHECKIN_EXISTS`, kể cả đã hoàn lượt. Buổi đang cập nhật trả `409 SESSION_UPDATE_PENDING`. |
 | `PUT /api/sessions/{id}/trainer` | ADMIN | Nhận `trainerId`, `reason`. Kiểm ca làm, giờ trùng và lượt điểm danh trước khi đổi HLV cho một buổi tương lai. |
 | `GET /api/sessions/{id}/trainer` | Người có quyền xem buổi | Trả ID và tên hiển thị của HLV đang dạy buổi đó. |
 
 ## Điểm danh và hoàn lượt
+
+Gán gói lớp 10 mới gửi `type: GROUP10` và `classId`; máy chủ kiểm lớp đang mở, lấy HLV phụ trách và trả cả hai ID. Nếu gửi thêm `trainerId`, ID phải khớp HLV của lớp. Gói chỉ gắn HLV từ client cũ vẫn tương thích. App tiếp tục gọi API gán lịch cố định; nếu bước này thất bại, giữ gói và chỉ thử lại gán lịch.
 
 | Phương thức và đường dẫn | Quyền | Dữ liệu chính |
 | --- | --- | --- |

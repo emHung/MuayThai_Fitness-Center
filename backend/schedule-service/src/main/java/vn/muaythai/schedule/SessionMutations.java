@@ -110,7 +110,7 @@ class SessionMutations {
       return result;
     }
     if (existing.exists()) {
-      throw Problem.conflict("CHECKIN_EXISTS", "Buổi đã có điểm danh. Cần xử lý lịch sử trước khi cập nhật.");
+      throw Problem.conflict("CHECKIN_EXISTS", "Buổi đã từng có điểm danh, không thể hủy hoặc đổi HLV, kể cả khi đã hoàn lượt.");
     }
     throw ScheduleRepository.mutationInProgress();
   }

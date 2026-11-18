@@ -149,6 +149,7 @@ async function rescheduleAndCancellation(){
  assert.equal((await api('GET','/api/sessions/'+session.id,learner.token)).startAt,before);
  time(session,719,779); await api('POST','/api/sessions/'+session.id+'/cancel',learner.token,reason,409,'CANCEL_TOO_LATE');
  time(session,721,781); await api('POST','/api/sessions/'+session.id+'/cancel',learner.token,reason);
+ assert.equal((await api('GET','/api/sessions/'+session.id,admin)).reason,reason.reason);
  assert.equal(await remaining(p),20);
  const g=await group('GROUP10','cancel3'); const gp=await pack(learner,'GROUP10',g.trainer);
  await api('PUT','/api/sessions/'+g.session.id+'/signup',learner.token,{packageId:gp.id});
@@ -262,6 +263,7 @@ async function manualAttendanceAndScope(){
  await api('POST','/api/checkins/manual',desk.token,body,403);
  await api('POST','/api/checkins/manual',trainer.token,{...body,reason:''},400);
  const entry=await api('POST','/api/checkins/manual',trainer.token,body,201);
+ await api('POST','/api/sessions/'+session.id+'/cancel',admin,reason,409,'CHECKIN_EXISTS');
  assert.equal(entry.method,'MANUAL');assert.equal(entry.actorId,trainer.id);assert.equal(await remaining(p),19);
  assert.equal((await api('GET','/api/checkins/'+entry.id,learner.token)).id,entry.id);
  await api('GET','/api/checkins/'+entry.id,other.token,undefined,403);
@@ -274,6 +276,61 @@ async function manualAttendanceAndScope(){
  await api('POST','/api/checkins/'+entry.id+'/adjustments',admin,reason,201);
  assert.equal(await remaining(p),20);
  assert.equal((await api('GET','/api/checkins/roster?sessionId='+session.id,trainer.token))[0].status,'ADJUSTED');
+ await api('POST','/api/sessions/'+session.id+'/cancel',admin,reason,409,'CHECKIN_EXISTS');
+ assert.equal((await api('GET','/api/sessions/'+session.id,admin)).status,'CONFIRMED');
+ assert.equal(await remaining(p),20);
+}
+
+async function customerFeedback(){
+ for(const directory of ['trainers','learners','receptionists']){
+  const payload={username:directory+'-password-'+run+'@example.test',displayName:'Acceptance password',temporaryPassword:'123456'};
+  const invalid=await api('POST','/api/'+directory,admin,payload,400);
+  assert.match(invalid.message,/8/,'Explain password minimum');
+  const password=randomUUID();
+  const created=await api('POST','/api/'+directory,admin,{...payload,temporaryPassword:password},201);
+  assert.equal(created.initialPassword,password);
+  assert.ok((await login(created.profile.username,password)).token,'Chosen password works');
+ }
+ const learner=await account('learners','archived-learner');
+ const desk=await account('receptionists','archived-desk');
+ const p=await pack(learner,'MEMBERSHIP');
+ const entry=await confirm(p,null,desk.token);
+ await api('DELETE','/api/learners/'+learner.id,desk.token,undefined,403);
+ await api('DELETE','/api/receptionists/'+desk.id,learner.token,undefined,403);
+ for(const [directory,user] of [['learners',learner],['receptionists',desk]]){
+  await api('DELETE','/api/'+directory+'/'+user.id,admin,undefined,204);
+  await api('DELETE','/api/'+directory+'/'+user.id,admin,undefined,204);
+  await api('GET','/api/users/me',user.token,undefined,401);
+  await api('GET','/api/'+directory+'/'+user.id,admin,undefined,404);
+  const rows=await api('GET','/api/'+directory+'?q='+encodeURIComponent(user.username),admin);
+  assert.equal(rows.items.length,0);
+ }
+ assert.equal((await api('GET','/api/checkins/'+entry.id,admin)).id,entry.id,'Keep archived account history');
+ assert.equal((await api('GET','/api/packages/'+p.id,admin)).learnerId,learner.id);
+ const g=await group('GROUP10','class-bound');
+ const student=await account('learners','class-bound-student');
+ const bound=await pack(student,'GROUP10',null,g.course.id);
+ assert.equal(bound.classId,g.course.id); assert.equal(bound.trainerId,g.trainer.id);
+ const enrolled=await api('PUT','/api/classes10/'+g.course.id+'/fixed/'+student.id,admin,{packageId:bound.id});
+ assert.ok(enrolled.length>0);
+ const repeat=await api('PUT','/api/classes10/'+g.course.id+'/fixed/'+student.id,admin,{packageId:bound.id});
+ assert.equal(repeat.length,enrolled.length,'Retry fixed enrollment without duplicates');
+ const upcoming=await account('learners','future-class-student');
+ const future=await api('POST','/api/packages',admin,{learnerId:upcoming.id,type:'GROUP10',classId:g.course.id,
+  startDate:day(7*1440),endDate:day(14*1440),totalSessions:10},201);
+ const futureSessions=await api('PUT','/api/classes10/'+g.course.id+'/fixed/'+upcoming.id,admin,{packageId:future.id});
+ assert.ok(futureSessions.length>0,'Allow assigning a future package now');
+ assert.ok(futureSessions.every(s=>s.startAt.slice(0,10)>=future.startDate));
+ const outsider=await account('trainers','other-group-coach'); await shifts(outsider);
+ const other=await api('POST','/api/classes10',admin,{title:'Other class '+run,trainerId:outsider.id,
+  weekdays:[1,2,3,4,5,6,7],startsAt:'10:00',endsAt:'11:00'},201);
+ await api('PUT','/api/classes10/'+other.id+'/fixed/'+student.id,admin,{packageId:bound.id},409,'WRONG_PACKAGE');
+ await api('PUT','/api/packages/'+bound.id+'/trainer',admin,{trainerId:outsider.id,...reason},400);
+ await api('POST','/api/packages',admin,{learnerId:student.id,type:'GROUP10',trainerId:outsider.id,classId:g.course.id,
+  startDate:day(0),endDate:day(14400),totalSessions:10},400);
+ const group30=await group('GROUP30','wrong-class-kind');
+ await api('POST','/api/packages',admin,{learnerId:student.id,type:'GROUP10',classId:group30.course.id,
+  startDate:day(0),endDate:day(14400),totalSessions:10},400);
 }
 
 async function learnerConflictAcrossTrainers(){
@@ -300,6 +357,7 @@ async function main(){
  await test('FR08/13/24/26-28: class lifecycle, PT rejection and slots',schedulingAndClassLifecycle);
  await test('FR02/35-41: manual attendance, quota and record scope',manualAttendanceAndScope);
  await test('FR11: concurrent learner bookings across trainers',learnerConflictAcrossTrainers);
+ await test('Customer feedback: chosen passwords, account archive, class10 assignment',customerFeedback);
 }
 try{await main();}catch(error){results.push({status:'FAIL',message:error.message});process.exitCode=1;console.error(error.message);}
 finally{writeFileSync('android/app/build/handoff/extended-results.json',JSON.stringify({run,at:new Date().toISOString(),calls,results},null,2));}

@@ -408,7 +408,10 @@ class ScheduleService {
   public List<Session> fixedClass(Actor admin, long classId, long learnerId, long packageId) {
     admin.require("ADMIN");
     Actor learner = new Actor(learnerId, "LEARNER", false);
-    ServiceHttp.Package pack = requirePackage(learner, packageId, "GROUP10", LocalDate.now(ZONE));
+    ServiceHttp.Package pack = ownedPackage(learner, packageId, "GROUP10");
+    if (LocalDate.parse(pack.endDate()).isBefore(LocalDate.now(ZONE))) {
+      throw Problem.conflict("WRONG_PACKAGE", "Gói lớp đã hết hiệu lực.");
+    }
     var group = requireClassType(repository.classInfo(classId, true), "GROUP10");
     if (!(pack.trainerId() != null ? Objects.equals(pack.trainerId(), group.trainerId())
         : Objects.equals(pack.classId(), classId))) {
@@ -578,10 +581,18 @@ class ScheduleService {
   }
 
   private ServiceHttp.Package requirePackage(Actor actor, long id, String type, LocalDate day) {
+    ServiceHttp.Package pack = ownedPackage(actor, id, type);
+    if (!active(pack, day)) {
+      throw Problem.conflict("WRONG_PACKAGE", "Gói đã chọn không còn hiệu lực hoặc không đúng loại.");
+    }
+    return pack;
+  }
+
+  private ServiceHttp.Package ownedPackage(Actor actor, long id, String type) {
     ServiceHttp.Package pack = http.to(checkin, client -> client.get().uri("/internal/packages/{id}", id)
         .retrieve().body(ServiceHttp.Package.class));
     if (pack == null || pack.learnerId() != actor.id() || !pack.type().equals(type)
-        || !active(pack, day) || pack.remainingSessions() == null || pack.remainingSessions() < 1) {
+        || pack.remainingSessions() == null || pack.remainingSessions() < 1) {
       throw Problem.conflict("WRONG_PACKAGE", "Gói đã chọn không còn hiệu lực hoặc không đúng loại.");
     }
     return pack;

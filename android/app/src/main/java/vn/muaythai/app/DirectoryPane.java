@@ -21,12 +21,16 @@ final class DirectoryPane {
     work.ui.action(body, "Thêm lễ tân", () -> work.open("Thêm lễ tân", panel -> {
       EditText name = work.ui.field(panel, "Họ và tên", "");
       EditText email = work.ui.field(panel, "Email đăng nhập", "", InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
-      work.ui.action(panel, "Tạo tài khoản", () -> work.request(work.api.service.post("api/receptionists", null,
-          Jsons.body("displayName", WorkspaceUi.read(name), "username", WorkspaceUi.read(email))), created -> {
+      EditText temporary = temporaryField(panel);
+      work.ui.action(panel, "Tạo tài khoản", () -> {
+        JsonObject payload = Jsons.body("displayName", WorkspaceUi.read(name), "username", WorkspaceUi.read(email));
+        if (!temporaryPassword(payload, temporary)) return;
+        work.request(work.api.service.post("api/receptionists", null, payload), created -> {
             var result = Jsons.object(created);
             work.back();
             showTemporaryPassword(WorkspaceUi.read(email), Jsons.text(result, "initialPassword"));
-          }));
+          });
+      });
     }));
     work.request(work.api.service.get("api/receptionists"), value -> Jsons.rows(value).forEach(profile ->
         work.ui.row(body, Jsons.text(profile, "displayName"), info(profile), () -> work.open(
@@ -53,11 +57,53 @@ final class DirectoryPane {
             showTemporaryPassword(Jsons.text(profile, "username"), Jsons.text(Jsons.object(value), "password"));
           }));
     }));
+    String role = Jsons.text(profile, "role");
+    if (role.equals("LEARNER") || role.equals("RECEPTION")) {
+      String directory = role.equals("LEARNER") ? "learners" : "receptionists";
+      work.ui.action(body, "Xóa tài khoản", () -> work.confirm("Xóa tài khoản",
+          "Tài khoản sẽ bị khóa và ẩn khỏi danh sách. Gói tập, lịch và lịch sử nghiệp vụ được giữ lại để đối soát; các buổi tập không tự hủy.",
+          "Xóa tài khoản", () -> work.request(work.api.service.delete("api/" + directory + "/" + id), done -> {
+            work.message("Đã xóa tài khoản khỏi danh sách, giữ lịch sử nghiệp vụ.");
+            work.back();
+          })));
+    }
   }
 
   private void showTemporaryPassword(String email, String password) {
     work.confirm("Mật khẩu tạm", "Email " + email + "\nMật khẩu " + password
-        + "\nGửi riêng cho người được cấp. Các phiên cũ đã hết hiệu lực.", "Đóng", () -> {});
+        + "\nGửi riêng cho người được cấp. Các phiên cũ đã hết hiệu lực.", "Sao chép", () -> {
+          ClipboardManager clipboard = work.getSystemService(ClipboardManager.class);
+          if (clipboard != null) {
+            ClipData clip = ClipData.newPlainText("Tài khoản", email + "\n" + password);
+            if (android.os.Build.VERSION.SDK_INT >= 33) {
+              android.os.PersistableBundle extras = new android.os.PersistableBundle();
+              extras.putBoolean(android.content.ClipDescription.EXTRA_IS_SENSITIVE, true);
+              clip.getDescription().setExtras(extras);
+            }
+            clipboard.setPrimaryClip(clip);
+            work.message("Đã sao chép tài khoản.");
+          }
+        });
+  }
+
+  private EditText temporaryField(LinearLayout body) {
+    EditText input = work.ui.field(body, "Mật khẩu tạm (bỏ trống để tự sinh)", "",
+        InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+    work.ui.label(body, "Ít nhất 8 ký tự, tối đa 72 byte UTF-8.", 12, false);
+    return input;
+  }
+
+  private boolean temporaryPassword(JsonObject payload, EditText input) {
+    String value = input.getText().toString();
+    if (value.isEmpty()) return true;
+    if (value.isBlank() || value.length() < 8 || value.getBytes(java.nio.charset.StandardCharsets.UTF_8).length > 72) {
+      work.ui.fieldError(input, "Mật khẩu tạm phải có ít nhất 8 ký tự, tối đa 72 byte UTF-8.");
+      input.requestFocus();
+      return false;
+    }
+    payload.addProperty("temporaryPassword", value);
+    work.ui.fieldError(input, null);
+    return true;
   }
 
   void list(LinearLayout body, boolean trainers) {
@@ -142,8 +188,7 @@ final class DirectoryPane {
     EditText email = editing ? null : work.ui.field(body, "Email đăng nhập", "", InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
     EditText phone = work.ui.field(body, "Điện thoại", Jsons.text(initial, "phone"), InputType.TYPE_CLASS_PHONE);
     EditText specialty = trainers ? work.ui.field(body, "Chuyên môn", Jsons.text(initial, "specialty")) : null;
-    EditText temporary = trainers && !editing ? work.ui.field(body, "Mật khẩu tạm (bỏ trống để tự sinh)", "",
-        InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD) : null;
+    EditText temporary = !editing ? temporaryField(body) : null;
     work.ui.action(body, editing ? "Lưu thay đổi" : "Tạo tài khoản", () -> {
       JsonObject values = Jsons.body("displayName", WorkspaceUi.read(name), "phone", WorkspaceUi.read(phone),
           "specialty", specialty == null ? null : WorkspaceUi.read(specialty));
@@ -151,23 +196,14 @@ final class DirectoryPane {
         work.request(work.api.service.put(directory(trainers) + "/" + Jsons.id(initial), values), saved -> work.back());
       } else {
         values.addProperty("username", WorkspaceUi.read(email));
-        if (temporary != null && temporary.length() > 0) {
-          values.addProperty("temporaryPassword", temporary.getText().toString());
-        }
+        if (!temporaryPassword(values, temporary)) return;
         work.request(work.api.service.post(directory(trainers), null, values), created -> {
           JsonObject result = Jsons.object(created);
           JsonObject newProfile = Jsons.object(result.get("profile"));
           String user = Jsons.text(newProfile, "username");
           String password = Jsons.text(result, "initialPassword");
           work.back();
-          work.confirm("Tài khoản đã tạo", "Email " + user + "\nMật khẩu ban đầu " + password,
-              "Sao chép", () -> {
-                ClipboardManager clipboard = work.getSystemService(ClipboardManager.class);
-                if (clipboard != null) {
-                  clipboard.setPrimaryClip(ClipData.newPlainText("Tài khoản mới", user + "\n" + password));
-                  work.message("Đã sao chép tài khoản.");
-                }
-              });
+          showTemporaryPassword(user, password);
         });
       }
     });

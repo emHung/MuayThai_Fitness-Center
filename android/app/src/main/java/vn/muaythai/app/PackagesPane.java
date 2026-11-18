@@ -56,7 +56,7 @@ final class PackagesPane {
   private void adminPack(LinearLayout panel, long learner, JsonObject pack) {
     qrContent(panel, pack);
     String type = Jsons.text(pack, "type");
-    if (type.equals("PT") || type.equals("GROUP10")) {
+    if (type.equals("PT") || type.equals("GROUP10") && Jsons.number(pack, "classId") == 0) {
       long currentTrainer = Jsons.number(pack, "trainerId");
       if (currentTrainer > 0) {
         work.planning.showTrainerName(panel, "api/trainers/" + currentTrainer);
@@ -73,7 +73,8 @@ final class PackagesPane {
   private void assignFixedGroup(long learner, JsonObject pack) {
     work.request(work.api.service.get("api/classes10"), response -> {
       var classes = Jsons.rows(response).stream().filter(row -> Jsons.text(row, "status").equals("OPEN")
-          && Jsons.number(row, "trainerId") == Jsons.number(pack, "trainerId")).collect(Collectors.toList());
+          && (Jsons.number(pack, "classId") > 0 ? Jsons.id(row) == Jsons.number(pack, "classId")
+              : Jsons.number(row, "trainerId") == Jsons.number(pack, "trainerId"))).collect(Collectors.toList());
       work.choose("Chọn lớp cố định", classes, "title", chosen -> work.request(work.api.service.put(
           "api/classes10/" + Jsons.id(chosen) + "/fixed/" + learner, Jsons.body("packageId", Jsons.id(pack))),
           saved -> work.message("Đã gán " + Jsons.rows(saved).size() + " buổi của lớp.")));
@@ -98,7 +99,7 @@ final class PackagesPane {
 
   private void assign(LinearLayout body, long learner, Kind kind) {
     boolean membership = kind.id().equals("MEMBERSHIP");
-    boolean pt = kind.id().equals("PT") || kind.id().equals("GROUP10");
+    boolean pt = kind.id().equals("PT");
     LocalDate today = LocalDate.now(WorkspaceUi.ZONE);
     EditText start = work.ui.date(body, "Hiệu lực từ", today.toString());
     EditText end = work.ui.date(body, "Hết hạn", today.plusDays(30).toString());
@@ -109,6 +110,14 @@ final class PackagesPane {
       Consumer<JsonObject> chosen = row -> {
         target[0] = Jsons.id(row);
         selected.setText(Jsons.text(row, pt ? "displayName" : "title"));
+        if (kind.id().equals("GROUP10")) {
+          work.request(work.api.service.get("api/trainers/" + Jsons.number(row, "trainerId")), response -> {
+            if (target[0] != null && target[0] == Jsons.id(row)) {
+              selected.setText(work.getString(R.string.selected_class_trainer, Jsons.text(row, "title"),
+                  Jsons.text(Jsons.object(response), "displayName")));
+            }
+          });
+        }
       };
       if (pt) {
         work.ui.action(body, "Chọn HLV", () -> work.directory.pick(true, "",
@@ -120,7 +129,8 @@ final class PackagesPane {
                 .filter(row -> Jsons.text(row, "status").equals("OPEN")).collect(Collectors.toList()), "title", chosen)));
       }
     }
-    work.ui.action(body, "Lưu gói", () -> {
+    var save = work.ui.action(body, "Lưu gói", () -> {});
+    save.setOnClickListener(view -> {
       if (!membership && (target[0] == null || WorkspaceUi.read(count).isEmpty())) {
         work.error("Chọn HLV hoặc lớp và nhập số buổi.");
         return;
@@ -133,12 +143,28 @@ final class PackagesPane {
       JsonObject payload = Jsons.body("learnerId", learner, "type", kind.id(), "startDate", WorkspaceUi.read(start),
           "endDate", WorkspaceUi.read(end), "totalSessions", total, "trainerId", pt ? target[0] : null,
           "classId", !membership && !pt ? target[0] : null);
+      save.setEnabled(false);
       work.request(work.api.service.post("api/packages", null, payload), result -> {
-        work.message("Đã gán gói tập.");
-        work.back();
-        work.back();
-      });
+        if (kind.id().equals("GROUP10")) {
+          JsonObject pack = Jsons.object(result);
+          Runnable enroll = () -> work.request(work.api.service.put("api/classes10/" + Jsons.number(pack, "classId") + "/fixed/" + learner,
+              Jsons.body("packageId", Jsons.id(pack))), done -> assigned(), error -> {
+                work.error("Gói đã được tạo nhưng chưa gán được lịch: " + error);
+                save.setText(R.string.retry_class_enrollment);
+                save.setEnabled(true);
+              });
+          // Retry only enrollment after a partial failure; never create a second package.
+          save.setOnClickListener(retry -> { save.setEnabled(false); enroll.run(); });
+          enroll.run();
+        } else assigned();
+      }, error -> { save.setEnabled(true); work.error(error); });
     });
+  }
+
+  private void assigned() {
+    work.message("Đã gán gói tập và lịch lớp nếu có.");
+    work.back();
+    work.back();
   }
 
   private void showQr(long id) {

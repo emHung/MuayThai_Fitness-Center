@@ -29,7 +29,15 @@ class ApiErrorHandler {
         .body(new Body(error.code, error.getMessage(), UUID.randomUUID()));
   }
 
-  @ExceptionHandler({MethodArgumentNotValidException.class, HttpMessageNotReadableException.class})
+  @ExceptionHandler(MethodArgumentNotValidException.class)
+  ResponseEntity<Body> invalidFields(MethodArgumentNotValidException error) {
+    String message = error.getBindingResult().getFieldErrors("temporaryPassword").isEmpty()
+        ? "Kiểm tra thông tin đã nhập và các trường bắt buộc."
+        : "Mật khẩu tạm phải từ 8 đến 72 ký tự, tối đa 72 byte UTF-8.";
+    return handle(new ApiError(HttpStatus.BAD_REQUEST, "INVALID_INPUT", message));
+  }
+
+  @ExceptionHandler(HttpMessageNotReadableException.class)
   ResponseEntity<Body> invalidInput() {
     return handle(new ApiError(HttpStatus.BAD_REQUEST, "INVALID_INPUT", "Thông tin gửi lên không hợp lệ."));
   }

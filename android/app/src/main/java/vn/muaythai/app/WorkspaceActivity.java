@@ -43,6 +43,7 @@ public final class WorkspaceActivity extends AppCompatActivity {
   ProgressPane progress;
   PlanningPane planning;
   OperationsPane operations;
+  HiddenItems hidden;
 
   static void open(LoginActivity from, AuthApi.Session authenticated) {
     session = authenticated;
@@ -58,6 +59,7 @@ public final class WorkspaceActivity extends AppCompatActivity {
       default -> R.style.Theme_MuayThai;
     });
     super.onCreate(state);
+    androidx.core.view.WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
     if (session == null) {
       login();
       return;
@@ -66,6 +68,7 @@ public final class WorkspaceActivity extends AppCompatActivity {
     setContentView(layout.getRoot());
     getLifecycle().addObserver(new ConnectivityNotice(this, layout.getRoot(), layout.workspaceNav));
     ui = new WorkspaceUi(this);
+    hidden = new HiddenItems(this);
     api = new ApiClient(session.authorization());
     images = new ImagesPane(this);
     getLifecycle().addObserver(new AppUpdatePrompt(this));
@@ -98,6 +101,13 @@ public final class WorkspaceActivity extends AppCompatActivity {
       Insets bars = window.getInsets(WindowInsetsCompat.Type.systemBars()
           | WindowInsetsCompat.Type.displayCutout() | WindowInsetsCompat.Type.ime());
       view.setPadding(bars.left, bars.top, bars.right, bars.bottom);
+      boolean typing = window.isVisible(WindowInsetsCompat.Type.ime());
+      layout.workspaceNav.setVisibility(!typing && history.isEmpty() ? View.VISIBLE : View.GONE);
+      View focused = getCurrentFocus();
+      if (typing && focused instanceof android.widget.EditText) {
+        focused.post(() -> focused.requestRectangleOnScreen(
+            new android.graphics.Rect(0, 0, focused.getWidth(), focused.getHeight()), false));
+      }
       return window;
     });
   }
@@ -199,7 +209,9 @@ public final class WorkspaceActivity extends AppCompatActivity {
     layout.workspaceBody.removeAllViews();
     layout.workspaceScroll.scrollTo(0, 0);
     layout.back.setVisibility(history.isEmpty() ? View.GONE : View.VISIBLE);
-    layout.workspaceNav.setVisibility(history.isEmpty() ? View.VISIBLE : View.GONE);
+    var insets = ViewCompat.getRootWindowInsets(layout.getRoot());
+    boolean typing = insets != null && insets.isVisible(WindowInsetsCompat.Type.ime());
+    layout.workspaceNav.setVisibility(history.isEmpty() && !typing ? View.VISIBLE : View.GONE);
     layout.loading.setVisibility(View.GONE);
     layout.screenError.setVisibility(View.GONE);
     var presentation = ScreenHeader.of(screen.title());

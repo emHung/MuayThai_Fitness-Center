@@ -17,8 +17,10 @@ final class ClassPane {
   }
 
   void show(LinearLayout body) {
+    work.hidden.restoreAction(body, "classes");
     var actions = work.ui.cards.grid(body);
-    work.ui.cards.tile(actions, "Tạo lớp 30", "Thiết lập lịch lặp", R.drawable.ic_add, () -> work.open("Tạo lớp 30", panel -> form(panel, "GROUP30", null)));
+    boolean admin = work.role().equals("ADMIN");
+    if (admin) work.ui.cards.tile(actions, "Tạo lớp 30", "Thiết lập lịch lặp", R.drawable.ic_add, () -> work.open("Tạo lớp 30", panel -> form(panel, "GROUP30", null)));
     work.ui.cards.tile(actions, "Tạo lớp 10", "Mở lớp theo buổi", R.drawable.ic_group, () -> work.open("Tạo lớp 10", panel -> form(panel, "GROUP10", null)));
     var query = work.ui.field(body, "Tên lớp cần tìm", "");
     LinearLayout results = new LinearLayout(work);
@@ -26,7 +28,7 @@ final class ClassPane {
     Runnable search = () -> {
       results.removeAllViews();
       String filter = "?q=" + Uri.encode(WorkspaceUi.read(query));
-      load(results, "GROUP30", "Lớp 30", filter);
+      if (admin) load(results, "GROUP30", "Lớp 30", filter);
       load(results, "GROUP10", "Lớp 10", filter);
     };
     work.ui.iconAction(work.ui.actions(body), "Tìm lớp", R.drawable.ic_search, search);
@@ -44,8 +46,11 @@ final class ClassPane {
       if (rows.isEmpty()) {
         work.ui.cards.empty(list, "Chưa có lớp", "Các lớp phù hợp sẽ xuất hiện tại đây.", R.drawable.ic_group);
       }
-      rows.forEach(item -> work.ui.row(list, Jsons.text(item, "title"), label(item),
-          () -> work.open(Jsons.text(item, "title"), panel -> detail(panel, type, Jsons.id(item)))));
+      rows.stream().filter(item -> !work.hidden.hidden("classes", Jsons.id(item))).forEach(item -> {
+        var row = work.ui.row(list, Jsons.text(item, "title"), label(item),
+            () -> work.open(Jsons.text(item, "title"), panel -> detail(panel, type, Jsons.id(item))));
+        work.hidden.attach(row, "classes", Jsons.id(item), Jsons.text(item, "status").equals("REJECTED"));
+      });
     });
   }
 
@@ -55,11 +60,17 @@ final class ClassPane {
       JsonObject info = Jsons.object(response);
       String status = Jsons.text(info, "status");
       work.ui.row(body, Jsons.text(info, "title"), label(info), null);
-      if (status.equals("PENDING")) {
+      boolean admin = work.role().equals("ADMIN");
+      if (admin) work.planning.showTrainerName(body, "api/trainers/" + Jsons.number(info, "trainerId"));
+      else work.ui.label(body, "Lớp do bạn phụ trách", 14, false);
+      work.ui.label(body, "Ngày tập: " + daySummary(days(info)), 15, true);
+      work.ui.label(body, "Khung giờ: " + hhmm(Jsons.text(info, "startsAt")) + " – "
+          + hhmm(Jsons.text(info, "endsAt")), 15, false);
+      if (admin && status.equals("PENDING")) {
         change(body, base, "approve", "Duyệt lớp");
         change(body, base, "reject", "Từ chối");
       }
-      if (status.equals("OPEN")) {
+      if (admin && status.equals("OPEN")) {
         work.ui.action(body, "Sửa lịch lặp", () -> work.open("Sửa lịch lớp", panel -> form(panel, type, info)));
         change(body, base, "stop", "Dừng lớp");
       }
@@ -141,7 +152,8 @@ final class ClassPane {
       case "STOPPED" -> "Đã dừng";
       default -> "Đã từ chối";
     };
-    return hhmm(Jsons.text(info, "startsAt")) + " – " + hhmm(Jsons.text(info, "endsAt")) + " · " + state;
+    return daySummary(days(info)) + " · " + hhmm(Jsons.text(info, "startsAt")) + " – "
+        + hhmm(Jsons.text(info, "endsAt")) + " · " + state;
   }
 
   private static String hhmm(String time) {

@@ -17,7 +17,7 @@ class ScheduleRepository {
       rs.getObject("learner_id", Long.class), rs.getObject("class_id", Long.class),
       rs.getObject("package_id", Long.class), rs.getObject("start_at", OffsetDateTime.class).toString(),
       rs.getObject("end_at", OffsetDateTime.class).toString(), rs.getString("status"), rs.getInt("capacity"),
-      rs.getObject("assigned_trainer_id", Long.class));
+      rs.getObject("assigned_trainer_id", Long.class), rs.getString("reason"));
 
   static final RowMapper<ScheduleApi.ClassInfo> CLASS = (rs, row) -> new ScheduleApi.ClassInfo(
       rs.getLong("id"), rs.getString("title"), rs.getLong("trainer_id"), rs.getString("type"),

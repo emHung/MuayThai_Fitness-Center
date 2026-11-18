@@ -55,7 +55,7 @@ Gateway kiểm JWT/phiên và chuẩn hóa danh tính; service nghiệp vụ v�
 | `SecurityConfiguration.java` | Cấu hình bảo vệ HTTP/JWT của Auth. |
 | `UserAccount.java`, `UserAccounts.java` | Entity tài khoản và repository dữ liệu tài khoản. |
 | `UserSession.java`, `UserSessions.java` | Entity phiên và thao tác kiểm tra/thu hồi phiên. |
-| `ProfileApi.java`, `ProfileService.java` | Endpoint và nghiệp vụ hồ sơ/danh bạ. |
+| `ProfileApi.java`, `ProfileService.java` | Hồ sơ/danh bạ, mật khẩu khi tạo và xóa mềm học viên/lễ tân có thu hồi phiên, lưu lịch sử. |
 | `ProfileImagesApi.java` | Endpoint avatar có kiểm quyền. |
 | `TrainerDirectory.java` | Tra cứu HLV và kiểm điều kiện liên quan vòng đời HLV. |
 | `InternalServices.java` | Giao tiếp/endpoint nội bộ phục vụ các service khác. |

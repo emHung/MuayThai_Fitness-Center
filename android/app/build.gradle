@@ -22,8 +22,8 @@ android {
         applicationId 'vn.muaythai.app'
         minSdk 24
         targetSdk 36
-        versionCode providers.gradleProperty('appVersionCode').orElse('8').get().toInteger()
-        versionName providers.gradleProperty('appVersionName').orElse('0.1.7').get()
+        versionCode providers.gradleProperty('appVersionCode').orElse('9').get().toInteger()
+        versionName providers.gradleProperty('appVersionName').orElse('0.1.8').get()
     }
     signingConfigs {
         release {
@@ -44,7 +44,7 @@ android {
                     updateAsset(tailscale ? 'app-debug-tailscale.apk' : 'app-debug.apk')
         }
         release {
-            signingConfig signingConfigs.release
+            signingConfig = signingConfigs.release
             buildConfigField 'String', 'AUTH_BASE_URL', buildConfigUrl(releaseUrl)
             buildConfigField 'String', 'APP_UPDATE_APK_NAME', updateAsset('muaythai-release.apk')
         }

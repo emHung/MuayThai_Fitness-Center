@@ -203,7 +203,9 @@ class AttendanceService {
   @Transactional
   public boolean exists(long session) {
     repository.lock(SESSION_LOCK, session);
-    return counted(session) != 0;
+    // Returning a visit restores quota, but must not erase the session's attendance history.
+    return repository.jdbc().sql("SELECT EXISTS (SELECT FROM checkins WHERE session_id=:session)")
+        .param("session", session).query(Boolean.class).single();
   }
 
   List<Entry> list(Actor actor, Long learner, Long session, LocalDate date) {

@@ -74,7 +74,7 @@ public class ServiceHttp {
       String startDate, String endDate, Integer remainingSessions) {}
 
   public record Session(long id, String type, String title, long trainerId, Long learnerId, Long classId,
-      Long packageId, String startAt, String endAt, String status, int capacity, Long assignedTrainerId) {
+      Long packageId, String startAt, String endAt, String status, int capacity, Long assignedTrainerId, String reason) {
     public long packageTrainerId() {
       return assignedTrainerId == null ? trainerId : assignedTrainerId;
     }

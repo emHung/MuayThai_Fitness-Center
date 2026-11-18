@@ -19,6 +19,7 @@ public final class LoginActivity extends AppCompatActivity {
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+    androidx.core.view.WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
     ui = ActivityLoginBinding.inflate(getLayoutInflater());
     setContentView(ui.getRoot());
     applyInsets();
