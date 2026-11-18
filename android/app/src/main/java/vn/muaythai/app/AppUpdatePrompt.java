@@ -1,12 +1,8 @@
 package vn.muaythai.app;
 
-import android.app.DownloadManager;
-import android.content.ActivityNotFoundException;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
-import android.os.Environment;
 import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -27,7 +23,6 @@ import retrofit2.http.GET;
 import retrofit2.http.Headers;
 
 final class AppUpdatePrompt implements DefaultLifecycleObserver {
-  private static final String APK_MIME = "application/vnd.android.package-archive";
   private static final long SNOOZE_MS = TimeUnit.HOURS.toMillis(24);
   private static final long CHECK_INTERVAL_MS = TimeUnit.HOURS.toMillis(1);
   private static final String REPOSITORY = "emHung/MuayThai_Fitness-Center";
@@ -166,35 +161,18 @@ final class AppUpdatePrompt implements DefaultLifecycleObserver {
   }
 
   private void download(String version, String assetId, Uri downloadUrl) {
-    DownloadManager manager = activity.getSystemService(DownloadManager.class);
+    String digest = "";
     try {
-      String key = "download_" + assetId;
-      long previous = settings.getLong(key, -1);
-      if (previous != -1) {
-        try (var cursor = manager.query(new DownloadManager.Query().setFilterById(previous))) {
-          if (cursor != null && cursor.moveToFirst()
-              && cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS))
-                  != DownloadManager.STATUS_FAILED) {
-            activity.startActivity(new Intent(DownloadManager.ACTION_VIEW_DOWNLOADS));
-            return;
-          }
-        }
-        manager.remove(previous);
+      var release = JsonParser.parseString(settings.getString("latest_release", "{}")).getAsJsonObject();
+      for (var element : release.getAsJsonArray("assets")) {
+        var asset = Jsons.object(element);
+        if (assetId.equals(Jsons.text(asset, "id"))) digest = Jsons.text(asset, "digest");
       }
-      var request = new DownloadManager.Request(downloadUrl)
-          .setTitle(activity.getString(R.string.app_update_download_title, version))
-          .setMimeType(APK_MIME)
-          .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-          .setDestinationInExternalFilesDir(activity, Environment.DIRECTORY_DOWNLOADS,
-              "muaythai-" + version + "-" + assetId + ".apk");
-      settings.edit().putLong(key, manager.enqueue(request)).apply();
-      Toast.makeText(activity, R.string.app_update_downloading, Toast.LENGTH_LONG).show();
-    } catch (ActivityNotFoundException | IllegalArgumentException | IllegalStateException | SecurityException error) {
-      Toast.makeText(activity, R.string.app_update_download_error, Toast.LENGTH_LONG).show();
-      settings.edit().remove("next_check").apply();
+    } catch (RuntimeException error) {
+      android.util.Log.w("AppUpdate", "Release digest unavailable", error);
     }
+    UpdateActivity.open(activity, version, assetId, downloadUrl, digest);
   }
-
   static String releaseAssetId(JsonObject release) {
     JsonElement assets = release.get("assets");
     if (assets == null || !assets.isJsonArray()) {

@@ -37,3 +37,7 @@ Khi sửa hoặc xác nhận một chức năng, thêm mục theo ngày và gắ
 ## Bố cục theo tham chiếu — 0.1.5
 
 Áp dụng cấu trúc header/hero/thẻ/menu/biểu mẫu cho bốn vai trò, giữ màu hiện tại và chức năng. Lịch có dải tuần lọc dữ liệu thật. Có bộ ảnh theo vai trò, kiểm tra đặt PT, QR, lưu hồ sơ, avatar và màn 320dp/cỡ chữ 130%. Android build/lint đạt 0 lỗi, 11 cảnh báo hiện hữu. [Báo cáo và ảnh](docs/UI_REDESIGN_0.1.5.md). Các mốc nghiệm thu điện thoại thật chưa thay đổi.
+
+## Cập nhật trong app — 0.1.6
+
+Đã thêm màn tiến độ DownloadManager, thử lại/hủy, kiểm tra package/phiên bản/chữ ký/SHA-256 (nếu release cung cấp), xin quyền và chuyển trình cài Android. Emulator tải và cài đè release thật sau khi Play Protect báo an toàn. [Báo cáo](docs/IN_APP_UPDATE.md).
