@@ -1,4 +1,7 @@
 <resources>
+    <string name="network_offline">Chưa có kết nối Internet. Kiểm tra Wi-Fi hoặc dữ liệu di động.</string>
+    <string name="network_restored">Đã kết nối Internet trở lại.</string>
+    <string name="network_settings">Cài đặt mạng</string>
     <string name="app_name">MuayThai &amp; Fitness Center</string>
     <string name="brand_mark">MT</string>
     <string name="login_hint">Đăng nhập để xem lịch, điểm danh và hành trình tập luyện.</string>
@@ -37,5 +40,4 @@
     <string name="cancel_image">Hủy</string>
     <string name="image_saved">Đã lưu ảnh.</string>
     <string name="image_failed">Không thể đọc ảnh. Chọn ảnh tối đa 5 MB và thử lại.</string>
-    <string name="package_images">Ảnh loại gói</string>
 </resources>

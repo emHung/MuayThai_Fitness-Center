@@ -68,7 +68,8 @@ final class DirectoryPane {
     }
     LinearLayout results = new LinearLayout(work);
     results.setOrientation(LinearLayout.VERTICAL);
-    work.ui.action(body, "Tìm kiếm", () -> load(results, trainers, WorkspaceUi.read(query)));
+    work.ui.iconAction(work.ui.actions(body), "Tìm kiếm", R.drawable.ic_search,
+        () -> load(results, trainers, WorkspaceUi.read(query)));
     work.ui.add(body, results, 5);
     load(results, trainers, "");
   }
@@ -185,9 +186,10 @@ final class DirectoryPane {
           Jsons.body("displayName", WorkspaceUi.read(name), "phone", WorkspaceUi.read(phone),
               "specialty", specialty == null ? null : WorkspaceUi.read(specialty))),
           done -> { work.message("Đã lưu thông tin."); work.refresh(); }));
-      work.ui.action(body, "Đổi mật khẩu", () -> work.open("Đổi mật khẩu", this::password));
-      work.ui.action(body, "Kiểm tra cập nhật", () -> AppUpdatePrompt.checkNow(work));
-      work.ui.action(body, "Đăng xuất", work::logout);
+      var actions = work.ui.actions(body);
+      work.ui.iconAction(actions, "Đổi mật khẩu", R.drawable.ic_key, () -> work.open("Đổi mật khẩu", this::password));
+      work.ui.iconAction(actions, "Kiểm tra cập nhật", R.drawable.ic_refresh, () -> AppUpdatePrompt.checkNow(work));
+      work.ui.iconAction(actions, "Đăng xuất", R.drawable.ic_logout, work::logout);
     }));
   }
 

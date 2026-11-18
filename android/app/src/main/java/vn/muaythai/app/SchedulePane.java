@@ -30,16 +30,17 @@ final class SchedulePane {
     EditText date = work.ui.date(body, "Ngày xem lịch", today.toString());
     work.ui.row(body, "Yêu cầu đổi lịch", "", () -> work.open("Đổi lịch PT", work.planning::changes));
     if (work.role().equals("ADMIN")) {
-      work.ui.action(body, "Quản lý lớp nhóm", () -> work.open("Lớp nhóm", this::classes));
+      work.ui.iconAction(work.ui.actions(body), "Quản lý lớp nhóm", R.drawable.ic_book, () -> work.open("Lớp nhóm", this::classes));
     } else if (work.role().equals("TRAINER")) {
       work.operations.reviewReminder(body);
       work.ui.row(body, "Ca làm của tôi", "", () -> work.open("Ca làm việc", panel -> work.planning.shifts(panel, work.userId())));
-      work.ui.action(body, "Đề xuất lớp 10", () -> work.open("Đề xuất lớp 10", panel -> classes.form(panel, "GROUP10", null)));
+      work.ui.iconAction(work.ui.actions(body), "Đề xuất lớp 10", R.drawable.ic_add, () -> work.open("Đề xuất lớp 10", panel -> classes.form(panel, "GROUP10", null)));
     }
     EditText query = work.ui.field(body, "Tên buổi cần tìm", "");
     CalendarFeed list = new CalendarFeed();
-    work.ui.action(body, "Xem theo ngày", () -> list.show(LocalDate.parse(WorkspaceUi.read(date)), 1, WorkspaceUi.read(query)));
-    work.ui.action(body, "Xem theo tuần", () -> list.show(LocalDate.parse(WorkspaceUi.read(date)), 7, WorkspaceUi.read(query)));
+    var actions = work.ui.actions(body);
+    work.ui.iconAction(actions, "Xem theo ngày", R.drawable.ic_calendar, () -> list.show(LocalDate.parse(WorkspaceUi.read(date)), 1, WorkspaceUi.read(query)));
+    work.ui.iconAction(actions, "Xem theo tuần", R.drawable.ic_grid, () -> list.show(LocalDate.parse(WorkspaceUi.read(date)), 7, WorkspaceUi.read(query)));
     work.ui.add(body, list, 6);
     list.show(today, 1, "");
   }
@@ -123,11 +124,6 @@ final class SchedulePane {
     long id = Jsons.id(session);
     String state = Jsons.text(session, "status");
     String type = Jsons.text(session, "type");
-    long classId = Jsons.number(session, "classId");
-    String kindImage = "api/packages/types/" + type + "/image";
-    String classImage = classId > 0
-        ? "api/" + (type.equals("GROUP10") ? "classes10" : "classes30") + "/" + classId + "/image" : kindImage;
-    work.images.show(body, classImage, kindImage, false, false);
     boolean admin = work.role().equals("ADMIN");
     boolean trainer = work.role().equals("TRAINER");
     boolean learner = work.role().equals("LEARNER");
@@ -212,10 +208,8 @@ final class SchedulePane {
   }
 
   void bookingHub(LinearLayout body) {
-    work.images.show(body, "api/packages/types/PT/image", false, false);
     work.ui.row(body, "Đặt PT với HLV phụ trách", "Chọn gói, ngày và giờ",
         () -> work.packages.selectMine("PT", pack -> work.open("Đặt buổi PT", panel -> book(panel, pack))));
-    work.images.show(body, "api/packages/types/GROUP10/image", false, false);
     work.ui.row(body, "Lớp nhóm 10", "Xem buổi có thể đăng ký", () -> work.open("Lịch lớp 10", panel -> {
       work.request(work.api.service.get("api/sessions"), result -> showSessions(panel,
           Jsons.rows(result).stream().filter(session -> Jsons.text(session, "type").equals("GROUP10"))

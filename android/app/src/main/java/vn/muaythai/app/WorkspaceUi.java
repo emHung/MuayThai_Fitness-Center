@@ -46,12 +46,47 @@ final class WorkspaceUi {
     button.setMinHeight(dp(46));
     button.setCornerRadius(dp(12));
     button.setOnClickListener(view -> run.run());
-    add(parent, button, 7);
+    LinearLayout.LayoutParams size = new LinearLayout.LayoutParams(-2, dp(48));
+    size.topMargin = dp(6);
+    parent.addView(button, size);
+  }
+
+  LinearLayout actions(LinearLayout parent) {
+    LinearLayout bar = new LinearLayout(context);
+    bar.setOrientation(LinearLayout.HORIZONTAL);
+    add(parent, bar, 6);
+    return bar;
+  }
+
+  void iconAction(LinearLayout parent, String title, int icon, Runnable run) {
+    var button = new androidx.appcompat.widget.AppCompatImageButton(context);
+    button.setImageResource(icon);
+    button.setImageTintList(ColorStateList.valueOf(ContextCompat.getColor(context, R.color.text_primary)));
+    button.setContentDescription(title);
+    androidx.appcompat.widget.TooltipCompat.setTooltipText(button, title);
+    button.setPadding(dp(12), dp(12), dp(12), dp(12));
+    android.util.TypedValue ripple = new android.util.TypedValue();
+    context.getTheme().resolveAttribute(android.R.attr.selectableItemBackgroundBorderless, ripple, true);
+    button.setBackgroundResource(ripple.resourceId);
+    button.setOnClickListener(view -> run.run());
+    parent.addView(button, new LinearLayout.LayoutParams(dp(48), dp(48)));
   }
 
   void row(LinearLayout parent, String title, String subtitle, Runnable action) {
     LinearLayout column = card(parent);
-    label(column, title, 15, true);
+    if (action == null) {
+      label(column, title, 15, true);
+    } else {
+      var header = new LinearLayout(context);
+      header.setGravity(android.view.Gravity.CENTER_VERTICAL);
+      var text = label(header, title, 15, true);
+      text.setLayoutParams(new LinearLayout.LayoutParams(0, -2, 1));
+      var arrow = new android.widget.ImageView(context);
+      arrow.setImageResource(R.drawable.ic_chevron);
+      arrow.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+      header.addView(arrow, new LinearLayout.LayoutParams(dp(20), dp(20)));
+      add(column, header, 0);
+    }
     if (!subtitle.trim().isEmpty()) {
       label(column, subtitle, 13, false);
     }

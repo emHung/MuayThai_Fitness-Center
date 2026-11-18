@@ -29,7 +29,7 @@ final class AttendancePane {
     var scannerCard = work.ui.card(body);
     work.ui.label(scannerCard, "Quét QR của gói tập", 20, true);
     work.ui.label(scannerCard, "Đưa mã QR vào khung. Kiểm tra gói và buổi trước khi xác nhận.", 14, false);
-    work.ui.action(scannerCard, "Mở camera", () -> {
+    work.ui.iconAction(work.ui.actions(scannerCard), "Mở camera", R.drawable.ic_camera, () -> {
       ScanOptions options = new ScanOptions()
           .setDesiredBarcodeFormats(ScanOptions.QR_CODE)
           .setPrompt("Đưa mã QR vào khung")
@@ -37,15 +37,16 @@ final class AttendancePane {
           .setBeepEnabled(false);
       scanner.launch(options);
     });
-    work.ui.action(body, "Nhập mã thủ công", () -> work.open("Nhập mã", this::lookup));
+    work.ui.iconAction(work.ui.actions(body), "Nhập mã thủ công", R.drawable.ic_qr, () -> work.open("Nhập mã", this::lookup));
     work.ui.row(body, "Lịch sử điểm danh", "Lượt điểm danh và điều chỉnh",
         () -> work.open("Lịch sử điểm danh", panel -> history(panel, null, null)));
   }
 
   private void lookup(LinearLayout body) {
     EditText code = work.ui.field(body, "Mã gói hoặc mã hội viên", "");
-    work.ui.action(body, "Tra mã gói", () -> openPreview(WorkspaceUi.read(code), "PACKAGE_CODE", null));
-    work.ui.action(body, "Tra mã hội viên", () -> openPreview(WorkspaceUi.read(code), "MEMBER_CODE", null));
+    var actions = work.ui.actions(body);
+    work.ui.iconAction(actions, "Tra mã gói", R.drawable.ic_qr, () -> openPreview(WorkspaceUi.read(code), "PACKAGE_CODE", null));
+    work.ui.iconAction(actions, "Tra mã hội viên", R.drawable.ic_user, () -> openPreview(WorkspaceUi.read(code), "MEMBER_CODE", null));
   }
 
   private void openPreview(String code, String kind, Long selected) {

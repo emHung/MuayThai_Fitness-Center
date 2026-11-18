@@ -17,8 +17,9 @@ final class ClassPane {
   }
 
   void show(LinearLayout body) {
-    work.ui.action(body, "Tạo lớp 30", () -> work.open("Tạo lớp 30", panel -> form(panel, "GROUP30", null)));
-    work.ui.action(body, "Tạo lớp 10", () -> work.open("Tạo lớp 10", panel -> form(panel, "GROUP10", null)));
+    var actions = work.ui.actions(body);
+    work.ui.iconAction(actions, "Tạo lớp 30", R.drawable.ic_add, () -> work.open("Tạo lớp 30", panel -> form(panel, "GROUP30", null)));
+    work.ui.iconAction(actions, "Tạo lớp 10", R.drawable.ic_group, () -> work.open("Tạo lớp 10", panel -> form(panel, "GROUP10", null)));
     var query = work.ui.field(body, "Tên lớp cần tìm", "");
     LinearLayout results = new LinearLayout(work);
     results.setOrientation(LinearLayout.VERTICAL);
@@ -28,7 +29,7 @@ final class ClassPane {
       load(results, "GROUP30", "Lớp 30", filter);
       load(results, "GROUP10", "Lớp 10", filter);
     };
-    work.ui.action(body, "Tìm lớp", search);
+    work.ui.iconAction(work.ui.actions(body), "Tìm lớp", R.drawable.ic_search, search);
     work.ui.add(body, results, 8);
     search.run();
   }
@@ -52,8 +53,6 @@ final class ClassPane {
     String base = path(type) + "/" + id;
     work.request(work.api.service.get(base), response -> {
       JsonObject info = Jsons.object(response);
-      work.images.show(body, base + "/image", "api/packages/types/" + type + "/image", false,
-          work.role().equals("ADMIN"));
       String status = Jsons.text(info, "status");
       work.ui.row(body, Jsons.text(info, "title"), label(info), null);
       if (status.equals("PENDING")) {

@@ -33,11 +33,7 @@ final class PackagesPane {
       if (rows.isEmpty()) {
         work.ui.label(body, "Bạn chưa được gán gói tập.", 14, false);
       }
-      rows.forEach(pack -> {
-        var card = work.ui.card(body);
-        work.images.show(card, "api/packages/types/" + Jsons.text(pack, "type") + "/image", false, false);
-        work.ui.row(card, title(pack), summary(pack), () -> showQr(Jsons.id(pack)));
-      });
+      rows.forEach(pack -> work.ui.row(body, title(pack), summary(pack), () -> showQr(Jsons.id(pack))));
     });
   }
 
@@ -95,9 +91,7 @@ final class PackagesPane {
 
   private void kindChooser(LinearLayout body, long learner) {
     TYPES.forEach(kind -> {
-      var card = work.ui.card(body);
-      work.images.show(card, "api/packages/types/" + kind.id() + "/image", false, false);
-      work.ui.row(card, kind.label(), "",
+      work.ui.row(body, kind.label(), "",
           () -> work.open("Gán gói " + kind.label(), content -> assign(content, learner, kind)));
     });
   }
@@ -153,7 +147,6 @@ final class PackagesPane {
   }
 
   private void qrContent(LinearLayout body, JsonObject pack) {
-    work.images.show(body, "api/packages/types/" + Jsons.text(pack, "type") + "/image", false, false);
     var card = work.ui.card(body);
     var image = new ImageView(work);
     image.setContentDescription("Mã QR của gói " + title(pack));

@@ -22,6 +22,7 @@ public final class LoginActivity extends AppCompatActivity {
     ui = ActivityLoginBinding.inflate(getLayoutInflater());
     setContentView(ui.getRoot());
     applyInsets();
+    getLifecycle().addObserver(new ConnectivityNotice(this, ui.getRoot(), null));
     getLifecycle().addObserver(new AppUpdatePrompt(this));
 
     LoginViewModel model = new ViewModelProvider(this).get(LoginViewModel.class);

@@ -59,6 +59,7 @@ public final class WorkspaceActivity extends AppCompatActivity {
     }
     layout = ActivityWorkspaceBinding.inflate(getLayoutInflater());
     setContentView(layout.getRoot());
+    getLifecycle().addObserver(new ConnectivityNotice(this, layout.getRoot(), layout.workspaceNav));
     ui = new WorkspaceUi(this);
     api = new ApiClient(session.authorization());
     images = new ImagesPane(this);
@@ -143,7 +144,6 @@ public final class WorkspaceActivity extends AppCompatActivity {
   }
 
   private void manage(LinearLayout body) {
-    ui.row(body, getString(R.string.package_images), "", () -> open(getString(R.string.package_images), images::kinds));
     ui.row(body, "Lễ tân", "Tài khoản tại quầy", () -> open("Lễ tân", directory::receptionists));
     ui.row(body, "Huấn luyện viên", "Tài khoản, chuyên môn và trạng thái",
         () -> open("Huấn luyện viên", content -> directory.list(content, true)));

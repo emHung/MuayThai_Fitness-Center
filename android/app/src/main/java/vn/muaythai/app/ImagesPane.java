@@ -53,26 +53,22 @@ final class ImagesPane {
   }
 
   void show(LinearLayout parent, String path, boolean avatar, boolean editable) {
-    show(parent, path, null, avatar, editable);
-  }
-
-  void show(LinearLayout parent, String path, String fallback, boolean avatar, boolean editable) {
     var view = image(parent, avatar);
     var request = Glide.with(work).load(remote(path)).diskCacheStrategy(DiskCacheStrategy.NONE)
         .skipMemoryCache(true).placeholder(avatar ? R.drawable.ic_user : R.drawable.ic_book)
         .error(avatar ? R.drawable.ic_user : R.drawable.ic_book);
-    if (fallback != null) request = request.error(Glide.with(work).load(remote(fallback))
-        .diskCacheStrategy(DiskCacheStrategy.NONE).skipMemoryCache(true).error(R.drawable.ic_book));
     if (avatar) request.circleCrop().into(view);
     else request.centerCrop().into(view);
     if (editable) {
-      work.ui.action(parent, work.getString(R.string.choose_image), () -> {
+      var actions = work.ui.actions(parent);
+      actions.setGravity(android.view.Gravity.CENTER_HORIZONTAL);
+      work.ui.iconAction(actions, work.getString(R.string.choose_image), R.drawable.ic_image_edit, () -> {
         this.path = path;
         title = work.getString(avatar ? R.string.profile_image : R.string.course_image);
         picker.launch(new PickVisualMediaRequest.Builder()
             .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE).build());
       });
-      work.ui.action(parent, work.getString(R.string.delete_image), () -> work.confirm(
+      work.ui.iconAction(actions, work.getString(R.string.delete_image), R.drawable.ic_delete_bin, () -> work.confirm(
           work.getString(R.string.delete_image), work.getString(R.string.delete_image_prompt),
           work.getString(R.string.delete_image),
           () -> work.request(work.api.service.delete(path), done -> work.refresh())));
@@ -170,10 +166,4 @@ final class ImagesPane {
     });
   }
 
-  void kinds(LinearLayout body) {
-    String[][] kinds = {{"PT", "PT 1–1"}, {"GROUP10", "Lớp 10"}, {"GROUP30", "Lớp 30"},
-        {"MEMBERSHIP", "Tập tự do"}};
-    for (String[] kind : kinds) work.ui.row(body, kind[1], "", () -> work.open(kind[1],
-        panel -> show(panel, "api/packages/types/" + kind[0] + "/image", false, true)));
-  }
 }
