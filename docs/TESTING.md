@@ -29,7 +29,7 @@ Set-Location ..
 
 Xem `android/app/build/reports/lint-results-debug.html`. Bản 0.1.7: 0 lỗi, 11 cảnh báo hiện hữu; không coi lint sạch lỗi là đã nghiệm thu UX hay bảo mật toàn hệ thống.
 
-Để chụp UI, dựng stack QA 8180 riêng theo hướng dẫn, build APK `'-PauthBaseUrl=http://10.0.2.2:8180/'`. Đặt `MUAYTHAI_UI_FIXTURE_OUT=android/app/build/ui-qa/accounts.json`, tạo thư mục output rồi chạy `node tests/ui-fixtures.mjs`; chép `tests/fixtures/course.jpg` cạnh accounts.json. Truyền FixturePath, ApkPath và OutputDirectory vào script. Fixture có credential, không in/chia sẻ/commit.
+Để chụp UI, dựng stack QA 8180 riêng theo hướng dẫn, build APK `'-PauthBaseUrl=http://10.0.2.2:8180/'`. Đặt `MUAYTHAI_TEST_COMPOSE_PROJECT` đúng project QA vừa dựng (ví dụ `muaythai-qa`), `MUAYTHAI_TEST_URL=http://127.0.0.1:8180` và `MUAYTHAI_UI_FIXTURE_OUT=android/app/build/ui-qa/accounts.json`, tạo thư mục output rồi chạy `node tests/ui-fixtures.mjs`; chép `tests/fixtures/course.jpg` cạnh accounts.json. Truyền FixturePath, ApkPath và OutputDirectory vào script. Fixture có credential, không in/chia sẻ/commit.
 
 ## SonarQube và coverage
 
@@ -55,3 +55,5 @@ Scanner nhập `backend/target/coverage/acceptance.xml`. Đợi SonarQube sẵn 
 5. Doanh nghiệp: ký APK production, sao lưu/khôi phục, uptime và kiểm soát truy cập.
 
 Xem [NGHIEM_THU_V2_3.md](NGHIEM_THU_V2_3.md). Không tăng mốc bàn giao chỉ vì có thêm ảnh hoặc tài liệu.
+
+Các ca điểm danh dùng helper tests/support/qa-time.mjs: tạo lịch hợp lệ qua API rồi chuẩn bị cửa sổ thời gian trong database QA để chạy ổn định cả sát nửa đêm. Helper bắt buộc localhost, cổng khác 8080 và project thử nằm trong danh sách cho phép; baseline và UI fixture kiểm điều kiện trước khi tạo dữ liệu. Không đổi đồng hồ hoặc sửa dữ liệu môi trường đang sử dụng.

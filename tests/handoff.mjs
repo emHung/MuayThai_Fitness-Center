@@ -202,9 +202,17 @@ async function packageAndCare(){
  assert.ok((await api('GET','/api/care/inactive',admin)).some(r=>r.learnerId===learner.id));
  sql('checkin_db',`UPDATE packages SET end_date=(now() AT TIME ZONE 'Asia/Ho_Chi_Minh')::date+6 WHERE id=${id(p.id)}`);
  assert.ok((await api('GET','/api/care/renewals',admin)).some(r=>r.learnerId===learner.id));
+ assert.ok((await api('GET','/api/notifications',learner.token)).some(n=>n.notice.id.startsWith('package-'+p.id+'-')));
  const trainer=await account('trainers','exhaust-coach'); const exhausted=await pack(learner,'PT',trainer, null,1);
  sql('checkin_db',`UPDATE packages SET used_sessions=total_sessions WHERE id=${id(exhausted.id)}`);
  await preview(exhausted,409,'PACKAGE_EXHAUSTED');
+ const thresholdLearner=await account('learners','care-threshold');
+ const thresholdPack=await pack(thresholdLearner,'PT',trainer);
+ sql('checkin_db',"UPDATE packages SET used_sessions=16 WHERE id="+id(thresholdPack.id));
+ assert.ok(!(await api('GET','/api/care/renewals',admin)).some(r=>r.learnerId===thresholdLearner.id));
+ sql('checkin_db',"UPDATE packages SET used_sessions=17 WHERE id="+id(thresholdPack.id));
+ assert.ok((await api('GET','/api/care/renewals',admin)).some(r=>r.learnerId===thresholdLearner.id));
+ assert.ok((await api('GET','/api/notifications',thresholdLearner.token)).some(n=>n.notice.id.startsWith('package-'+thresholdPack.id+'-')));
 }
 async function schedulingAndClassLifecycle(){
  const g=await group('GROUP30','lifecycle');

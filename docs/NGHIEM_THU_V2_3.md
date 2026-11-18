@@ -55,7 +55,7 @@ Bộ A, H, kiểm thử ảnh và production smoke đã chạy đạt trên môi
 | FR42 | Lớp 10 walk-in | A/H: walk-in lớp 10, đủ chỗ và muộn quá cửa sổ; không trừ lượt khi bị chặn. |
 | FR43 | Check-in tập tự do | A: tập tự do không trừ lượt, chặn lượt thứ hai cùng ngày. |
 | FR44 | Đánh dấu vắng | A/H: chặn ghi vắng trước kết thúc; sau buổi ghi ABSENT, không mất lượt. |
-| FR45 | Danh sách sắp hết lượt/hạn | H: danh sách gia hạn với gói gần hết hạn; A kiểm nhắc gói/lượt. |
+| FR45 | Danh sách sắp hết lượt/hạn | H: ngưỡng 3/4 lượt, hạn gần hết và thông báo gói đúng tài khoản. |
 | FR46 | Danh sách lâu không tập | H: danh sách lâu chưa tập trước/sau mốc 14 ngày và sau khi đã điểm danh. |
 | FR47 | Hồ sơ và hành trình học viên PT | H: lịch sử/đánh giá theo học viên PT, chặn HLV hoặc học viên không liên quan. |
 | FR48 | HLV ghi nội dung đã dạy | H: lưu nội dung buổi, đọc lại và lịch sử. |
@@ -68,5 +68,5 @@ Bộ A, H, kiểm thử ảnh và production smoke đã chạy đạt trên môi
 | FR55 | Hộp thư nhận yêu cầu HLV đề xuất đổi PT | H: đề xuất của HLV đến đúng hộp thư học viên và phản hồi. |
 | FR56 | Hộp thư HLV có trạng thái lịch và thông báo thay HLV | A/H: trạng thái PT và thông báo thay HLV cho cả HLV cũ/mới. |
 | FR57 | Nhắc đánh giá PT còn chờ ở màn Lịch dạy và hộp thư | UI/A: lời nhắc đánh giá được đối chiếu ở màn lịch/hộp thư trong bộ thử trước. |
-| FR58 | Nhắc lịch PT, lớp 10, lớp 30 và gói sắp hết | A: nhắc PT/lớp, lớp theo đăng ký/gói và gói sắp hết. |
+| FR58 | Nhắc lịch PT, lớp 10, lớp 30 và gói sắp hết | A/H: nhắc PT/lớp theo đăng ký/gói; thông báo gói sắp hết theo ngày hoặc lượt. |
 | FR59 | ADMIN gửi thông báo chung | A: thông báo chung đến học viên, đánh dấu đã đọc. |

@@ -1,3 +1,4 @@
+import { prepareAttendanceWindow, requireDisposableQa } from './support/qa-time.mjs';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
@@ -7,6 +8,7 @@ const settings = Object.fromEntries(readFileSync(new URL('../deploy/.env', impor
   .split(/\r?\n/).filter(line => /^[A-Z_]+=/.test(line))
   .map(line => [line.slice(0, line.indexOf('=')), line.slice(line.indexOf('=') + 1)]));
 const base = process.env.MUAYTHAI_TEST_URL || 'http://127.0.0.1:8080';
+requireDisposableQa(base, process.env.MUAYTHAI_TEST_COMPOSE_PROJECT);
 const run = randomUUID().slice(0, 8);
 const localDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' });
 const date = instant => localDate.format(instant);
@@ -140,8 +142,8 @@ async function main() {
     request('POST', '/api/packages', { token: admin, body: pt, status: 201 }),
   ]);
   assert.notEqual(pack.code, secondPack.code);
-  const upcoming = later(10);
-  const appointment = await request('POST', '/api/pt/bookings', {
+  const upcoming = new Date(date(later(1440)) + 'T10:00:00+07:00');
+  let appointment = await request('POST', '/api/pt/bookings', {
     token: student, body: { packageId: pack.id, startAt: upcoming.toISOString() }, status: 201,
   });
   await request('POST', '/api/pt/bookings', {
@@ -149,6 +151,8 @@ async function main() {
     status: 409, code: 'SCHEDULE_CONFLICT',
   });
   await request('POST', '/api/pt/' + appointment.id + '/confirm', { token: coach, body: {} });
+  prepareAttendanceWindow(appointment.id, base, process.env.MUAYTHAI_TEST_COMPOSE_PROJECT);
+  appointment = await request('GET', '/api/sessions/' + appointment.id, { token: admin });
   assert.equal((await request('GET', learners, { token: coach })).items[0]?.id, learner.profile.id);
   await request('POST', '/api/shifts/' + trainer.profile.id + '/blocks', {
     token: admin, status: 409, code: 'BLOCK_HAS_BOOKINGS',
@@ -209,8 +213,10 @@ async function main() {
     body: { shifts: [1,2,3,4,5,6,7].map(weekday => ({weekday, startsAt: '00:00', endsAt: '23:59'})) } });
   const guardPack = await request('POST', '/api/packages', { token: admin, status: 201,
     body: { ...pt, learnerId: guardLearner.profile.id, trainerId: guardTrainer.profile.id } });
-  const [guardSession] = await request('POST', '/api/pt/direct', { token: admin, status: 201,
-    body: { learnerId: guardLearner.profile.id, packageId: guardPack.id, weeks: 1, startAt: later(10).toISOString() } });
+  let [guardSession] = await request('POST', '/api/pt/direct', { token: admin, status: 201,
+    body: { learnerId: guardLearner.profile.id, packageId: guardPack.id, weeks: 1, startAt: upcoming.toISOString() } });
+  prepareAttendanceWindow(guardSession.id, base, process.env.MUAYTHAI_TEST_COMPOSE_PROJECT);
+  guardSession = await request('GET', '/api/sessions/' + guardSession.id, { token: admin });
   const cancelRace = await Promise.all([
     fetch(base + '/api/sessions/' + guardSession.id + '/cancel', {
       method: 'POST', headers: adminHeaders, body: JSON.stringify({ reason: 'QA tranh chấp với điểm danh' }),

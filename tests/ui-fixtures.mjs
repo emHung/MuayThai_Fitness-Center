@@ -1,8 +1,10 @@
+import { prepareAttendanceWindow, requireDisposableQa } from './support/qa-time.mjs';
 import assert from 'node:assert/strict';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
 
 const base = process.env.MUAYTHAI_TEST_URL || 'http://127.0.0.1:8180';
+requireDisposableQa(base, process.env.MUAYTHAI_TEST_COMPOSE_PROJECT);
 assert.equal(new URL(base).hostname, '127.0.0.1');
 assert.notEqual(new URL(base).port, '8080', 'UI fixtures require a disposable QA stack');
 const output = process.env.MUAYTHAI_UI_FIXTURE_OUT;
@@ -53,9 +55,10 @@ const endDate = day(new Date(Date.now() + 30 * 86400000));
 const pack = await api('/api/packages', admin.token, 'POST', { learnerId: learner.id,
   trainerId: coach.id, type: 'PT', totalSessions: 10, startDate, endDate }, 201);
 const confirmed = await api('/api/pt/bookings', learner.token, 'POST', {
-  packageId: pack.id, startAt: new Date(Date.now() + 10 * 60000).toISOString(),
+  packageId: pack.id, startAt: day(new Date(Date.now() + 86400000)) + 'T10:00:00+07:00',
 }, 201);
 await api('/api/pt/' + confirmed.id + '/confirm', coach.token, 'POST', {});
+prepareAttendanceWindow(confirmed.id, base, process.env.MUAYTHAI_TEST_COMPOSE_PROJECT);
 const checkin = await fetch(base + '/api/checkins/confirm', { method: 'POST',
   headers: { Authorization: 'Bearer ' + accounts.RECEPTION.token, 'Content-Type': 'application/json',
     'Idempotency-Key': randomUUID() }, signal: AbortSignal.timeout(20000),
@@ -63,7 +66,7 @@ const checkin = await fetch(base + '/api/checkins/confirm', { method: 'POST',
 });
 assert.equal(checkin.status, 201, 'QA check-in');
 await api('/api/pt/bookings', learner.token, 'POST', {
-  packageId: pack.id, startAt: new Date(Date.now() + 90 * 60000).toISOString(),
+  packageId: pack.id, startAt: day(new Date(Date.now() + 86400000)) + 'T12:00:00+07:00',
 }, 201);
 await api('/api/packages', admin.token, 'POST', { learnerId: learner.id, type: 'MEMBERSHIP', startDate, endDate }, 201);
 writeFileSync(output, JSON.stringify({ accounts, sessionId: confirmed.id, packageId: pack.id }, null, 2));
