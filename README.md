@@ -55,7 +55,7 @@ Danh sách trên mô tả mã hiện có, không đồng nghĩa đã nghiệm th
 
 Bản 0.1.7 đã build và kiểm chữ ký; CI Android, API và production smoke đạt. Lint ghi nhận 0 lỗi, 11 cảnh báo hiện hữu. SonarQube có báo cáo đo trước đó, không chạy tự động trong workflow hiện tại và không đại diện cho mọi commit mới.
 
-Người sử dụng đã xác nhận quét QR và xác nhận điểm danh thành công trên điện thoại. Còn đối chiếu lượt gói, đồng bộ thiết bị và cài ứng viên release ký riêng. Đã bổ sung kiểm thử các mốc biên nghiệp vụ; không coi đây là đã kiểm mọi tình huống gián đoạn trên mọi thiết bị. Xem [hướng dẫn chốt bàn giao](docs/HANDOVER.md). Các ảnh hiện tại nằm ở [bố cục 0.1.5](docs/UI_REDESIGN_0.1.5.md); ảnh này là bằng chứng phiên bản đó, không phải ảnh chụp lại 0.1.7.
+Người sử dụng đã xác nhận quét QR và xác nhận điểm danh thành công trên điện thoại. Đã đối chiếu lượt gói và thử cài/đăng nhập/đăng xuất release trên emulator; còn xác nhận cập nhật ở thiết bị khác. Đã bổ sung kiểm thử các mốc biên nghiệp vụ; không coi đây là đã kiểm mọi tình huống gián đoạn trên mọi thiết bị. Xem [hướng dẫn chốt bàn giao](docs/HANDOVER.md). Các ảnh hiện tại nằm ở [bố cục 0.1.5](docs/UI_REDESIGN_0.1.5.md); ảnh này là bằng chứng phiên bản đó, không phải ảnh chụp lại 0.1.7.
 
 ## Nguyên tắc thay đổi
 

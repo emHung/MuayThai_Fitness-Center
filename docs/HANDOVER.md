@@ -26,6 +26,6 @@ Không tự gỡ app trên điện thoại đang dùng để xử lý lỗi ch�
 
 ## Hiện trạng
 
-Người sử dụng đã xác nhận quét QR và xác nhận điểm danh thành công trên điện thoại thật. Các ca nghiệp vụ tự động và cấu hình triển khai đã đạt. Chưa có xác nhận đầy đủ về lượt gói/đồng bộ thiết bị và cài ứng viên release; vì vậy mốc chốt bàn giao còn mở trong [PROGRESS.md](../PROGRESS.md).
+Người sử dụng đã xác nhận quét QR và xác nhận điểm danh thành công trên điện thoại thật. Các ca nghiệp vụ tự động và cấu hình triển khai đã đạt. Đã đối chiếu dữ liệu lượt gói với lịch sử trên máy chủ hiện tại, không phát hiện sai lệch. Ứng viên release đã cài mới, đăng nhập HTTPS và đăng xuất thành công trên emulator. Còn xác nhận cập nhật ở thiết bị khác từ người sử dụng; vì vậy mốc chốt bàn giao còn mở trong [PROGRESS.md](../PROGRESS.md).
 
 Ứng viên release được chuẩn bị riêng để kiểm tra trước khi công bố; chưa dùng thay thế bản APK hiện hành trên GitHub. Khóa ký không được đính kèm vào tài liệu hoặc kho mã nguồn.

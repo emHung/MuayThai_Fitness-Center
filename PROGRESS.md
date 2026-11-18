@@ -11,12 +11,12 @@ Tiến độ tính theo mốc bàn giao, không phải phần trăm hoàn thiệ
 | APK Android Java | Hoàn thành | Có bản cài đang sử dụng; đã đóng gói thêm ứng viên release 0.1.8/code 9 ký riêng qua HTTPS. |
 | Kiểm thử tích hợp các luồng chính | Hoàn thành | Bốn vai trò, gói, lịch, QR/điểm danh, quyền, thông báo và đồng bộ nhiều phiên qua API đạt. |
 | Nghiệm thu nghiệp vụ v2.3 ở lớp hệ thống | Hoàn thành | Bộ hồi quy và bộ nghiệm thu bổ sung đạt: sức chứa, tranh chấp, mốc hủy lịch, đổi lịch hết hạn, điểm danh/hoàn lượt, đánh giá/mục tiêu và giới hạn quyền. [Kiểm thử](docs/TESTING.md). |
-| Nghiệm thu thiết bị và chốt bộ cài bàn giao | Chờ xác nhận cuối | Người sử dụng đã xác nhận quét QR và xác nhận điểm danh thành công trên điện thoại. Cần đối chiếu lượt gói và cập nhật trên thiết bị khác; kiểm tra cài ứng viên release trước khi chốt. |
+| Nghiệm thu thiết bị và chốt bộ cài bàn giao | Chờ xác nhận cuối | Người sử dụng đã xác nhận quét QR và xác nhận điểm danh thành công trên điện thoại. Đối chiếu dữ liệu lượt gói không phát hiện sai lệch; cài/đăng nhập/đăng xuất release trên emulator đạt. Còn xác nhận cập nhật trên thiết bị khác. |
 
 ## Bản cài và cách triển khai
 
 - Bản đang phát hành công khai: **0.1.7/code 8**, chuỗi ký debug hiện có, có cập nhật trong app.
-- Ứng viên bàn giao: **release 0.1.8/code 9**, đã build, lint và xác minh chữ ký riêng; chưa phát hành thay thế chuỗi debug và chưa chốt nghiệm thu cài trên điện thoại.
+- Ứng viên bàn giao: **release 0.1.8/code 9**, đã build, lint, xác minh chữ ký riêng, cài mới và đăng nhập/đăng xuất HTTPS trên emulator; chưa phát hành thay thế chuỗi debug.
 - Không cài đè hai chuỗi ký khác nhau. Kế hoạch chuyển bản cài và trách nhiệm giữ khóa được ghi trong [hướng dẫn bàn giao](docs/HANDOVER.md).
 - Bản sửa quyền backend đã được áp dụng sau sao lưu; đường HTTPS và đăng nhập được kiểm tra lại.
 
@@ -32,8 +32,8 @@ Tiến độ tính theo mốc bàn giao, không phải phần trăm hoàn thiệ
 
 ## Điều kiện chốt mốc 6
 
-1. Xác nhận lượt gói sau điểm danh giảm đúng một lần và không giảm lần nữa khi gửi trùng.
-2. Xác nhận tài khoản liên quan trên thiết bị khác thấy cập nhật lịch/điểm danh đúng quyền.
-3. Cài và đăng nhập ứng viên release trên thiết bị dùng bàn giao, thống nhất chuyển chuỗi ký; lưu giữ khóa phát hành ngoài Git.
+1. **Đã kiểm:** bộ tự động đối chiếu giảm/hoàn/gửi trùng; đối chiếu dữ liệu gói với lịch sử trên máy chủ hiện tại không phát hiện sai lệch. Gói tập tự do không trừ lượt.
+2. **Chờ người sử dụng xác nhận:** tài khoản liên quan trên thiết bị khác thấy cập nhật lịch/điểm danh đúng quyền. SSE nhiều phiên và ứng dụng trên emulator đã có kiểm tra riêng; không ghi thay cho xác nhận này.
+3. **Đã chuẩn bị:** bộ release có APK, hướng dẫn và checksum; cài/đăng nhập/đăng xuất trên emulator đạt. Khóa phát hành lưu ngoài Git. Khi chuyển sang điện thoại đang có bản debug cần thực hiện đúng kế hoạch chuỗi ký trong hướng dẫn, không tự cài đè khác khóa.
 
 Không đánh dấu 6/6 chỉ từ việc build thành công. Cài máy mới theo [SETUP_NEW_MACHINE.md](docs/SETUP_NEW_MACHINE.md); cấu trúc [Android](android/README.md), [backend](backend/README.md).
