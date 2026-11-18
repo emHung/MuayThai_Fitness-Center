@@ -26,6 +26,6 @@ Không tự gỡ app trên điện thoại đang dùng để xử lý lỗi ch�
 
 ## Hiện trạng
 
-Người sử dụng đã xác nhận quét QR và xác nhận điểm danh thành công trên điện thoại thật. Các ca nghiệp vụ tự động và cấu hình triển khai đã đạt. Bản công khai 0.1.8/code 9 đã cài đè 0.1.7, giữ dữ liệu app và đăng nhập/đăng xuất HTTPS trên emulator. Backend đã được sao lưu, cập nhật và kiểm tra lại. Còn xác nhận đồng bộ ở thiết bị sử dụng; vì vậy mốc chốt bàn giao còn mở trong [PROGRESS.md](../PROGRESS.md).
+Người sử dụng đã xác nhận quét QR và xác nhận điểm danh thành công trên điện thoại thật. Phiên bản hiện tại 0.1.9/code 10 giữ chuỗi ký hiện có và đã kiểm tra đổi ngày tự tải giờ PT cho ADMIN/học viên trên emulator. Ca cài đè, giữ dữ liệu app và đăng nhập/đăng xuất HTTPS đã đạt ở 0.1.8; backend không đổi trong 0.1.9. Còn xác nhận đồng bộ ở thiết bị sử dụng; vì vậy mốc chốt bàn giao còn mở trong [PROGRESS.md](../PROGRESS.md).
 
 APK hiện hành trên GitHub vẫn dùng chuỗi debug đã có. Nếu chọn chuỗi production ký riêng, cần đóng gói và nghiệm thu riêng trước khi thay thế. Khóa ký không được đính kèm vào tài liệu hoặc kho mã nguồn.

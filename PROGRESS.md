@@ -33,7 +33,7 @@ Giữ **5/6 mốc** đến khi xác nhận đồng bộ trên thiết bị sử 
 
 ## Tự tải giờ khi đổi ngày — 0.1.9
 
-Đã tái hiện lỗi ở 0.1.8 và kiểm tra bản sửa cho ADMIN/học viên: đổi ngày tự tải đúng giờ trống, bỏ giờ đã chọn cũ và hiển thị giờ vừa đặt là không khả dụng khi quay lại. Build/lint đạt 0 lỗi, 11 cảnh báo hiện hữu; giữ chữ ký cài đè. Không thay backend/database trong lượt này. [Báo cáo 0.1.9](docs/UI_UPDATE_0.1.9.md).
+Đã tái hiện lỗi ở 0.1.8 và kiểm tra bản sửa cho ADMIN/học viên: đổi ngày tự tải đúng giờ trống, bỏ giờ đã chọn cũ và hiển thị giờ vừa đặt là không khả dụng khi quay lại. Build/lint đạt 0 lỗi, 11 cảnh báo hiện hữu; giữ chữ ký cài đè. [CI 0.1.9](https://github.com/emHung/MuayThai_Fitness-Center/actions/runs/44409598080) đạt Android và backend. Không thay backend/database trong lượt này. [Báo cáo 0.1.9](docs/UI_UPDATE_0.1.9.md).
 
 ## Các điểm đã kiểm tra bổ sung
 

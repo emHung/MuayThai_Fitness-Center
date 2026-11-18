@@ -15,5 +15,6 @@ Thay đổi nằm ở thành phần dùng chung `PtSlotGrid` và hai màn gọi 
 - APK 0.1.9: ADMIN đổi qua lại hai ngày có trạng thái 12:00 khác nhau, danh sách tự đổi đúng; giờ 14:00 đã chọn bị xóa khi đổi ngày. Không xác nhận được khi chưa chọn lại giờ; hộp chọn giờ vẫn mở được từ ô trống.
 - Học viên chọn ngày khác, đặt PT lúc 12:00, quay lại và đổi ngày mà không bấm cập nhật: giờ vừa đặt hiển thị không khả dụng.
 - Android build/lint đạt: 0 lỗi, 11 cảnh báo hiện hữu. Hai APK 0.1.9/code 10 giữ chữ ký debug hiện hành để cài đè. Kiểm thử UI chạy trên emulator và database QA riêng.
+- [CI mã nguồn 0.1.9](https://github.com/emHung/MuayThai_Fitness-Center/actions/runs/44409598080) đạt cả Android và backend.
 
 Điện thoại cài `app-debug-tailscale.apk` từ Releases; backend hiện tại tiếp tục sử dụng bình thường.
