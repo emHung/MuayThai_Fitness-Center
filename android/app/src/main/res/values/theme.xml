@@ -21,4 +21,19 @@
     </style>
 
     <style name="Theme.MuayThai" parent="Theme.MuayThai.Base" />
+    <style name="Theme.MuayThai.Trainer" parent="Theme.MuayThai">
+        <item name="colorPrimary">@color/trainer</item>
+    </style>
+    <style name="Theme.MuayThai.Learner" parent="Theme.MuayThai">
+        <item name="colorPrimary">@color/learner</item>
+    </style>
+    <style name="Widget.MuayThai.Input" parent="Widget.Material3.TextInputLayout.OutlinedBox">
+        <item name="boxCornerRadiusTopStart">@dimen/field_radius</item>
+        <item name="boxCornerRadiusTopEnd">@dimen/field_radius</item>
+        <item name="boxCornerRadiusBottomStart">@dimen/field_radius</item>
+        <item name="boxCornerRadiusBottomEnd">@dimen/field_radius</item>
+        <item name="boxBackgroundColor">@color/surface</item>
+        <item name="startIconTint">@color/text_secondary</item>
+        <item name="endIconTint">@color/text_secondary</item>
+    </style>
 </resources>

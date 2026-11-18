@@ -1,4 +1,7 @@
 <resources>
+    <string name="app_version_label">Phiên bản %1$s</string>
+    <string name="account_fields_title">Thông tin tài khoản</string>
+    <string name="password_fields_title">Thiết lập mật khẩu mới</string>
     <string name="network_offline">Chưa có kết nối Internet. Kiểm tra Wi-Fi hoặc dữ liệu di động.</string>
     <string name="network_restored">Đã kết nối Internet trở lại.</string>
     <string name="network_settings">Cài đặt mạng</string>

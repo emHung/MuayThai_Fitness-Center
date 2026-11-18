@@ -31,7 +31,7 @@ final class OperationsPane {
     }
     work.request(work.api.service.get("api/notifications"), response -> {
       var rows = Jsons.rows(response);
-      if (rows.isEmpty()) work.ui.label(body, "Chưa có thông báo.", 14, false);
+      if (rows.isEmpty()) work.ui.cards.empty(body, "Chưa có thông báo", "Các yêu cầu và cập nhật mới sẽ xuất hiện tại đây.", R.drawable.ic_inbox);
       rows.forEach(item -> {
         var notice = Jsons.object(item.get("notice"));
         String title = Jsons.text(notice, "title");
@@ -65,16 +65,16 @@ final class OperationsPane {
   }
 
   void care(LinearLayout body) {
-    work.ui.row(body, "Gói sắp hết", "Số lượt hoặc thời hạn", () -> work.open("Gói sắp hết",
+    work.ui.cards.menu(body, "Gói sắp hết", "Số lượt hoặc thời hạn", R.drawable.ic_qr, () -> work.open("Gói sắp hết",
         panel -> listCare(panel, "renewals")));
-    work.ui.row(body, "Lâu chưa tập", "Từ 14 ngày", () -> work.open("Học viên lâu chưa tập",
+    work.ui.cards.menu(body, "Lâu chưa tập", "Từ 14 ngày", R.drawable.ic_trend, () -> work.open("Học viên lâu chưa tập",
         panel -> listCare(panel, "inactive")));
   }
 
   private void listCare(LinearLayout body, String kind) {
     work.request(work.api.service.get("api/care/" + kind), response -> {
       var rows = Jsons.rows(response);
-      if (rows.isEmpty()) work.ui.label(body, "Không có học viên phù hợp.", 14, false);
+      if (rows.isEmpty()) work.ui.cards.empty(body, "Không có học viên phù hợp", "Danh sách được cập nhật theo dữ liệu gói và lịch tập.", R.drawable.ic_group);
       rows.forEach(row -> work.ui.row(body, Jsons.text(row, "learnerName"),
           Jsons.text(row, "memberCode") + " · " + Jsons.text(row, "detail"),
           () -> work.open(Jsons.text(row, "learnerName"),

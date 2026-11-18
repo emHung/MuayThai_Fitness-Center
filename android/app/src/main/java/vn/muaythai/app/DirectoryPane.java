@@ -78,7 +78,7 @@ final class DirectoryPane {
     pick(trainers, term, rows -> {
       body.removeAllViews();
       if (rows.isEmpty()) {
-        work.ui.label(body, "Không tìm thấy hồ sơ.", 14, false);
+        work.ui.cards.empty(body, "Không tìm thấy hồ sơ", "Thử tên hoặc mã khác để tìm kiếm.", R.drawable.ic_group);
       }
       rows.forEach(profile -> work.ui.row(body, Jsons.text(profile, "displayName"),
           info(profile), () -> detail(trainers, profile)));
@@ -176,20 +176,45 @@ final class DirectoryPane {
   void account() {
     work.open("Tài khoản của tôi", body -> work.request(work.api.service.get("api/users/me/profile"), value -> {
       JsonObject profile = Jsons.object(value);
-      work.images.show(body, "api/users/me/image", true, true);
-      work.ui.row(body, Jsons.text(profile, "displayName"), info(profile), null);
-      EditText name = work.ui.field(body, "Họ và tên", Jsons.text(profile, "displayName"));
-      EditText phone = work.ui.field(body, "Điện thoại", Jsons.text(profile, "phone"), InputType.TYPE_CLASS_PHONE);
+      var identity = work.ui.card(body);
+      ((com.google.android.material.card.MaterialCardView) identity.getParent()).setCardBackgroundColor(work.ui.cards.accent());
+      identity.setOrientation(LinearLayout.HORIZONTAL);
+      identity.setGravity(android.view.Gravity.CENTER_VERTICAL);
+      var avatar = new LinearLayout(work);
+      avatar.setOrientation(LinearLayout.VERTICAL);
+      identity.addView(avatar, new LinearLayout.LayoutParams(work.ui.dp(96), -2));
+      work.images.show(avatar, "api/users/me/image", true, false);
+      var details = new LinearLayout(work);
+      details.setOrientation(LinearLayout.VERTICAL);
+      var detailSize = new LinearLayout.LayoutParams(0, -2, 1);
+      detailSize.leftMargin = work.ui.dp(14);
+      identity.addView(details, detailSize);
+      work.ui.label(details, Jsons.text(profile, "displayName"), 22, true)
+          .setTextColor(androidx.core.content.ContextCompat.getColor(work, R.color.surface));
+      work.ui.label(details, info(profile), 13, false)
+          .setTextColor(androidx.core.content.ContextCompat.getColor(work, R.color.surface));
+      work.images.editActions(details, "api/users/me/image", true);
+      var information = work.ui.cards.section(body, "Thông tin cá nhân", R.drawable.ic_user);
+      EditText name = work.ui.field(information, "Họ và tên", Jsons.text(profile, "displayName"));
+      EditText phone = work.ui.field(information, "Điện thoại", Jsons.text(profile, "phone"), InputType.TYPE_CLASS_PHONE);
       EditText specialty = work.role().equals("TRAINER")
-          ? work.ui.field(body, "Chuyên môn", Jsons.text(profile, "specialty")) : null;
-      work.ui.action(body, "Lưu thông tin", () -> work.request(work.api.service.put("api/users/me",
+          ? work.ui.field(information, "Chuyên môn", Jsons.text(profile, "specialty")) : null;
+      work.ui.action(information, "Lưu thông tin", () -> work.request(work.api.service.put("api/users/me",
           Jsons.body("displayName", WorkspaceUi.read(name), "phone", WorkspaceUi.read(phone),
               "specialty", specialty == null ? null : WorkspaceUi.read(specialty))),
           done -> { work.message("Đã lưu thông tin."); work.refresh(); }));
-      var actions = work.ui.actions(body);
-      work.ui.iconAction(actions, "Đổi mật khẩu", R.drawable.ic_key, () -> work.open("Đổi mật khẩu", this::password));
-      work.ui.iconAction(actions, "Kiểm tra cập nhật", R.drawable.ic_refresh, () -> AppUpdatePrompt.checkNow(work));
-      work.ui.iconAction(actions, "Đăng xuất", R.drawable.ic_logout, work::logout);
+      var actions = work.ui.cards.grid(body, 3);
+      work.ui.cards.tile(actions, "Đổi mật khẩu", "Bảo mật tài khoản", R.drawable.ic_key, () -> work.open("Đổi mật khẩu", this::password));
+      work.ui.cards.tile(actions, "Cập nhật ứng dụng", "Kiểm tra phiên bản mới", R.drawable.ic_refresh, () -> AppUpdatePrompt.checkNow(work));
+      work.ui.cards.tile(actions, "Đăng xuất", "Thoát khỏi tài khoản", R.drawable.ic_logout, work::logout);
+      work.ui.cards.menu(body, "Thông báo", "Xem cập nhật và yêu cầu", R.drawable.ic_inbox,
+          () -> work.open("Thông báo", work.operations::notices));
+      work.ui.cards.menu(body, "Thông tin ứng dụng", "Phiên bản và cập nhật", R.drawable.ic_book,
+          () -> work.open("Thông tin ứng dụng", panel -> {
+            var appInformation = work.ui.cards.section(panel, "MuayThai & Fitness Center", R.drawable.ic_grid);
+            work.ui.label(appInformation, work.getString(R.string.app_version_label, BuildConfig.VERSION_NAME), 17, true);
+            work.ui.action(appInformation, "Kiểm tra cập nhật", () -> AppUpdatePrompt.checkNow(work));
+          }));
     }));
   }
 

@@ -26,10 +26,9 @@ final class AttendancePane {
   }
 
   void scanner(LinearLayout body) {
-    var scannerCard = work.ui.card(body);
-    work.ui.label(scannerCard, "Quét QR của gói tập", 20, true);
-    work.ui.label(scannerCard, "Đưa mã QR vào khung. Kiểm tra gói và buổi trước khi xác nhận.", 14, false);
-    work.ui.iconAction(work.ui.actions(scannerCard), "Mở camera", R.drawable.ic_camera, () -> {
+    var scannerCard = work.ui.cards.hero(body, "Quét QR của gói tập",
+        "Đưa mã QR vào khung, kiểm tra gói và buổi tập trước khi xác nhận.", R.drawable.ic_qr);
+    var camera = work.ui.action(scannerCard, "Mở camera", () -> {
       ScanOptions options = new ScanOptions()
           .setDesiredBarcodeFormats(ScanOptions.QR_CODE)
           .setPrompt("Đưa mã QR vào khung")
@@ -37,9 +36,26 @@ final class AttendancePane {
           .setBeepEnabled(false);
       scanner.launch(options);
     });
-    work.ui.iconAction(work.ui.actions(body), "Nhập mã thủ công", R.drawable.ic_qr, () -> work.open("Nhập mã", this::lookup));
-    work.ui.row(body, "Lịch sử điểm danh", "Lượt điểm danh và điều chỉnh",
+    camera.setIconResource(R.drawable.ic_camera);
+    camera.setBackgroundTintList(android.content.res.ColorStateList.valueOf(
+        androidx.core.content.ContextCompat.getColor(work, R.color.surface)));
+    camera.setTextColor(work.ui.cards.accent());
+    camera.setIconTint(android.content.res.ColorStateList.valueOf(work.ui.cards.accent()));
+    var shortcuts = work.ui.cards.grid(body);
+    work.ui.cards.tile(shortcuts, "Nhập mã QR", "Nhập mã thủ công", R.drawable.ic_qr,
+        () -> work.open("Nhập mã", this::lookup));
+    work.ui.cards.tile(shortcuts, "Tra học viên", "Tìm kiếm hồ sơ", R.drawable.ic_group,
+        () -> work.open("Học viên", panel -> work.directory.list(panel, false)));
+    work.ui.cards.menu(body, "Lịch sử điểm danh", "Xem và tra cứu lượt đã ghi", R.drawable.ic_calendar,
         () -> work.open("Lịch sử điểm danh", panel -> history(panel, null, null)));
+    var recent = work.ui.cards.section(body, "Điểm danh gần đây", R.drawable.ic_inbox);
+    work.request(work.api.service.get("api/checkins"), response -> {
+      var rows = Jsons.rows(response);
+      if (rows.isEmpty()) work.ui.cards.empty(recent, "Chưa có lượt điểm danh", "Các lượt đã ghi sẽ xuất hiện tại đây.", R.drawable.ic_scan);
+      rows.stream().limit(3).forEach(entry -> work.ui.row(recent, Jsons.text(entry, "learnerName"),
+          Jsons.text(entry, "sessionTitle") + " · " + SchedulePane.displayTime(Jsons.text(entry, "checkedInAt")),
+          () -> detail(Jsons.id(entry))));
+    }, message -> work.ui.label(recent, message, 13, false));
   }
 
   private void lookup(LinearLayout body) {

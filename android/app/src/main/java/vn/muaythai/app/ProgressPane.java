@@ -24,7 +24,7 @@ final class ProgressPane {
     work.request(work.api.service.get("api/goals" + filter), response -> {
       var rows = Jsons.rows(response);
       if (rows.isEmpty()) {
-        work.ui.label(goals, "Chưa có mục tiêu.", 13, false);
+        work.ui.cards.empty(goals, "Chưa có mục tiêu", "Mục tiêu được huấn luyện viên cập nhật theo tháng.", R.drawable.ic_trend);
       }
       rows.forEach(goal -> work.ui.row(goals, Jsons.text(goal, "title"),
           Jsons.text(goal, "month") + " · " + Jsons.text(goal, "progress") + "% · "
@@ -38,7 +38,7 @@ final class ProgressPane {
     work.request(work.api.service.get("api/notes" + filter), response -> {
       var rows = Jsons.rows(response);
       if (rows.isEmpty()) {
-        work.ui.label(notes, "Chưa có đánh giá.", 13, false);
+        work.ui.cards.empty(notes, "Chưa có đánh giá", "Nhận xét của huấn luyện viên sẽ xuất hiện sau buổi tập.", R.drawable.ic_book);
       }
       rows.forEach(note -> {
         String rating = Jsons.text(note, "rating");
@@ -54,11 +54,7 @@ final class ProgressPane {
   }
 
   private LinearLayout panel(LinearLayout parent, String title) {
-    LinearLayout body = new LinearLayout(work);
-    body.setOrientation(LinearLayout.VERTICAL);
-    work.ui.label(body, title, 16, true);
-    work.ui.add(parent, body, 7);
-    return body;
+    return work.ui.cards.section(parent, title, R.drawable.ic_trend);
   }
 
   void note(LinearLayout body, JsonObject session) {

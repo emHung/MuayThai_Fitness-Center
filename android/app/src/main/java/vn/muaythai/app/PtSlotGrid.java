@@ -35,7 +35,7 @@ final class PtSlotGrid {
 
   private void show(List<JsonObject> slots, Consumer<String> select) {
     if (slots.isEmpty()) {
-      work.ui.label(panel, "HLV chưa có ca làm phù hợp trong ngày này.", 14, false);
+      work.ui.cards.empty(panel, "Chưa có khung giờ phù hợp", "Thử chọn ngày khác để xem ca làm của huấn luyện viên.", R.drawable.ic_calendar);
       return;
     }
     work.ui.label(panel, "Xanh · Còn trống     Xám · Không khả dụng", 13, false);
@@ -55,7 +55,7 @@ final class PtSlotGrid {
         cell.setTextColor(work.getColor(open ? R.color.slot_open_text : R.color.slot_closed_text));
         cell.setContentDescription(time + (open ? ", còn trống" : ", không khả dụng"));
         GradientDrawable surface = new GradientDrawable();
-        surface.setCornerRadius(work.ui.dp(10));
+        surface.setCornerRadius(work.getResources().getDimension(R.dimen.field_radius));
         surface.setColor(work.getColor(open ? R.color.slot_open_surface : R.color.slot_closed_surface));
         cell.setBackground(surface);
         if (open) {

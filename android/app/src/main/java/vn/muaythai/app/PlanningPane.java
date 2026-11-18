@@ -22,7 +22,7 @@ final class PlanningPane {
     work.request(work.api.service.get("api/shifts/" + trainer), response -> {
       var rows = new ArrayList<>(Jsons.rows(response));
       if (rows.isEmpty()) {
-        work.ui.label(body, "Chưa thiết lập ca làm.", 14, false);
+        work.ui.cards.empty(body, "Chưa thiết lập ca làm", "Lịch làm việc được quản lý theo từng huấn luyện viên.", R.drawable.ic_calendar);
       }
       for (JsonObject shift : rows) {
         int day = (int) Jsons.number(shift, "weekday");
@@ -83,7 +83,7 @@ final class PlanningPane {
     }));
     work.request(work.api.service.get(path), response -> {
       var rows = Jsons.rows(response);
-      if (rows.isEmpty()) work.ui.label(body, "Không có khung bị đóng.", 14, false);
+      if (rows.isEmpty()) work.ui.cards.empty(body, "Không có khung bị đóng", "Các khoảng thời gian đã đóng sẽ hiển thị tại đây.", R.drawable.ic_calendar);
       rows.forEach(block -> work.ui.row(body, Jsons.text(block, "reason"),
           SchedulePane.displayTime(Jsons.text(block, "startAt")) + " – "
               + SchedulePane.displayTime(Jsons.text(block, "endAt")),
@@ -95,7 +95,7 @@ final class PlanningPane {
   void changes(LinearLayout body) {
     work.request(work.api.service.get("api/pt/changes"), response -> {
       var rows = Jsons.rows(response);
-      if (rows.isEmpty()) work.ui.label(body, "Chưa có yêu cầu đổi lịch.", 14, false);
+      if (rows.isEmpty()) work.ui.cards.empty(body, "Chưa có yêu cầu đổi lịch", "Các đề xuất đổi lịch sẽ hiển thị tại đây.", R.drawable.ic_refresh);
       rows.forEach(change -> work.ui.row(body, "Lịch mới " + SchedulePane.displayTime(Jsons.text(change, "proposedStart")),
           changeStatus(change), () -> work.open("Yêu cầu đổi lịch", panel -> renderChange(panel, change))));
     });

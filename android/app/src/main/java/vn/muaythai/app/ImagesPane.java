@@ -59,7 +59,10 @@ final class ImagesPane {
         .error(avatar ? R.drawable.ic_user : R.drawable.ic_book);
     if (avatar) request.circleCrop().into(view);
     else request.centerCrop().into(view);
-    if (editable) {
+    if (editable) editActions(parent, path, avatar);
+  }
+
+  void editActions(LinearLayout parent, String path, boolean avatar) {
       var actions = work.ui.actions(parent);
       actions.setGravity(android.view.Gravity.CENTER_HORIZONTAL);
       work.ui.iconAction(actions, work.getString(R.string.choose_image), R.drawable.ic_image_edit, () -> {
@@ -72,7 +75,6 @@ final class ImagesPane {
           work.getString(R.string.delete_image), work.getString(R.string.delete_image_prompt),
           work.getString(R.string.delete_image),
           () -> work.request(work.api.service.delete(path), done -> work.refresh())));
-    }
   }
 
   private GlideUrl remote(String path) {
@@ -84,7 +86,9 @@ final class ImagesPane {
     var view = new ImageView(work);
     view.setContentDescription(work.getString(avatar ? R.string.profile_image : R.string.course_image));
     view.setScaleType(ImageView.ScaleType.CENTER_CROP);
-    var size = new LinearLayout.LayoutParams(avatar ? work.ui.dp(112) : -1, work.ui.dp(avatar ? 112 : 176));
+    if (avatar) view.setBackground(work.ui.cards.background(
+        androidx.core.content.ContextCompat.getColor(work, R.color.surface), 20));
+    var size = new LinearLayout.LayoutParams(avatar ? work.ui.dp(80) : -1, work.ui.dp(avatar ? 80 : 176));
     size.gravity = android.view.Gravity.CENTER_HORIZONTAL;
     size.bottomMargin = work.ui.dp(8);
     parent.addView(view, size);

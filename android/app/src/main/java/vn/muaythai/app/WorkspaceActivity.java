@@ -52,6 +52,11 @@ public final class WorkspaceActivity extends AppCompatActivity {
 
   @Override
   protected void onCreate(Bundle state) {
+    if (session != null) setTheme(switch (session.user.role) {
+      case "TRAINER" -> R.style.Theme_MuayThai_Trainer;
+      case "LEARNER" -> R.style.Theme_MuayThai_Learner;
+      default -> R.style.Theme_MuayThai;
+    });
     super.onCreate(state);
     if (session == null) {
       login();
@@ -127,6 +132,8 @@ public final class WorkspaceActivity extends AppCompatActivity {
         new int[] {accent, ContextCompat.getColor(this, R.color.text_secondary)});
     layout.workspaceNav.setItemIconTintList(colors);
     layout.workspaceNav.setItemTextColor(colors);
+    layout.workspaceNav.setItemActiveIndicatorColor(ColorStateList.valueOf(
+        androidx.core.graphics.ColorUtils.setAlphaComponent(accent, 24)));
     for (int index = 0; index < tabs.size(); index++) {
       Tab tab = tabs.get(index);
       layout.workspaceNav.getMenu().add(0, index + 1, index, tab.label()).setIcon(tab.icon());
@@ -144,13 +151,14 @@ public final class WorkspaceActivity extends AppCompatActivity {
   }
 
   private void manage(LinearLayout body) {
-    ui.row(body, "Lễ tân", "Tài khoản tại quầy", () -> open("Lễ tân", directory::receptionists));
-    ui.row(body, "Huấn luyện viên", "Tài khoản, chuyên môn và trạng thái",
+    var grid = ui.cards.grid(body);
+    ui.cards.tile(grid, "Lễ tân", "Tài khoản tại quầy", R.drawable.ic_user, () -> open("Lễ tân", directory::receptionists));
+    ui.cards.tile(grid, "Huấn luyện viên", "Tài khoản và chuyên môn", R.drawable.ic_book,
         () -> open("Huấn luyện viên", content -> directory.list(content, true)));
-    ui.row(body, "Lớp nhóm", "Lớp 30, lớp 10 và lịch lặp", () -> open("Lớp nhóm", schedule::classes));
-    ui.row(body, "Chăm sóc học viên", "Gói sắp hết và học viên lâu chưa tập",
+    ui.cards.tile(grid, "Lớp nhóm", "Lớp 30, lớp 10 và lịch lặp", R.drawable.ic_group, () -> open("Lớp nhóm", schedule::classes));
+    ui.cards.tile(grid, "Chăm sóc học viên", "Gói sắp hết và học viên lâu chưa tập", R.drawable.ic_trend,
         () -> open("Chăm sóc học viên", operations::care));
-    ui.row(body, "Lịch sử điểm danh", "Lượt đã ghi và điều chỉnh",
+    ui.cards.menu(body, "Lịch sử điểm danh", "Lượt đã ghi và điều chỉnh", R.drawable.ic_calendar,
         () -> open("Lịch sử điểm danh", content -> attendance.history(content, null, null)));
   }
 
@@ -194,6 +202,19 @@ public final class WorkspaceActivity extends AppCompatActivity {
     layout.workspaceNav.setVisibility(history.isEmpty() ? View.VISIBLE : View.GONE);
     layout.loading.setVisibility(View.GONE);
     layout.screenError.setVisibility(View.GONE);
+    var presentation = ScreenHeader.of(screen.title());
+    layout.workspaceSubtitle.setText(presentation.subtitle());
+    layout.screenIcon.setVisibility(history.isEmpty() ? View.VISIBLE : View.GONE);
+    layout.screenIcon.setImageResource(presentation.icon());
+    layout.screenIcon.setImageTintList(ColorStateList.valueOf(ui.cards.accent()));
+    layout.screenIcon.setBackground(ui.cards.background(
+        androidx.core.graphics.ColorUtils.setAlphaComponent(ui.cards.accent(), 20), 14));
+    for (var button : List.of(layout.back, layout.notices, layout.accounts)) {
+      button.setBackground(ui.cards.background(ContextCompat.getColor(this, R.color.surface), 14));
+    }
+    if (history.isEmpty() && !screen.title().equals("Quét QR check-in") && !presentation.heroTitle().isEmpty()) {
+      ui.cards.hero(layout.workspaceBody, presentation.heroTitle(), presentation.description(), presentation.icon());
+    }
     screen.content().accept(layout.workspaceBody);
   }
 

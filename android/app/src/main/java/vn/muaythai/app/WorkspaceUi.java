@@ -22,33 +22,40 @@ import java.util.Locale;
 final class WorkspaceUi {
   static final ZoneId ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
   private final Context context;
+  final ScreenCards cards;
 
   WorkspaceUi(Context context) {
     this.context = context;
+    cards = new ScreenCards(this, context);
   }
 
   TextView label(LinearLayout parent, String text, int size, boolean strong) {
     TextView view = new TextView(context);
     view.setText(text);
     view.setTextSize(size);
+    view.setLineSpacing(dp(2), 1);
     view.setTextColor(ContextCompat.getColor(context, strong ? R.color.text_primary : R.color.text_secondary));
     if (strong) {
       view.setTypeface(view.getTypeface(), android.graphics.Typeface.BOLD);
+      if (size >= 17) androidx.core.view.ViewCompat.setAccessibilityHeading(view, true);
     }
     add(parent, view, 4);
     return view;
   }
 
-  void action(LinearLayout parent, String title, Runnable run) {
+  MaterialButton action(LinearLayout parent, String title, Runnable run) {
     MaterialButton button = new MaterialButton(context);
     button.setText(title);
     button.setAllCaps(false);
     button.setMinHeight(dp(46));
     button.setCornerRadius(dp(12));
+    button.setBackgroundTintList(ColorStateList.valueOf(cards.accent()));
+    button.setTextColor(ContextCompat.getColor(context, R.color.surface));
     button.setOnClickListener(view -> run.run());
-    LinearLayout.LayoutParams size = new LinearLayout.LayoutParams(-2, dp(48));
+    LinearLayout.LayoutParams size = new LinearLayout.LayoutParams(-1, -2);
     size.topMargin = dp(6);
     parent.addView(button, size);
+    return button;
   }
 
   LinearLayout actions(LinearLayout parent) {
@@ -65,9 +72,9 @@ final class WorkspaceUi {
     button.setContentDescription(title);
     androidx.appcompat.widget.TooltipCompat.setTooltipText(button, title);
     button.setPadding(dp(12), dp(12), dp(12), dp(12));
-    android.util.TypedValue ripple = new android.util.TypedValue();
-    context.getTheme().resolveAttribute(android.R.attr.selectableItemBackgroundBorderless, ripple, true);
-    button.setBackgroundResource(ripple.resourceId);
+    var shape = cards.background(ContextCompat.getColor(context, R.color.surface), 14);
+    button.setBackground(new android.graphics.drawable.RippleDrawable(
+        ColorStateList.valueOf(androidx.core.graphics.ColorUtils.setAlphaComponent(cards.accent(), 30)), shape, shape));
     button.setOnClickListener(view -> run.run());
     parent.addView(button, new LinearLayout.LayoutParams(dp(48), dp(48)));
   }
@@ -101,16 +108,17 @@ final class WorkspaceUi {
 
   LinearLayout card(LinearLayout parent) {
     MaterialCardView card = new MaterialCardView(context);
-    card.setRadius(dp(16));
+    card.setRadius(context.getResources().getDimension(R.dimen.card_radius));
     card.setCardElevation(0);
     card.setCardBackgroundColor(ContextCompat.getColor(context, R.color.surface));
     card.setStrokeColor(ColorStateList.valueOf(ContextCompat.getColor(context, R.color.border)));
     card.setStrokeWidth(dp(1));
     LinearLayout column = new LinearLayout(context);
     column.setOrientation(LinearLayout.VERTICAL);
-    column.setPadding(dp(14), dp(9), dp(14), dp(11));
+    int padding = context.getResources().getDimensionPixelSize(R.dimen.card_padding);
+    column.setPadding(padding, padding, padding, padding);
     card.addView(column);
-    add(parent, card, 8);
+    add(parent, card, 12);
     return column;
   }
 
@@ -118,6 +126,9 @@ final class WorkspaceUi {
     TextInputLayout layout = new TextInputLayout(context);
     layout.setHint(title);
     layout.setBoxBackgroundMode(TextInputLayout.BOX_BACKGROUND_OUTLINE);
+    float radius = context.getResources().getDimension(R.dimen.field_radius);
+    layout.setBoxCornerRadii(radius, radius, radius, radius);
+    layout.setBoxBackgroundColor(ContextCompat.getColor(context, R.color.surface));
     TextInputEditText edit = new TextInputEditText(layout.getContext());
     edit.setInputType(type);
     edit.setText(content);

@@ -68,6 +68,7 @@ public final class LoginActivity extends AppCompatActivity {
     ui.progress.setVisibility(visibility(state.busy));
     ui.feedback.setVisibility(visibility(!state.message.isEmpty()));
     ui.feedback.setText(state.message);
+    ui.formTitle.setText(page == Page.CHANGE_PASSWORD ? R.string.password_fields_title : R.string.account_fields_title);
     switch (page) {
       case LOGIN:
         ui.title.setText(R.string.app_name);

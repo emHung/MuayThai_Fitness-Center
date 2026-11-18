@@ -27,22 +27,63 @@ final class SchedulePane {
 
   void calendar(LinearLayout body) {
     LocalDate today = LocalDate.now(WorkspaceUi.ZONE);
-    EditText date = work.ui.date(body, "Ngày xem lịch", today.toString());
-    work.ui.row(body, "Yêu cầu đổi lịch", "", () -> work.open("Đổi lịch PT", work.planning::changes));
+    CalendarFeed list = new CalendarFeed();
+    int[] mode = {1};
+    var controls = new LinearLayout(work);
+    controls.setOrientation(LinearLayout.VERTICAL);
+    work.ui.add(body, controls, 8);
+    EditText date = work.ui.date(controls, "Ngày xem lịch", today.toString());
+    var week = new WeekSelector(work, selected -> date.setText(selected.toString()));
+    work.ui.add(controls, week.view(), 10);
+    var searchRow = new LinearLayout(work);
+    searchRow.setGravity(android.view.Gravity.CENTER_VERTICAL);
+    var queryColumn = new LinearLayout(work);
+    queryColumn.setOrientation(LinearLayout.VERTICAL);
+    searchRow.addView(queryColumn, new LinearLayout.LayoutParams(0, -2, 1));
+    EditText query = work.ui.field(queryColumn, "Tên buổi cần tìm", "");
+    Runnable load = () -> {
+      try {
+        LocalDate selected = LocalDate.parse(WorkspaceUi.read(date));
+        date.setError(null);
+        list.show(selected, mode[0], WorkspaceUi.read(query));
+      } catch (java.time.format.DateTimeParseException invalid) {
+        date.setError("Chọn ngày hợp lệ.");
+      }
+    };
+    var actions = new LinearLayout(work);
+    searchRow.addView(actions, new LinearLayout.LayoutParams(-2, -2));
+    work.ui.add(controls, searchRow, 6);
+    work.ui.iconAction(actions, "Tìm buổi tập", R.drawable.ic_search, load);
+    work.ui.iconAction(actions, "Xem theo ngày", R.drawable.ic_calendar, () -> { mode[0] = 1; load.run(); });
+    work.ui.iconAction(actions, "Xem theo tuần", R.drawable.ic_grid, () -> { mode[0] = 7; load.run(); });
+    date.addTextChangedListener(new android.text.TextWatcher() {
+      @Override public void beforeTextChanged(CharSequence value, int start, int count, int after) {}
+      @Override public void onTextChanged(CharSequence value, int start, int before, int count) {}
+      @Override public void afterTextChanged(android.text.Editable value) {
+        try {
+          week.show(LocalDate.parse(value.toString()));
+          load.run();
+        } catch (java.time.format.DateTimeParseException invalid) {
+          date.setError("Chọn ngày hợp lệ.");
+        }
+      }
+    });
+    week.show(today);
+    var tools = work.ui.actions(body);
+    work.ui.cards.pill(tools, "Đổi lịch", R.drawable.ic_refresh,
+        () -> work.open("Đổi lịch PT", work.planning::changes));
     if (work.role().equals("ADMIN")) {
-      work.ui.iconAction(work.ui.actions(body), "Quản lý lớp nhóm", R.drawable.ic_book, () -> work.open("Lớp nhóm", this::classes));
+      work.ui.cards.pill(tools, "Lớp nhóm", R.drawable.ic_group,
+          () -> work.open("Lớp nhóm", this::classes));
     } else if (work.role().equals("TRAINER")) {
       work.operations.reviewReminder(body);
-      work.ui.row(body, "Ca làm của tôi", "", () -> work.open("Ca làm việc", panel -> work.planning.shifts(panel, work.userId())));
-      work.ui.iconAction(work.ui.actions(body), "Đề xuất lớp 10", R.drawable.ic_add, () -> work.open("Đề xuất lớp 10", panel -> classes.form(panel, "GROUP10", null)));
+      work.ui.cards.pill(tools, "Ca làm", R.drawable.ic_calendar,
+          () -> work.open("Ca làm việc", panel -> work.planning.shifts(panel, work.userId())));
+      work.ui.cards.pill(tools, "Lớp 10", R.drawable.ic_add,
+          () -> work.open("Đề xuất lớp 10", panel -> classes.form(panel, "GROUP10", null)));
     }
-    EditText query = work.ui.field(body, "Tên buổi cần tìm", "");
-    CalendarFeed list = new CalendarFeed();
-    var actions = work.ui.actions(body);
-    work.ui.iconAction(actions, "Xem theo ngày", R.drawable.ic_calendar, () -> list.show(LocalDate.parse(WorkspaceUi.read(date)), 1, WorkspaceUi.read(query)));
-    work.ui.iconAction(actions, "Xem theo tuần", R.drawable.ic_grid, () -> list.show(LocalDate.parse(WorkspaceUi.read(date)), 7, WorkspaceUi.read(query)));
-    work.ui.add(body, list, 6);
-    list.show(today, 1, "");
+    work.ui.add(body, list, 12);
+    load.run();
   }
 
   private final class CalendarFeed extends LinearLayout {
@@ -109,7 +150,8 @@ final class SchedulePane {
 
   private void showSessions(LinearLayout body, List<JsonObject> sessions) {
     if (sessions.isEmpty()) {
-      work.ui.label(body, "Chưa có buổi tập trong khoảng thời gian này.", 14, false);
+      work.ui.cards.empty(body, "Chưa có buổi tập trong khoảng thời gian này.",
+          "Thử chọn ngày khác hoặc điều chỉnh bộ lọc để xem lịch.", R.drawable.ic_calendar);
     }
     sessions.forEach(session -> work.ui.row(body, Jsons.text(session, "title"),
         times(session) + " · " + status(session), () -> detail(Jsons.id(session))));
@@ -208,9 +250,9 @@ final class SchedulePane {
   }
 
   void bookingHub(LinearLayout body) {
-    work.ui.row(body, "Đặt PT với HLV phụ trách", "Chọn gói, ngày và giờ",
+    work.ui.cards.menu(body, "Đặt PT với HLV phụ trách", "Chọn gói, ngày và giờ", R.drawable.ic_user,
         () -> work.packages.selectMine("PT", pack -> work.open("Đặt buổi PT", panel -> book(panel, pack))));
-    work.ui.row(body, "Lớp nhóm 10", "Xem buổi có thể đăng ký", () -> work.open("Lịch lớp 10", panel -> {
+    work.ui.cards.menu(body, "Lớp nhóm 10", "Xem buổi có thể đăng ký", R.drawable.ic_group, () -> work.open("Lịch lớp 10", panel -> {
       work.request(work.api.service.get("api/sessions"), result -> showSessions(panel,
           Jsons.rows(result).stream().filter(session -> Jsons.text(session, "type").equals("GROUP10"))
               .collect(Collectors.toList())));

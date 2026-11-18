@@ -101,6 +101,9 @@ final class ConnectivityNotice implements DefaultLifecycleObserver {
 
   private Snackbar bar(int message, int duration) {
     Snackbar result = Snackbar.make(root, message, duration).setTextMaxLines(3);
+    result.setTextColor(androidx.core.content.ContextCompat.getColor(activity, R.color.surface));
+    result.setActionTextColor(androidx.core.content.ContextCompat.getColor(activity, R.color.surface));
+    result.getView().setBackgroundResource(R.drawable.notice_surface);
     if (anchor != null) result.setAnchorView(anchor);
     return result;
   }

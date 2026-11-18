@@ -31,9 +31,9 @@ final class PackagesPane {
     work.request(work.api.service.get("api/packages/mine"), response -> {
       var rows = Jsons.rows(response);
       if (rows.isEmpty()) {
-        work.ui.label(body, "Bạn chưa được gán gói tập.", 14, false);
+        work.ui.cards.empty(body, "Bạn chưa có gói tập", "Liên hệ trung tâm để được tư vấn và gán gói phù hợp.", R.drawable.ic_qr);
       }
-      rows.forEach(pack -> work.ui.row(body, title(pack), summary(pack), () -> showQr(Jsons.id(pack))));
+      rows.forEach(pack -> work.ui.cards.menu(body, title(pack), summary(pack), R.drawable.ic_qr, () -> showQr(Jsons.id(pack))));
     });
   }
 

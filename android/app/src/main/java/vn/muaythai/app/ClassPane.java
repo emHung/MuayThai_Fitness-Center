@@ -17,9 +17,9 @@ final class ClassPane {
   }
 
   void show(LinearLayout body) {
-    var actions = work.ui.actions(body);
-    work.ui.iconAction(actions, "Tạo lớp 30", R.drawable.ic_add, () -> work.open("Tạo lớp 30", panel -> form(panel, "GROUP30", null)));
-    work.ui.iconAction(actions, "Tạo lớp 10", R.drawable.ic_group, () -> work.open("Tạo lớp 10", panel -> form(panel, "GROUP10", null)));
+    var actions = work.ui.cards.grid(body);
+    work.ui.cards.tile(actions, "Tạo lớp 30", "Thiết lập lịch lặp", R.drawable.ic_add, () -> work.open("Tạo lớp 30", panel -> form(panel, "GROUP30", null)));
+    work.ui.cards.tile(actions, "Tạo lớp 10", "Mở lớp theo buổi", R.drawable.ic_group, () -> work.open("Tạo lớp 10", panel -> form(panel, "GROUP10", null)));
     var query = work.ui.field(body, "Tên lớp cần tìm", "");
     LinearLayout results = new LinearLayout(work);
     results.setOrientation(LinearLayout.VERTICAL);
@@ -42,7 +42,7 @@ final class ClassPane {
     work.request(work.api.service.get(path(type) + filter), response -> {
       var rows = Jsons.rows(response);
       if (rows.isEmpty()) {
-        work.ui.label(list, "Chưa có lớp.", 13, false);
+        work.ui.cards.empty(list, "Chưa có lớp", "Các lớp phù hợp sẽ xuất hiện tại đây.", R.drawable.ic_group);
       }
       rows.forEach(item -> work.ui.row(list, Jsons.text(item, "title"), label(item),
           () -> work.open(Jsons.text(item, "title"), panel -> detail(panel, type, Jsons.id(item)))));

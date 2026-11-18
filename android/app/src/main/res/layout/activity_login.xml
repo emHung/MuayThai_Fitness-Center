@@ -9,19 +9,36 @@
             android:background="@drawable/brand_mark" android:gravity="center"
             android:text="@string/brand_mark" android:textColor="@color/surface"
             android:textSize="19sp" android:textStyle="bold" android:importantForAccessibility="no" />
-        <TextView android:id="@+id/title" android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:layout_marginTop="16dp" android:text="@string/app_name" android:textSize="27sp"
-            android:textColor="@color/text_primary" android:textStyle="bold" />
-        <TextView android:id="@+id/subtitle" android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:layout_marginTop="5dp" android:text="@string/login_hint" android:textSize="14sp"
-            android:textColor="@color/text_secondary" />
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="20dp" app:cardCornerRadius="28dp" app:cardElevation="0dp"
+            app:cardBackgroundColor="@color/admin">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="horizontal" android:gravity="center_vertical" android:padding="22dp">
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:orientation="vertical">
+                    <TextView android:id="@+id/title" android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:text="@string/app_name" android:textSize="25sp" android:textStyle="bold"
+                        android:textColor="@color/surface" />
+                    <TextView android:id="@+id/subtitle" android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp" android:text="@string/login_hint" android:textSize="14sp"
+                        android:lineSpacingExtra="2dp" android:textColor="@color/surface" />
+                </LinearLayout>
+                <ImageView android:layout_width="64dp" android:layout_height="64dp" android:layout_marginStart="10dp"
+                    android:src="@drawable/ic_trend" app:tint="@color/surface" android:alpha="0.6"
+                    android:importantForAccessibility="no" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/formCard" android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:layout_marginTop="20dp" app:cardCornerRadius="16dp" app:cardElevation="0dp">
+            android:layout_marginTop="20dp" app:cardCornerRadius="24dp" app:cardElevation="0dp">
             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:orientation="vertical" android:padding="16dp">
+                android:orientation="vertical" android:padding="20dp">
+                <TextView android:id="@+id/formTitle" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:text="@string/sign_in" android:textSize="20sp" android:textStyle="bold"
+                    android:textColor="@color/text_primary" android:layout_marginBottom="14dp" />
                 <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/emailField" style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    android:id="@+id/emailField" app:startIconDrawable="@drawable/ic_inbox" style="@style/Widget.MuayThai.Input"
                     android:layout_width="match_parent" android:layout_height="wrap_content"
                     android:hint="@string/email">
                     <com.google.android.material.textfield.TextInputEditText android:id="@+id/email"
@@ -30,7 +47,7 @@
                         android:maxLength="120" />
                 </com.google.android.material.textfield.TextInputLayout>
                 <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/passwordField" style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    android:id="@+id/passwordField" app:startIconDrawable="@drawable/ic_key" style="@style/Widget.MuayThai.Input"
                     android:layout_width="match_parent" android:layout_height="wrap_content"
                     android:layout_marginTop="10dp" android:hint="@string/password" app:endIconMode="password_toggle">
                     <com.google.android.material.textfield.TextInputEditText android:id="@+id/password"
@@ -39,7 +56,7 @@
                         android:saveEnabled="false" />
                 </com.google.android.material.textfield.TextInputLayout>
                 <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/newPasswordField" style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    android:id="@+id/newPasswordField" style="@style/Widget.MuayThai.Input"
                     android:layout_width="match_parent" android:layout_height="wrap_content"
                     android:layout_marginTop="10dp" android:hint="@string/new_password" android:visibility="gone">
                     <com.google.android.material.textfield.TextInputEditText android:id="@+id/newPassword"
@@ -48,7 +65,7 @@
                         android:saveEnabled="false" />
                 </com.google.android.material.textfield.TextInputLayout>
                 <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/repeatField" style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    android:id="@+id/repeatField" style="@style/Widget.MuayThai.Input"
                     android:layout_width="match_parent" android:layout_height="wrap_content"
                     android:layout_marginTop="10dp" android:hint="@string/repeat_password" android:visibility="gone">
                     <com.google.android.material.textfield.TextInputEditText android:id="@+id/repeatPassword"
