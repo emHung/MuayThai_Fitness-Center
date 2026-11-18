@@ -1,5 +1,7 @@
 # Giao diện theo vai trò
 
+Bộ ảnh lịch sử của bản 0.1.2. Từ bản 0.1.4, ảnh lớp/gói đã bỏ khỏi giao diện và các thao tác phụ dùng icon. Xem [giao diện hiện tại](UI_UPDATE_0.1.4.md).
+
 Bộ chụp ngày 18/11/2026 từ APK Java chạy trên Android Emulator, màn hình 720 × 1280, kết nối database QA riêng. Có 30 ảnh, được chia theo bốn vai trò. Đây là các màn hình chính và luồng cập nhật ảnh, chưa phải toàn bộ biểu mẫu và trạng thái lỗi của ứng dụng.
 
 Ảnh khóa học và avatar là dữ liệu minh họa tự tạo phục vụ kiểm thử. Tài khoản trong ảnh dùng địa chỉ `example.test`, không phải hồ sơ hội viên thật. Người quản trị có thể thay bằng ảnh của trung tâm trong ứng dụng.

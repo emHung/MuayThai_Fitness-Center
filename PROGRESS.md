@@ -29,3 +29,7 @@ Khi sửa hoặc xác nhận một chức năng, thêm mục theo ngày và gắ
 ## Tính năng ảnh — 18/11/2026
 
 Đã triển khai avatar bốn vai trò, ảnh bốn loại gói và ảnh từng lớp. Bộ API ảnh, hồi quy, production smoke và sao lưu/khôi phục ảnh đều đạt. Android 0.1.2 build đạt với lint 0 lỗi, 11 cảnh báo. Có [30 ảnh giao diện theo vai trò](docs/UI_GALLERY.md) và [báo cáo kiểm thử](docs/QA_IMAGES_2026-11-18.md). Giữ nguyên các mốc nghiệm thu điện thoại thật còn mở.
+
+## Giao diện và kết nối — 0.1.4
+
+Đã bỏ ảnh lớp/gói khỏi giao diện, giữ avatar, chuyển thao tác phụ sang icon Remix Icon và thu gọn nút chính. Thông báo mất Internet/nối lại hoạt động ở đăng nhập và workspace, không tự gửi lại yêu cầu ghi. Bộ thử emulator xác nhận giữ biểu mẫu, giữ phiên, trở về từ cài đặt và Recents; build/lint đạt với 0 lỗi, 11 cảnh báo hiện hữu. [Ảnh và báo cáo UI 0.1.4](docs/UI_UPDATE_0.1.4.md). Các mốc nghiệm thu điện thoại thật vẫn còn mở.

@@ -1,5 +1,7 @@
 # Ảnh hồ sơ, loại gói và lớp học
 
+Từ 0.1.4, giao diện chỉ giữ avatar. Ảnh lớp/gói đã bỏ theo yêu cầu cập nhật; API và dữ liệu cũ được giữ tương thích. Xem [thay đổi UI](UI_UPDATE_0.1.4.md).
+
 Đã được duyệt và triển khai trong bản 0.1.2. Xem [API](IMAGE_API.md), [giao diện](UI_GALLERY.md) và [kết quả kiểm thử](QA_IMAGES_2026-11-18.md). Các mục kiểm thử bên dưới là tiêu chí, trạng thái đạt hoặc còn mở nằm trong báo cáo.
 
 ## Phạm vi đã thống nhất

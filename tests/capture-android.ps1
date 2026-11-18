@@ -4,7 +4,7 @@ param(
   [Parameter(Mandatory)][string] $ApkPath,
   [string] $Adb = (Join-Path $env:LOCALAPPDATA 'Android\Sdk\platform-tools\adb.exe'),
   [string] $Device = 'emulator-5556',
-  [string] $OutputDirectory = 'docs/screenshots/2026-11-18'
+  [string] $OutputDirectory = 'android/app/build/role-screens'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -30,7 +30,7 @@ function Tap-Node($Node) {
 
 function Tap-Text([string] $Text) {
   $xml = Read-Ui
-  Tap-Node ($xml.SelectSingleNode("//node[@text='$Text']"))
+  Tap-Node ($xml.SelectSingleNode("//node[@text='$Text' or @content-desc='$Text']"))
 }
 
 function Enter-Field([string] $Id, [string] $Value) {
@@ -46,7 +46,7 @@ function Enter-Field([string] $Id, [string] $Value) {
 function Expect-Text([string] $Text) {
   for ($attempt=0; $attempt -lt 6; $attempt++) {
     $xml = Read-Ui
-    if ($xml.SelectSingleNode("//node[@text='$Text']")) { return }
+    if ($xml.SelectSingleNode("//node[@text='$Text' or @content-desc='$Text']")) { return }
     Start-Sleep -Seconds 1
   }
   throw "Expected Android text is missing: $Text"
@@ -107,28 +107,6 @@ foreach ($role in @('ADMIN','RECEPTION','TRAINER','LEARNER')) {
     Tap-Node $node
     Capture $role $names[$role][$index]
     $index++
-  }
-  if ($role -eq 'ADMIN') {
-    Tap-Text 'Ảnh loại gói'
-    Expect-Text 'PT 1–1'
-    Capture $role 'package-image-types'
-    Tap-Text 'PT 1–1'
-    Expect-Text 'Chọn ảnh'
-    Capture $role 'package-image-editor'
-    & $Adb -s $Device shell input keyevent 4
-    & $Adb -s $Device shell input keyevent 4
-    Tap-Text 'Lớp nhóm'
-    for ($attempt=0; $attempt -lt 6; $attempt++) {
-      $xml = Read-Ui
-      $classNode = $xml.SelectSingleNode("//node[starts-with(@text,'Muay Thai căn bản')]")
-      if ($classNode) { break }
-      & $Adb -s $Device shell input swipe 350 1050 350 450 300
-    }
-    Tap-Node $classNode
-    Expect-Text 'Chọn ảnh'
-    Capture $role 'class-image-editor'
-    & $Adb -s $Device shell input keyevent 4
-    & $Adb -s $Device shell input keyevent 4
   }
   $xml = Read-Ui
   Tap-Node ($xml.SelectSingleNode("//node[@resource-id='vn.muaythai.app:id/accounts']"))
