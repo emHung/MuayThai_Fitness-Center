@@ -71,6 +71,10 @@ final class ImagesPane {
         picker.launch(new PickVisualMediaRequest.Builder()
             .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE).build());
       });
+      var gap = new android.view.View(work);
+      gap.setImportantForAccessibility(android.view.View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+      actions.addView(gap, new LinearLayout.LayoutParams(
+          work.getResources().getDimensionPixelSize(R.dimen.image_action_gap), 1));
       work.ui.iconAction(actions, work.getString(R.string.delete_image), R.drawable.ic_delete_bin, () -> work.confirm(
           work.getString(R.string.delete_image), work.getString(R.string.delete_image_prompt),
           work.getString(R.string.delete_image),

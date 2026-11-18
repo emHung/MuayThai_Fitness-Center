@@ -1,4 +1,5 @@
 <resources>
+    <dimen name="image_action_gap">16dp</dimen>
     <dimen name="page_padding">16dp</dimen>
     <dimen name="card_radius">24dp</dimen>
     <dimen name="card_padding">16dp</dimen>
