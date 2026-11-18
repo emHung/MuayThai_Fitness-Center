@@ -97,6 +97,7 @@ class ProgressService {
           ORDER BY session_at DESC LIMIT 200
           """).param("trainer", actor.id()).param("learner", learner, java.sql.Types.BIGINT).query(NOTE).list();
     }
+    actor.require("ADMIN");
     return db.sql("""
         SELECT * FROM session_notes WHERE (:learner IS NULL OR learner_id=:learner)
         ORDER BY session_at DESC LIMIT 200
@@ -104,6 +105,7 @@ class ProgressService {
   }
 
   List<ProgressApi.Goal> goals(Actor actor, Long learner) {
+    actor.require(actor.is("ADMIN") || actor.is("TRAINER") || actor.is("LEARNER"));
     if (actor.is("LEARNER")) {
       actor.require(learner == null || learner == actor.id());
       learner = actor.id();

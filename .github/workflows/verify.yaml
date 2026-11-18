@@ -43,6 +43,7 @@ jobs:
           docker compose -p khang-acceptance -f deploy/compose.yaml up -d --build --wait --wait-timeout 180
           node tests/acceptance.mjs
           node tests/images.mjs
+          node tests/handoff.mjs
       - name: Stop demo containers
         if: always()
         run: docker compose -p khang-acceptance -f deploy/compose.yaml down --volumes
