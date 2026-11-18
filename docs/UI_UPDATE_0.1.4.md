@@ -1,5 +1,7 @@
 # Giao diện và kết nối — 0.1.4
 
+> Báo cáo lịch sử. Ảnh cũ được tham chiếu cố định từ tag v0.1.7; bố cục hiện hành xem [UI_REDESIGN_0.1.5.md](UI_REDESIGN_0.1.5.md), thay đổi cập nhật xem [IN_APP_UPDATE.md](IN_APP_UPDATE.md).
+
 ## Phạm vi
 
 - Bỏ ảnh loại gói và ảnh từng lớp khỏi giao diện, màn đặt lịch và thẻ QR. Không còn mục quản lý ảnh loại gói.
@@ -30,9 +32,9 @@ Bộ ảnh chụp từ emulator 720 × 1280 với tài khoản demo, không ph�
 
 | Nhóm | Ảnh |
 | --- | --- |
-| Mạng | [Đăng nhập offline](screenshots/0.1.4/login-offline.png), [đăng nhập nối lại](screenshots/0.1.4/login-online.png), [workspace offline](screenshots/0.1.4/workspace-offline.png), [Internet trở lại](screenshots/0.1.4/workspace-online.png) |
-| Quản trị viên | [Quét QR](screenshots/0.1.4/admin-scan.png), [lịch](screenshots/0.1.4/admin-calendar.png), [quản lý](screenshots/0.1.4/admin-management.png), [tài khoản](screenshots/0.1.4/admin-profile.png) |
-| Học viên | [Đặt lịch](screenshots/0.1.4/learner-booking.png), [thẻ tập](screenshots/0.1.4/learner-qr.png), [tài khoản](screenshots/0.1.4/learner-profile.png) |
+| Mạng | [Đăng nhập offline](https://github.com/emHung/MuayThai_Fitness-Center/blob/v0.1.7/docs/screenshots/0.1.4/login-offline.png), [đăng nhập nối lại](https://github.com/emHung/MuayThai_Fitness-Center/blob/v0.1.7/docs/screenshots/0.1.4/login-online.png), [workspace offline](https://github.com/emHung/MuayThai_Fitness-Center/blob/v0.1.7/docs/screenshots/0.1.4/workspace-offline.png), [Internet trở lại](https://github.com/emHung/MuayThai_Fitness-Center/blob/v0.1.7/docs/screenshots/0.1.4/workspace-online.png) |
+| Quản trị viên | [Quét QR](https://github.com/emHung/MuayThai_Fitness-Center/blob/v0.1.7/docs/screenshots/0.1.4/admin-scan.png), [lịch](https://github.com/emHung/MuayThai_Fitness-Center/blob/v0.1.7/docs/screenshots/0.1.4/admin-calendar.png), [quản lý](https://github.com/emHung/MuayThai_Fitness-Center/blob/v0.1.7/docs/screenshots/0.1.4/admin-management.png), [tài khoản](https://github.com/emHung/MuayThai_Fitness-Center/blob/v0.1.7/docs/screenshots/0.1.4/admin-profile.png) |
+| Học viên | [Đặt lịch](https://github.com/emHung/MuayThai_Fitness-Center/blob/v0.1.7/docs/screenshots/0.1.4/learner-booking.png), [thẻ tập](https://github.com/emHung/MuayThai_Fitness-Center/blob/v0.1.7/docs/screenshots/0.1.4/learner-qr.png), [tài khoản](https://github.com/emHung/MuayThai_Fitness-Center/blob/v0.1.7/docs/screenshots/0.1.4/learner-profile.png) |
 
-<img src="screenshots/0.1.4/admin-profile.png" width="300" alt="Tài khoản với thao tác icon" />
-<img src="screenshots/0.1.4/learner-booking.png" width="300" alt="Đặt lịch không dùng ảnh gói" />
+<img src="https://github.com/emHung/MuayThai_Fitness-Center/blob/v0.1.7/docs/screenshots/0.1.4/admin-profile.png" width="300" alt="Tài khoản với thao tác icon" />
+<img src="https://github.com/emHung/MuayThai_Fitness-Center/blob/v0.1.7/docs/screenshots/0.1.4/learner-booking.png" width="300" alt="Đặt lịch không dùng ảnh gói" />
