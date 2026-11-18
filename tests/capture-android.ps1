@@ -9,16 +9,41 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $fixture = Get-Content -LiteralPath $FixturePath -Raw -Encoding UTF8 | ConvertFrom-Json
+$photo = Join-Path (Split-Path -Parent $FixturePath) 'course.jpg'
+if (!(Test-Path -LiteralPath $photo)) { throw 'Place course.jpg beside the QA fixture for avatar picker tests.' }
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+$archive = [IO.Compression.ZipFile]::OpenRead((Resolve-Path -LiteralPath $ApkPath).Path)
+$qaEndpoint = $false
+try {
+  foreach ($entry in $archive.Entries | Where-Object {$_.Name -match '^classes\d*\.dex$'}) {
+    $stream = $entry.Open()
+    $bytes = New-Object IO.MemoryStream
+    try {
+      $stream.CopyTo($bytes)
+      if ([Text.Encoding]::UTF8.GetString($bytes.ToArray()).Contains('http://10.0.2.2:8180/')) {
+        $qaEndpoint = $true
+        break
+      }
+    } finally { $bytes.Dispose(); $stream.Dispose() }
+  }
+} finally { $archive.Dispose() }
+if (!$qaEndpoint) { throw 'Avatar screenshot tests require an APK pointing only to the QA gateway on port 8180.' }
 if ((& $Adb -s $Device shell getprop ro.kernel.qemu).Trim() -ne '1') {
   throw 'Screenshots require an isolated Android emulator.'
 }
 New-Item -ItemType Directory -Force $OutputDirectory | Out-Null
 
 function Read-Ui {
-  & $Adb -s $Device shell uiautomator dump /sdcard/muaythai-capture.xml | Out-Null
-  if ($LASTEXITCODE -ne 0) { throw 'Unable to inspect Android UI.' }
-  [xml]$xml = (& $Adb -s $Device exec-out cat /sdcard/muaythai-capture.xml) -join ''
-  return $xml
+  for ($attempt=0; $attempt -lt 4; $attempt++) {
+    & $Adb -s $Device shell rm -f /sdcard/muaythai-capture.xml
+    $dump = (& $Adb -s $Device shell uiautomator dump /sdcard/muaythai-capture.xml) -join ''
+    if ($dump -like '*dumped to*') {
+      [xml]$xml = (& $Adb -s $Device exec-out cat /sdcard/muaythai-capture.xml) -join ''
+      return $xml
+    }
+    Start-Sleep -Milliseconds 300
+  }
+  throw 'Unable to inspect a fresh Android UI.'
 }
 
 function Tap-Node($Node) {
@@ -37,6 +62,8 @@ function Enter-Field([string] $Id, [string] $Value) {
   $xml = Read-Ui
   Tap-Node ($xml.SelectSingleNode("//node[@resource-id='vn.muaythai.app:id/$Id']"))
   Start-Sleep -Milliseconds 600
+  & $Adb -s $Device shell input text x
+  Start-Sleep -Milliseconds 300
   & $Adb -s $Device shell input keycombination 113 29
   & $Adb -s $Device shell input keyevent 67
   & $Adb -s $Device shell input text $Value
@@ -69,7 +96,6 @@ if ($LASTEXITCODE -ne 0) { throw 'Could not install QA APK.' }
 & $Adb -s $Device shell settings put system accelerometer_rotation 0
 & $Adb -s $Device shell settings put system user_rotation 0
 & $Adb -s $Device shell mkdir -p /sdcard/Pictures
-$photo = Join-Path (Split-Path -Parent $FixturePath) 'course.jpg'
 & $Adb -s $Device push $photo /sdcard/Pictures/muaythai-course.jpg | Out-Null
 & $Adb -s $Device shell am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file:///sdcard/Pictures/muaythai-course.jpg | Out-Null
 
@@ -97,7 +123,8 @@ foreach ($role in @('ADMIN','RECEPTION','TRAINER','LEARNER')) {
   if ($role -eq 'ADMIN') { Capture $role 'login' }
   Enter-Field email $account.username
   Enter-Field password $account.password
-  Tap-Text 'Đăng nhập'
+  $xml = Read-Ui
+  Tap-Node ($xml.SelectSingleNode("//node[@resource-id='vn.muaythai.app:id/submit']"))
   Expect-Text $firstTitle[$role]
   $index = 0
   foreach ($tab in $tabs[$role]) {

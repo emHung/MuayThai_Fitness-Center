@@ -33,3 +33,7 @@ Khi sửa hoặc xác nhận một chức năng, thêm mục theo ngày và gắ
 ## Giao diện và kết nối — 0.1.4
 
 Đã bỏ ảnh lớp/gói khỏi giao diện, giữ avatar, chuyển thao tác phụ sang icon Remix Icon và thu gọn nút chính. Thông báo mất Internet/nối lại hoạt động ở đăng nhập và workspace, không tự gửi lại yêu cầu ghi. Bộ thử emulator xác nhận giữ biểu mẫu, giữ phiên, trở về từ cài đặt và Recents; build/lint đạt với 0 lỗi, 11 cảnh báo hiện hữu. [Ảnh và báo cáo UI 0.1.4](docs/UI_UPDATE_0.1.4.md). Các mốc nghiệm thu điện thoại thật vẫn còn mở.
+
+## Bố cục theo tham chiếu — 0.1.5
+
+Áp dụng cấu trúc header/hero/thẻ/menu/biểu mẫu cho bốn vai trò, giữ màu hiện tại và chức năng. Lịch có dải tuần lọc dữ liệu thật. Có bộ ảnh theo vai trò, kiểm tra đặt PT, QR, lưu hồ sơ, avatar và màn 320dp/cỡ chữ 130%. Android build/lint đạt 0 lỗi, 11 cảnh báo hiện hữu. [Báo cáo và ảnh](docs/UI_REDESIGN_0.1.5.md). Các mốc nghiệm thu điện thoại thật chưa thay đổi.

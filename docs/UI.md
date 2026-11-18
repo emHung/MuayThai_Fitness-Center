@@ -2,6 +2,8 @@
 
 Giao diện ứng dụng Android tuân theo chuẩn Material 3 và sitemap bên dưới. Tra màn bằng `id` của section. Khi chạy APK, vai trò lấy từ phiên đăng nhập.
 
+Bố cục hiện tại: [thiết kế và bộ ảnh 0.1.5](UI_REDESIGN_0.1.5.md). Header, hero, thẻ, biểu mẫu và trạng thái rỗng dùng chung; giữ bảng màu riêng từng vai trò.
+
 ## Sitemap
 
 | Vai trò | Tab gốc | Màn con tiêu biểu |
