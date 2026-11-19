@@ -3,11 +3,19 @@
 
 # GitHub Linguist Overrides
 # Exclude test suites, automation scripts, and deployment helpers from repository language stats
+*.mjs -linguist-detectable
+*.js -linguist-detectable
+*.ps1 -linguist-detectable
+*.sh -linguist-detectable
+*.sql -linguist-detectable
+*.bat -linguist-detectable
+
 tests/** linguist-vendored
+tests/** -linguist-detectable
 deploy/** linguist-vendored
+deploy/** -linguist-detectable
 scripts/** linguist-vendored
-*.bat linguist-vendored
-*.ps1 linguist-vendored
-*.sh linguist-vendored
-*.sql linguist-vendored
+scripts/** -linguist-detectable
+docs/** linguist-documentation
+
 
