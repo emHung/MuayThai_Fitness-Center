@@ -1,70 +1,72 @@
 ﻿# ========================================================================
 # Script: start-server.ps1
-# Mục đích: Tự động kiểm tra môi trường, khởi động Docker, chạy Backend,
-#           bật Tailscale Funnel và tự động lấy địa chỉ HTTPS của từng máy.
+# Muc dich: Tu dong kiem tra moi truong, khoi dong Docker, chay Backend,
+#           bat Tailscale Funnel va tu dong lay dia chi HTTPS cua tung may.
 # ========================================================================
 
 $ErrorActionPreference = 'Stop'
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
-function Write-Header($text) {
+function Write-Header([string]$text) {
     Write-Host "`n========================================================================" -ForegroundColor Cyan
     Write-Host "  $text" -ForegroundColor Cyan
     Write-Host "========================================================================" -ForegroundColor Cyan
 }
 
-function Write-Success($text) {
+function Write-Success([string]$text) {
     Write-Host "  [OK] $text" -ForegroundColor Green
 }
 
-function Write-Info($text) {
+function Write-Info([string]$text) {
     Write-Host "  [..] $text" -ForegroundColor Gray
 }
 
-function Write-Warn($text) {
+function Write-Warn([string]$text) {
     Write-Host "  [!] $text" -ForegroundColor Yellow
 }
 
-function Write-Failure($text) {
+function Write-Failure([string]$text) {
     Write-Host "  [X] $text" -ForegroundColor Red
 }
 
-$rootDir = Split-Path -Parent $PSScriptRoot
+$scriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Path }
+if (-not $scriptDir) { $scriptDir = (Join-Path (Get-Location) "deploy") }
+$rootDir = Split-Path -Parent $scriptDir
 Set-Location $rootDir
 
-Write-Header "MUAYTHAI & FITNESS CENTER - TỰ ĐỘNG KHỞI ĐỘNG HỆ THỐNG"
+Write-Header "MUAYTHAI & FITNESS CENTER - TU DONG KHOI DONG HE THONG"
 
 # ------------------------------------------------------------------------
-# 1. KIỂM TRA VÀ TẠO CẤU HÌNH deploy/.env
+# 1. KIEM TRA VA TAO CAU HINH deploy/.env
 # ------------------------------------------------------------------------
-Write-Host "`n1. Kiểm tra cấu hình môi trường (.env)..." -ForegroundColor White
+Write-Host "`n1. Kiem tra cau hinh moi truong (.env)..." -ForegroundColor White
 $envFile = Join-Path $rootDir "deploy\.env"
 
 if (-not (Test-Path $envFile)) {
-    Write-Info "Chưa tìm thấy deploy\.env. Đang tự động khởi tạo dữ liệu mẫu..."
+    Write-Info "Chua tim thay deploy\.env. Dang tu dong khoi tao du lieu mau..."
     & (Join-Path $rootDir "deploy\init-demo.ps1")
     if (-not (Test-Path $envFile)) {
-        Write-Failure "Không thể tạo file deploy\.env. Vui lòng kiểm tra lại quyền truy cập."
+        Write-Failure "Khong the tao file deploy\.env. Vui long kiem tra lai quyen truy cap."
         exit 1
     }
-    Write-Success "Đã tạo thành công file deploy\.env với mật khẩu mẫu an toàn."
+    Write-Success "Da tao thanh cong file deploy\.env voi mat khau mau an toan."
 } else {
-    Write-Success "File cấu hình deploy\.env đã sẵn sàng."
+    Write-Success "File cau hinh deploy\.env da san sang."
 }
 
-# Đọc thông tin tài khoản demo từ .env
+# Doc thong tin tai khoan demo tu .env
 $envLines = Get-Content $envFile -ErrorAction SilentlyContinue
 $adminPw = ($envLines | Where-Object { $_ -match '^DEMO_ADMIN_PASSWORD=(.+)$' } | ForEach-Object { $matches[1] })
 $trainerPw = ($envLines | Where-Object { $_ -match '^DEMO_TRAINER_PASSWORD=(.+)$' } | ForEach-Object { $matches[1] })
 $learnerPw = ($envLines | Where-Object { $_ -match '^DEMO_LEARNER_PASSWORD=(.+)$' } | ForEach-Object { $matches[1] })
 
 # ------------------------------------------------------------------------
-# 2. KIỂM TRA VÀ TỰ ĐỘNG BẬT DOCKER DESKTOP
+# 2. KIEM TRA VA TU DONG BAT DOCKER DESKTOP
 # ------------------------------------------------------------------------
-Write-Host "`n2. Kiểm tra Docker Desktop..." -ForegroundColor White
+Write-Host "`n2. Kiem tra Docker Desktop..." -ForegroundColor White
 
 if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
-    Write-Failure "Không tìm thấy lệnh 'docker'. Vui lòng cài đặt Docker Desktop từ: https://www.docker.com/"
+    Write-Failure "Khong tim thay lenh docker. Vui long cai dat Docker Desktop tu: https://www.docker.com/"
     exit 1
 }
 
@@ -79,7 +81,7 @@ try {
 }
 
 if (-not $dockerRunning) {
-    Write-Warn "Docker Desktop chưa chạy. Đang tự động tìm và khởi động..."
+    Write-Warn "Docker Desktop chua chay. Dang tu dong tim va khoi dong..."
     
     $candidatePaths = @(
         "$env:ProgramFiles\Docker\Docker\Docker Desktop.exe",
@@ -91,8 +93,8 @@ if (-not $dockerRunning) {
 
     if ($dockerExe) {
         Start-Process -FilePath $dockerExe
-        Write-Info "Đã gửi lệnh mở Docker Desktop ($dockerExe)."
-        Write-Info "Đang đợi Docker Engine sẵn sàng (tối đa 90 giây)..."
+        Write-Info "Da gui lenh mo Docker Desktop ($dockerExe)."
+        Write-Info "Dang doi Docker Engine san sang (toi da 90 giay)..."
 
         $timeoutSeconds = 90
         $elapsed = 0
@@ -109,32 +111,32 @@ if (-not $dockerRunning) {
             }
         }
     } else {
-        Write-Failure "Không tìm thấy đường dẫn 'Docker Desktop.exe'. Vui lòng tự mở Docker Desktop bằng tay."
+        Write-Failure "Khong tim thay duong dan Docker Desktop.exe. Vui long tu mo Docker Desktop bang tay."
         exit 1
     }
 
     if (-not $dockerRunning) {
         Write-Host ""
-        Write-Failure "Docker Desktop khởi động quá lâu hoặc gặp lỗi. Vui lòng kiểm tra Docker Desktop rồi chạy lại."
+        Write-Failure "Docker Desktop khoi dong qua lau hoac gap loi. Vui long kiem tra Docker Desktop roi chay lai."
         exit 1
     }
 }
 
-Write-Success "Docker Engine đã sẵn sàng hoạt động."
+Write-Success "Docker Engine da san sang hoat dong."
 
 # ------------------------------------------------------------------------
-# 3. KHỞI ĐỘNG CÁC SERVICE BACKEND QUA DOCKER COMPOSE
+# 3. KHOI DONG CAC SERVICE BACKEND QUA DOCKER COMPOSE
 # ------------------------------------------------------------------------
-Write-Host "`n3. Khởi động các dịch vụ Backend (Docker Compose)..." -ForegroundColor White
-Write-Info "Đang đồng bộ containers (Gateway, Auth, Schedule, Checkin, Progress, PostgreSQL)..."
+Write-Host "`n3. Khoi dong cac dich vu Backend (Docker Compose)..." -ForegroundColor White
+Write-Info "Dang dong bo containers (Gateway, Auth, Schedule, Checkin, Progress, PostgreSQL)..."
 
 docker compose --env-file deploy/.env -p deploy -f deploy/compose.yaml up -d
 if ($LASTEXITCODE -ne 0) {
-    Write-Failure "Khởi động Docker Compose thất bại. Vui lòng kiểm tra log lỗi ở trên."
+    Write-Failure "Khoi dong Docker Compose that bai. Vui long kiem tra log loi o tren."
     exit 1
 }
 
-Write-Info "Đang chờ API Gateway khởi động hoàn tất (kiểm tra http://127.0.0.1:8080/actuator/health)..."
+Write-Info "Dang cho API Gateway khoi dong hoan tat (kiem tra http://127.0.0.1:8080/actuator/health)..."
 $backendReady = $false
 $maxHealthCheckWait = 45
 $waited = 0
@@ -147,7 +149,7 @@ while ($waited -lt $maxHealthCheckWait) {
             break
         }
     } catch {
-        # Đang khởi động
+        # Dang khoi dong
     }
     Start-Sleep -Seconds 2
     $waited += 2
@@ -156,15 +158,15 @@ while ($waited -lt $maxHealthCheckWait) {
 Write-Host ""
 
 if ($backendReady) {
-    Write-Success "Backend Microservices đã hoạt động tốt tại cổng 8080 (Status: UP)."
+    Write-Success "Backend Microservices da hoat dong tot tai cong 8080 (Status: UP)."
 } else {
-    Write-Warn "Backend đang mất nhiều thời gian hơn dự kiến để khởi động. Bạn vẫn có thể tiếp tục chờ."
+    Write-Warn "Backend dang mat nhieu thoi gian hon du kien de khoi dong. Ban van co the tiep tuc cho."
 }
 
 # ------------------------------------------------------------------------
-# 4. KIỂM TRA TAILSCALE, BẬT FUNNEL & TỰ ĐỘNG LẤY ĐỊA CHỈ HTTPS
+# 4. KIEM TRA TAILSCALE, BAT FUNNEL & TU DONG LAY DIA CHI HTTPS
 # ------------------------------------------------------------------------
-Write-Host "`n4. Kiểm tra Tailscale & Kích hoạt HTTPS từ xa..." -ForegroundColor White
+Write-Host "`n4. Kiem tra Tailscale & Kich hoat HTTPS tu xa..." -ForegroundColor White
 $tailscaleAvailable = $false
 $tailscaleHttpsUrl = $null
 
@@ -176,57 +178,58 @@ if (Get-Command tailscale -ErrorAction SilentlyContinue) {
             $rawDns = $tsJson.Self.DNSName.TrimEnd('.')
             $tailscaleHttpsUrl = "https://$rawDns"
             
-            Write-Success "Tailscale đã đăng nhập: $rawDns"
-            Write-Info "Đang tự động bật chế độ Funnel (HTTPS công khai)..."
+            Write-Success "Tailscale da dang nhap: $rawDns"
+            Write-Info "Dang tu dong bat che do Funnel (HTTPS cong khai)..."
             
-            # Kích hoạt Funnel proxy vào cổng 8080
+            # Kich hoat Funnel proxy vao cong 8080
             $null = tailscale funnel --bg --yes --https=443 http://127.0.0.1:8080 2>&1
             
-            Write-Success "Đã mở cổng HTTPS thành công: $tailscaleHttpsUrl"
+            Write-Success "Da mo cong HTTPS thanh cong: $tailscaleHttpsUrl"
         } else {
-            Write-Warn "Ứng dụng Tailscale đang ở trạng thái: '$($tsJson.BackendState)'."
-            Write-Warn "Vui lòng mở Tailscale và đăng nhập để kích hoạt đường link HTTPS từ xa."
+            Write-Warn "Ung dung Tailscale dang o trang thai: $($tsJson.BackendState)"
+            Write-Warn "Vui long mo Tailscale va dang nhap de kich hoat duong link HTTPS tu xa."
         }
     } catch {
-        Write-Warn "Không thể lấy thông tin từ Tailscale ($($_.Exception.Message))."
+        Write-Warn "Khong the lay thong tin tu Tailscale ($($_.Exception.Message))."
     }
 } else {
-    Write-Warn "Chưa tìm thấy lệnh 'tailscale'. Máy chủ vẫn hoạt động tốt ở mạng nội bộ (localhost:8080)."
-    Write-Info "Nếu muốn truy cập từ xa qua 4G, hãy cài Tailscale từ: https://tailscale.com/download"
+    Write-Warn "Chua tim thay lenh tailscale. May chu van hoat dong tot o mang noi bo (localhost:8080)."
+    Write-Info "Neu muon truy cap tu xa qua 4G, hay cai Tailscale tu: https://tailscale.com/download"
 }
 
 # ------------------------------------------------------------------------
-# 5. BẢNG TỔNG KẾT VÀ HƯỚNG DẪN KẾT NỐI
+# 5. BANG TONG KET VA HUONG DAN KET NOI
 # ------------------------------------------------------------------------
-Write-Header "HỆ THỐNG ĐÃ KHỞI ĐỘNG HOÀN TẤT VÀ SẴN SÀNG"
+Write-Header "HE THONG DA KHOI DONG HOAN TAT VA SAN SANG"
 
-Write-Host "  [+] ĐỊA CHỈ TRUY CẬP MÁY CHỦ:" -ForegroundColor Yellow
-Write-Host "      * Cục bộ (Máy tính / USB / Emulator):  http://127.0.0.1:8080" -ForegroundColor White
+Write-Host "  [+] DIA CHI TRUY CAP MAY CHU:" -ForegroundColor Yellow
+Write-Host "      * Cuc bo (May tinh / USB / Emulator):  http://127.0.0.1:8080" -ForegroundColor White
 if ($tailscaleHttpsUrl) {
-    Write-Host "      * Từ xa qua Internet (4G / Mạng ngoài): $tailscaleHttpsUrl" -ForegroundColor Green
+    Write-Host "      * Tu xa qua Internet (4G / Mang ngoai): $tailscaleHttpsUrl" -ForegroundColor Green
 } else {
-    Write-Host "      * Từ xa qua Internet:                  (Chưa bật Tailscale)" -ForegroundColor DarkGray
+    Write-Host "      * Tu xa qua Internet:                  (Chua bat Tailscale)" -ForegroundColor DarkGray
 }
 
-Write-Host "`n  [+] THÔNG TIN ĐĂNG NHẬP DEMO (Lấy tự động từ deploy/.env):" -ForegroundColor Yellow
-Write-Host "      1. QUẢN TRỊ VIÊN (Admin):" -ForegroundColor White
+Write-Host "`n  [+] THONG TIN DANG NHAP DEMO (Lay tu dong tu deploy/.env):" -ForegroundColor Yellow
+Write-Host "      1. QUAN TRI VIEN (Admin):" -ForegroundColor White
 Write-Host "         Email:    admin@example.test" -ForegroundColor Cyan
-Write-Host "         Mật khẩu: $adminPw" -ForegroundColor Cyan
+Write-Host "         Mat khau: $adminPw" -ForegroundColor Cyan
 
-Write-Host "`n      2. HUẤN LUYỆN VIÊN (Trainer):" -ForegroundColor White
+Write-Host "`n      2. HUAN LUYEN VIEN (Trainer):" -ForegroundColor White
 Write-Host "         Email:    trainer@example.test" -ForegroundColor Cyan
-Write-Host "         Mật khẩu: $trainerPw" -ForegroundColor Cyan
+Write-Host "         Mat khau: $trainerPw" -ForegroundColor Cyan
 
-Write-Host "`n      3. HỌC VIÊN (Learner):" -ForegroundColor White
+Write-Host "`n      3. HOC VIEN (Learner):" -ForegroundColor White
 Write-Host "         Email:    learner@example.test" -ForegroundColor Cyan
-Write-Host "         Mật khẩu: $learnerPw" -ForegroundColor Cyan
+Write-Host "         Mat khau: $learnerPw" -ForegroundColor Cyan
 
 if ($tailscaleHttpsUrl) {
-    Write-Host "`n  [+] LỆNH BUILD APK ANDROID CHO MÁY NÀY (Chạy qua Internet):" -ForegroundColor Yellow
+    Write-Host "`n  [+] LENH BUILD APK ANDROID CHO MAY NAY (Chay qua Internet):" -ForegroundColor Yellow
     Write-Host "      cd android" -ForegroundColor White
-    Write-Host "      .\gradlew.bat :app:assembleDebug '-PauthBaseUrl=$tailscaleHttpsUrl/'" -ForegroundColor Green
+    $apkParam = "-PauthBaseUrl=$tailscaleHttpsUrl/"
+    Write-Host "      .\gradlew.bat :app:assembleDebug $apkParam" -ForegroundColor Green
 }
 
 Write-Host "`n========================================================================" -ForegroundColor Cyan
-Write-Host "  Mẹo: Bạn có thể thu nhỏ cửa sổ này để máy chủ tiếp tục chạy." -ForegroundColor Gray
+Write-Host "  Meo: Ban co the thu nho cua so nay de may chu tiep tuc chay." -ForegroundColor Gray
 Write-Host "========================================================================`n" -ForegroundColor Cyan
