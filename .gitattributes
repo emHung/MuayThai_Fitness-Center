@@ -1,2 +1,13 @@
 * text=auto eol=lf
 *.bat text eol=crlf
+
+# GitHub Linguist Overrides
+# Exclude test suites, automation scripts, and deployment helpers from repository language stats
+tests/** linguist-vendored
+deploy/** linguist-vendored
+scripts/** linguist-vendored
+*.bat linguist-vendored
+*.ps1 linguist-vendored
+*.sh linguist-vendored
+*.sql linguist-vendored
+
