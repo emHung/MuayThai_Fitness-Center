@@ -28,13 +28,20 @@
 
 ## Chạy demo nhanh
 
-Cần Git, PowerShell và Docker Desktop đang chạy Linux containers. Chạy từ gốc repo:
+Chỉ cần nhấp đúp vào tệp `start.bat` tại thư mục gốc của dự án (hoặc chạy lệnh):
 
-```powershell
-.\deploy\init-demo.ps1
-docker compose --env-file deploy/.env -p deploy -f deploy/compose.yaml up -d --build --wait --wait-timeout 300
-Invoke-RestMethod http://127.0.0.1:8080/actuator/health
+```cmd
+start.bat
 ```
+
+Tệp script sẽ tự động thực hiện từ A đến Z:
+1. Tự động tạo tệp cấu hình `deploy/.env` nếu máy mới chưa có.
+2. Tự động kiểm tra và khởi động Docker Desktop nếu phần mềm đang tắt.
+3. Tự động khởi động toàn bộ cụm Backend Microservices và PostgreSQL bằng Docker Compose.
+4. Tự động nhận diện Tailscale, kích hoạt Funnel và trích xuất địa chỉ HTTPS công khai riêng của máy đó.
+5. Hiển thị bảng tổng kết gồm các tài khoản demo (Admin, Trainer, Learner) và lệnh build APK tương ứng.
+
+*(Nếu muốn chạy thủ công từng lệnh PowerShell, bạn có thể tham khảo [SETUP_NEW_MACHINE.md](docs/SETUP_NEW_MACHINE.md)).*
 
 Mật khẩu seed được sinh trong `deploy/.env`; không đưa tệp này lên Git. Tài khoản ban đầu: `admin@example.test`, `trainer@example.test`, `learner@example.test`. Mật khẩu tạm phải đổi trước khi dùng nghiệp vụ. ADMIN tạo lễ tân và thiết lập ca làm HLV. Sửa `.env` không đổi mật khẩu tài khoản đã tồn tại.
 
