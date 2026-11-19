@@ -26,20 +26,19 @@
 | Tìm API, dữ liệu, UI và báo cáo cũ | [Mục lục tài liệu](docs/README.md) |
 | Xem những gì được giữ/gỡ khỏi GitHub | [REPOSITORY_REVIEW.md](docs/REPOSITORY_REVIEW.md) |
 
-## Chạy demo nhanh
+## Khởi động và Dừng hệ thống nhanh (1-Click)
 
-Chỉ cần nhấp đúp vào tệp `start.bat` tại thư mục gốc của dự án (hoặc chạy lệnh):
+- **Để khởi động**: Nhấp đúp vào tệp `start.bat` tại thư mục gốc của dự án (hoặc chạy lệnh `start.bat`).
+  1. Tự động tạo tệp cấu hình `deploy/.env` nếu máy mới chưa có.
+  2. Tự động kiểm tra và khởi động Docker Desktop nếu phần mềm đang tắt.
+  3. Tự động khởi động toàn bộ cụm Backend Microservices và PostgreSQL bằng Docker Compose.
+  4. Tự động nhận diện Tailscale, kích hoạt Funnel và trích xuất địa chỉ HTTPS công khai riêng của máy đó.
+  5. Hiển thị bảng tổng kết gồm các tài khoản demo (Admin, Trainer, Learner) và lệnh build APK tương ứng.
 
-```cmd
-start.bat
-```
-
-Tệp script sẽ tự động thực hiện từ A đến Z:
-1. Tự động tạo tệp cấu hình `deploy/.env` nếu máy mới chưa có.
-2. Tự động kiểm tra và khởi động Docker Desktop nếu phần mềm đang tắt.
-3. Tự động khởi động toàn bộ cụm Backend Microservices và PostgreSQL bằng Docker Compose.
-4. Tự động nhận diện Tailscale, kích hoạt Funnel và trích xuất địa chỉ HTTPS công khai riêng của máy đó.
-5. Hiển thị bảng tổng kết gồm các tài khoản demo (Admin, Trainer, Learner) và lệnh build APK tương ứng.
+- **Để dừng và giải phóng tài nguyên**: Nhấp đúp vào tệp `stop.bat` tại thư mục gốc của dự án (hoặc chạy lệnh `stop.bat`).
+  1. Tự động đóng kết nối Tailscale Funnel / Serve (ngắt link HTTPS công khai).
+  2. Dừng toàn bộ các container Docker (Gateway, Auth, Schedule, Checkin, Progress, PostgreSQL) an toàn và giải phóng cổng 8080 (dữ liệu trong database volume `auth_data` được giữ nguyên vẹn).
+  3. Cung cấp tùy chọn tắt luôn Docker Desktop để giải phóng hoàn toàn 2-4GB RAM cho máy tính.
 
 *(Nếu muốn chạy thủ công từng lệnh PowerShell, bạn có thể tham khảo [SETUP_NEW_MACHINE.md](docs/SETUP_NEW_MACHINE.md)).*
 
