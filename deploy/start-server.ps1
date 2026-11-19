@@ -34,7 +34,7 @@ if (-not $scriptDir) { $scriptDir = (Join-Path (Get-Location) "deploy") }
 $rootDir = Split-Path -Parent $scriptDir
 Set-Location $rootDir
 
-Write-Header "MUAYTHAI & FITNESS CENTER - TU DONG KHOI DONG HE THONG"
+Write-Header "MUAYTHAI VA FITNESS CENTER - TU DONG KHOI DONG HE THONG"
 
 # ------------------------------------------------------------------------
 # 1. KIEM TRA VA TAO CAU HINH deploy/.env
@@ -164,11 +164,12 @@ if ($backendReady) {
 }
 
 # ------------------------------------------------------------------------
-# 4. KIEM TRA TAILSCALE, BAT FUNNEL & TU DONG LAY DIA CHI HTTPS
+# 4. KIEM TRA TAILSCALE, BAT FUNNEL VA TU DONG MO DUONG DAN NEU CHUA BAT
 # ------------------------------------------------------------------------
-Write-Host "`n4. Kiem tra Tailscale & Kich hoat HTTPS tu xa..." -ForegroundColor White
+Write-Host "`n4. Kiem tra Tailscale va Kich hoat HTTPS tu xa..." -ForegroundColor White
 $tailscaleAvailable = $false
 $tailscaleHttpsUrl = $null
+$funnelActive = $false
 
 if (Get-Command tailscale -ErrorAction SilentlyContinue) {
     try {
@@ -179,22 +180,88 @@ if (Get-Command tailscale -ErrorAction SilentlyContinue) {
             $tailscaleHttpsUrl = "https://$rawDns"
             
             Write-Success "Tailscale da dang nhap: $rawDns"
-            Write-Info "Dang tu dong bat che do Funnel (HTTPS cong khai)..."
+            Write-Info "Dang tu dong kich hoat che do Funnel (HTTPS cong khai)..."
             
-            # Kich hoat Funnel proxy vao cong 8080
-            $null = tailscale funnel --bg --yes --https=443 http://127.0.0.1:8080 2>&1
+            # Kich hoat Funnel proxy vao cong 8080 va ghi nhan output
+            $funnelOutput = tailscale funnel --bg --yes --https=443 http://127.0.0.1:8080 2>&1 | Out-String
             
-            Write-Success "Da mo cong HTTPS thanh cong: $tailscaleHttpsUrl"
+            # Kiem tra xem Funnel da thuc su bat thanh cong chua (kiem tra JSON va text)
+            $statusJson = tailscale funnel status --json 2>$null | ConvertFrom-Json -ErrorAction SilentlyContinue
+            if ($statusJson -and $statusJson.AllowFunnel) {
+                foreach ($prop in $statusJson.AllowFunnel.PSObject.Properties) {
+                    if ($prop.Value -eq $true) {
+                        $funnelActive = $true
+                        break
+                    }
+                }
+            }
+            if (-not $funnelActive) {
+                $rawStatus = tailscale funnel status 2>&1 | Out-String
+                if ($rawStatus -match 'Funnel on') {
+                    $funnelActive = $true
+                }
+            }
+            
+            if ($funnelActive) {
+                Write-Success "Da mo cong HTTPS thanh cong: $tailscaleHttpsUrl"
+            } else {
+                Write-Warn "Tailscale Funnel chua duoc bat tren may chu hoac tai khoan nay!"
+                
+                # Tim duong dan Tailscale tra ve neu co link
+                $openUrl = $null
+                if ($funnelOutput -match '(https?://(login|console)\.tailscale\.com/[^\s''"<>]+)') {
+                    $openUrl = $matches[1]
+                } else {
+                    $openUrl = "https://login.tailscale.com/admin/dns"
+                }
+                
+                Write-Info "Dang tu dong mo trinh duyet den trang cau hinh Tailscale de ban bat Funnel..."
+                Write-Host "  Duong dan cau hinh: $openUrl" -ForegroundColor Cyan
+                try {
+                    Start-Process $openUrl
+                } catch {
+                    # Bo qua neu loi mo trinh duyet
+                }
+                
+                Write-Host "`n  [*] CAC BUOC BAT FUNNEL TRONG TAILSCALE ADMIN CONSOLE (Chi can lam 1 lan):" -ForegroundColor Yellow
+                Write-Host "      1. Bat 'MagicDNS' va nhan 'Enable HTTPS' tai:" -ForegroundColor White
+                Write-Host "         https://login.tailscale.com/admin/dns" -ForegroundColor Cyan
+                Write-Host "      2. Neu chua cap quyen, them 'funnel' vao ACL (Access Controls) tai:" -ForegroundColor White
+                Write-Host "         https://login.tailscale.com/admin/acls" -ForegroundColor Cyan
+                Write-Host '         "nodeAttrs": [{"target": ["autogroup:member"], "attr": ["funnel"]}]' -ForegroundColor DarkGray
+                Write-Host "      3. Sau khi bat xong tren web, hay chay lai: start.bat`n" -ForegroundColor Green
+            }
         } else {
             Write-Warn "Ung dung Tailscale dang o trang thai: $($tsJson.BackendState)"
-            Write-Warn "Vui long mo Tailscale va dang nhap de kich hoat duong link HTTPS tu xa."
+            Write-Info "Dang lay duong dan dang nhap..."
+            $upOutput = tailscale up 2>&1 | Out-String
+            $loginUrl = $null
+            if ($upOutput -match '(https?://login\.tailscale\.com/a/[^\s''"<>]+)') {
+                $loginUrl = $matches[1]
+            } else {
+                $loginUrl = "https://login.tailscale.com/admin"
+            }
+            Write-Info "Dang tu dong mo trinh duyet de ban dang nhap Tailscale..."
+            Write-Host "  Duong dan dang nhap: $loginUrl" -ForegroundColor Cyan
+            try {
+                Start-Process $loginUrl
+            } catch {
+                # Bo qua
+            }
+            Write-Warn "Vui long dang nhap tren trinh duyet roi chay lai: start.bat"
         }
     } catch {
         Write-Warn "Khong the lay thong tin tu Tailscale ($($_.Exception.Message))."
     }
 } else {
-    Write-Warn "Chua tim thay lenh tailscale. May chu van hoat dong tot o mang noi bo (localhost:8080)."
-    Write-Info "Neu muon truy cap tu xa qua 4G, hay cai Tailscale tu: https://tailscale.com/download"
+    Write-Warn "Chua tim thay cong cu tailscale. May chu van hoat dong o mang cuc bo (localhost:8080)."
+    Write-Info "Dang tu dong mo trinh duyet den trang tai Tailscale..."
+    Write-Host "  Duong dan tai: https://tailscale.com/download" -ForegroundColor Cyan
+    try {
+        Start-Process "https://tailscale.com/download"
+    } catch {
+        # Bo qua
+    }
 }
 
 # ------------------------------------------------------------------------
@@ -204,10 +271,13 @@ Write-Header "HE THONG DA KHOI DONG HOAN TAT VA SAN SANG"
 
 Write-Host "  [+] DIA CHI TRUY CAP MAY CHU:" -ForegroundColor Yellow
 Write-Host "      * Cuc bo (May tinh / USB / Emulator):  http://127.0.0.1:8080" -ForegroundColor White
-if ($tailscaleHttpsUrl) {
+if ($tailscaleHttpsUrl -and $funnelActive) {
     Write-Host "      * Tu xa qua Internet (4G / Mang ngoai): $tailscaleHttpsUrl" -ForegroundColor Green
+} elseif ($tailscaleHttpsUrl) {
+    Write-Host "      * Tu xa qua Internet (4G / Mang ngoai): (Chua bat Funnel - Hay cau hinh tren web vua mo)" -ForegroundColor Yellow
+    Write-Host "        Duong dan cau hinh:                  https://login.tailscale.com/admin/dns" -ForegroundColor Cyan
 } else {
-    Write-Host "      * Tu xa qua Internet:                  (Chua bat Tailscale)" -ForegroundColor DarkGray
+    Write-Host "      * Tu xa qua Internet:                  (Chua bat / dang nhap Tailscale)" -ForegroundColor DarkGray
 }
 
 Write-Host "`n  [+] THONG TIN DANG NHAP DEMO (Lay tu dong tu deploy/.env):" -ForegroundColor Yellow
@@ -223,13 +293,21 @@ Write-Host "`n      3. HOC VIEN (Learner):" -ForegroundColor White
 Write-Host "         Email:    learner@example.test" -ForegroundColor Cyan
 Write-Host "         Mat khau: $learnerPw" -ForegroundColor Cyan
 
-if ($tailscaleHttpsUrl) {
+if ($tailscaleHttpsUrl -and $funnelActive) {
     Write-Host "`n  [+] LENH BUILD APK ANDROID CHO MAY NAY (Chay qua Internet):" -ForegroundColor Yellow
     Write-Host "      cd android" -ForegroundColor White
     $apkParam = "-PauthBaseUrl=$tailscaleHttpsUrl/"
     Write-Host "      .\gradlew.bat :app:assembleDebug $apkParam" -ForegroundColor Green
+} else {
+    Write-Host "`n  [+] LENH BUILD APK ANDROID CHO MAY NAY (Chay mang cuc bo):" -ForegroundColor Yellow
+    Write-Host "      cd android" -ForegroundColor White
+    Write-Host "      .\gradlew.bat :app:assembleDebug -PauthBaseUrl=http://10.0.2.2:8080/" -ForegroundColor Green
+    if ($tailscaleHttpsUrl) {
+        Write-Host "      (Meo: Sau khi bat Funnel tren trang web vua mo, chay lai start.bat de lay link HTTPS)" -ForegroundColor Gray
+    }
 }
 
 Write-Host "`n========================================================================" -ForegroundColor Cyan
 Write-Host "  Meo: Ban co the thu nho cua so nay de may chu tiep tuc chay." -ForegroundColor Gray
+Write-Host "  Khi muon dung he thong va giai phong RAM, hay chay: stop.bat" -ForegroundColor Gray
 Write-Host "========================================================================`n" -ForegroundColor Cyan
